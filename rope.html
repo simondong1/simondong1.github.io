@@ -171,9 +171,24 @@
   nav.toc ol{margin:0;padding:0;list-style:none;
     columns:2;column-gap:2rem;font-size:.93rem}
   nav.toc li{margin:.3rem 0;break-inside:avoid}
-  nav.toc a{color:var(--ink-soft);border:none}
-  nav.toc a:hover{color:var(--accent)}
+  nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.16rem .5rem;border-radius:6px;line-height:1.4;transition:background .15s,color .15s}
+  nav.toc a:hover{color:var(--accent);background:var(--accent-soft)}
+  nav.toc a.active{color:var(--accent);background:var(--accent-soft);font-weight:600}
   nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}
+
+  /* Desktop: dock the contents bar as a fixed left sidebar */
+  @media (min-width:1280px){
+    nav.toc{
+      position:fixed;top:5.5rem;
+      left:calc((100vw - 46rem)/2 - 15.5rem);
+      width:13.5rem;max-height:calc(100vh - 7rem);overflow-y:auto;
+      background:none;border:none;border-radius:0;padding:0;margin:0;
+    }
+    nav.toc ol{columns:1;column-gap:0;font-size:.82rem}
+    nav.toc .toc-title{margin-bottom:.7rem}
+    nav.toc::-webkit-scrollbar{width:6px}
+    nav.toc::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  }
 
   /* ---------- Models chips ---------- */
   .chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.2rem 0 1.6rem}
@@ -526,6 +541,25 @@ seq               &rarr; which token (sets how far each hand turns)</code></pre>
     <p>RoPE — position turned into rotation, read back as relative distance.</p>
   </div>
 </footer>
+
+<script>
+  // Highlight the current section in the contents bar while scrolling.
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var byId = {};
+    links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+    var setActive = function(id){
+      links.forEach(function(l){ l.classList.remove('active'); });
+      if (byId[id]) byId[id].classList.add('active');
+    };
+    var heads = Array.prototype.slice.call(document.querySelectorAll('main h2[id]'));
+    if (!('IntersectionObserver' in window) || !heads.length) return;
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if (e.isIntersecting) setActive(e.target.id); });
+    }, { rootMargin: '-12% 0px -78% 0px', threshold: 0 });
+    heads.forEach(function(h){ obs.observe(h); });
+  })();
+</script>
 
 </body>
 </html>
