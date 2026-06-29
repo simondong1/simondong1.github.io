@@ -264,16 +264,17 @@
       <li><a href="#s16"><span class="n">16</span>What could be improved</a></li>
       <li><a href="#s17"><span class="n">17</span>Beyond vanilla RoPE</a></li>
       <li><a href="#s18"><span class="n">18</span>Reference implementation</a></li>
-      <li><a href="#s19"><span class="n">19</span>Exercises</a></li>
-      <li><a href="#s20"><span class="n">20</span>Summary</a></li>
+      <li><a href="#s19"><span class="n">19</span>Summary</a></li>
     </ol>
   </nav>
 
   <h2 id="s1"><span class="num">1.</span>Background — where RoPE came from</h2>
 
-  <p><strong>Origin (2021).</strong> Rotary Position Embeddings were introduced by Jianlin Su and colleagues (Zhuiyi Technology) in <a href="https://arxiv.org/abs/2104.09864"><em>RoFormer: Enhanced Transformer with Rotary Position Embedding</em></a> (arXiv 2104.09864, April 2021; later in <em>Neurocomputing</em>, 2024). The idea: instead of <em>adding</em> a position vector to the token embedding (absolute/sinusoidal encodings from the original Transformer) or learning relative-position biases, <strong>rotate</strong> the query and key vectors by an angle proportional to their position. That one move bakes relative-position awareness directly into the attention dot product.</p>
+  <p><strong>Why we need position encodings at all.</strong> Self-attention is <em>permutation-invariant</em>: the raw <code>Q·K</code> dot product compares token <em>content</em> with no notion of order, so "the cat sat" and "sat the cat" would look identical to it. Something has to tell the model <em>where</em> each token sits in the sequence — otherwise a Transformer is just a bag of words.</p>
 
-  <p><strong>The road to ubiquity (2021–2023).</strong> RoPE spread through the open decoder lineage — GPT-J and GPT-NeoX adopted it early (GPT-NeoX popularized the <strong>half-split / <code>rotate_half</code></strong> form everyone now copies), then PaLM and LLaMA (2023) made it the default. Once that architecture became the community template, RoPE was locked in.</p>
+  <p><strong>What came before RoPE.</strong> The original Transformer (2017) <em>added</em> a fixed <strong>sinusoidal</strong> vector to each token embedding; later models learned an <strong>absolute</strong> position embedding per slot, or added a learned <strong>relative-position bias</strong> directly to the attention scores (e.g. T5). These all work, but they bolt position onto the inputs or the logits rather than into the geometry of <code>Q·K</code> itself — and absolute schemes tend to generalize poorly to lengths unseen in training.</p>
+
+  <p><strong>RoPE (2021).</strong> <a href="https://arxiv.org/abs/2104.09864"><em>RoFormer</em></a> (Su et al.) took a different route: instead of adding anything, <strong>rotate</strong> Q and K by an angle proportional to their position, so relative position falls out of the dot product directly. GPT-NeoX popularized the half-split / <code>rotate_half</code> form, and LLaMA (2023) made it the default — after which it became near-universal.</p>
 
   <h3>Why it won — and still wins in 2026</h3>
   <ul>
@@ -500,16 +501,7 @@ def apply_rotary_pos_emb(q, k, cos, sin, unsqueeze_dim=1):
     sin = sin.unsqueeze(unsqueeze_dim)
     q_embed = (q * cos) + (rotate_half(q) * sin)</code></pre>
 
-  <h2 id="s19"><span class="num">19.</span>Exercises</h2>
-  <ol>
-    <li><strong>Wrap-around.</strong> With a single hand of period 8, list every gap in <code>0..15</code> that collides with gap <code>2</code>. (Hint: same <code>cos</code> value.)</li>
-    <li><strong>Build the fingerprint.</strong> For <code>theta_0=1.0, theta_1=0.25</code>, compute the <code>(fast, slow)</code> score pair for gaps <code>0,1,2,3</code> and confirm all four are distinct.</li>
-    <li><strong>Direction.</strong> Using one pair with content <code>(1,0)</code>, show the score for gap <code>+3</code> equals the score for gap <code>−3</code>. What does that say about distinguishing "key before query" vs "after"? Why does the full vector fix it?</li>
-    <li><strong>Complex form.</strong> Re-derive the §12 score using <code>z = x_i + j·x_{i+d/2}</code> and <code>e^{j·alpha}</code> instead of <code>cos/sin</code>. You should get <code>9.864</code>.</li>
-    <li><strong>Implementation.</strong> Write <code>apply_rope(x, positions)</code> from scratch and unit-test it: fix <code>q, k</code>, and assert the score is identical for several <code>(m, n)</code> with the same <code>m - n</code>. This single test catches almost every RoPE bug.</li>
-  </ol>
-
-  <h2 id="s20"><span class="num">20.</span>Summary — the one-paragraph mental model</h2>
+  <h2 id="s19"><span class="num">19.</span>Summary — the one-paragraph mental model</h2>
 <pre><code>position p        &rarr; how far along the sequence (one number)
 speed theta_i     &rarr; how fast that hand turns (a spectrum of speeds)
 head_dim          &rarr; where the bank of clock hands is stored (orthogonal pairs)
