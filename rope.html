@@ -4,7 +4,12 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Understanding RoPE — A Step-by-Step Tutorial on Rotary Position Embeddings</title>
-<meta name="description" content="From the attention score down to a single rotating clock hand, and back up to why modern LLMs encode position the way they do." />
+<meta name="description" content="A visual, step-by-step explanation of Rotary Position Embeddings: why Transformers need position, how RoPE turns position into rotation, and why modern LLMs still use it." />
+<meta property="og:title" content="Understanding RoPE" />
+<meta property="og:description" content="A visual, step-by-step explanation of Rotary Position Embeddings and the clock-hand intuition behind modern LLM positional encoding." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/rope.html" />
+<meta name="twitter:card" content="summary_large_image" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -40,11 +45,12 @@
     margin:0;
     background:var(--bg);
     color:var(--ink);
-    font-family:"Newsreader",Georgia,"Times New Roman",serif;
-    font-size:1.2rem;
-    line-height:1.72;
+    font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:1.05rem;
+    line-height:1.68;
     -webkit-font-smoothing:antialiased;
     text-rendering:optimizeLegibility;
+    font-feature-settings:"kern" 1,"liga" 1,"calt" 1;
   }
   ::selection{background:var(--accent-soft)}
 
@@ -52,9 +58,9 @@
 
   /* ---------- Hero ---------- */
   header.hero{
-    padding:5.5rem 0 2.5rem;
+    padding:6rem 0 2.8rem;
     border-bottom:1px solid var(--line);
-    margin-bottom:3rem;
+    margin-bottom:3.4rem;
   }
   .eyebrow{
     font-family:"Inter",system-ui,sans-serif;
@@ -64,13 +70,13 @@
   h1.title{
     font-family:"Inter",system-ui,sans-serif;
     font-weight:800;
-    font-size:clamp(2.1rem,5vw,3.2rem);
+    font-size:clamp(2.4rem,5.6vw,4rem);
     line-height:1.08;letter-spacing:-.03em;
     margin:0 0 1rem;color:var(--ink);
   }
   .subtitle{
-    font-size:1.3rem;font-style:italic;color:var(--ink-soft);
-    margin:0 0 1.8rem;line-height:1.5;
+    font-size:1.22rem;color:var(--ink-soft);
+    margin:0 0 1.9rem;line-height:1.55;max-width:42rem;
   }
   .byline{
     font-family:"Inter",system-ui,sans-serif;
@@ -92,6 +98,14 @@
     font-weight:600;font-size:1.18rem;margin:2rem 0 .6rem;letter-spacing:-.01em;
   }
   p{margin:1.05rem 0}
+  .lede{
+    font-size:1.22rem;
+    line-height:1.62;
+    letter-spacing:-.01em;
+    color:var(--ink);
+    margin:0 0 1.8rem;
+  }
+  .lede strong{font-weight:650}
   a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
   a:hover{border-color:var(--accent)}
   strong{font-weight:600;color:var(--ink)}
@@ -103,7 +117,7 @@
   /* ---------- Inline + block code ---------- */
   code{
     font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-    font-size:.82em;
+    font-size:.86em;
     background:#f0f1f4;
     color:#cf2a6b;
     padding:.12em .4em;border-radius:5px;
@@ -141,7 +155,7 @@
     border-radius:10px;
     padding:1.1rem 1.3rem;
     margin:1.8rem 0;
-    font-size:1.05rem;
+    font-size:1rem;
     line-height:1.6;
   }
   .callout.note{border-left-color:#0ea5e9}
@@ -224,7 +238,7 @@
   <div class="wrap">
     <p class="eyebrow">Transformers · Position Encoding</p>
     <h1 class="title">Understanding RoPE</h1>
-    <p class="subtitle">From the attention score down to a single rotating clock hand, and back up to why modern LLMs encode position this way.</p>
+    <p class="subtitle">A visual tutorial on Rotary Position Embeddings: why Transformers need position, how RoPE turns it into rotation, and why the clock-hand intuition explains the math.</p>
     <div class="byline">
       <span class="who">sdong</span>
       <span class="dot">•</span>
@@ -237,8 +251,10 @@
 
 <main class="wrap">
 
+  <p class="lede"><strong>RoPE is one of the quiet pieces of infrastructure behind modern language models.</strong> It does not add a learned position vector or a bias table. It rotates queries and keys so that the attention score naturally depends on relative distance. This article builds that idea from a single 2-D clock hand to the full multi-frequency implementation used in contemporary LLMs.</p>
+
   <div class="callout note">
-    <span class="label">Prerequisites</span>
+    <span class="label">What you'll need</span>
     <p>You should be comfortable with vectors and dot products, basic trig (<code>sin</code>/<code>cos</code>), matrix multiplication, and the rough idea of self-attention (Q, K, V). Everything else is built up from scratch.</p>
     <p style="margin-bottom:0">Notation: <code>d</code> = head dimension, <code>p</code>/<code>m</code>/<code>n</code> = token positions, <code>i</code> = channel-pair index, <code>theta_i</code> = a frequency, <code>@</code> = matrix multiply.</p>
   </div>
@@ -256,11 +272,11 @@
       <li><a href="#s8"><span class="n">8</span>Which channels pair up</a></li>
       <li><a href="#s9"><span class="n">9</span>The full formula</a></li>
       <li><a href="#s10"><span class="n">10</span>The vectorized form</a></li>
-      <li><a href="#s11"><span class="n">11</span>RoPE as complex multiply</a></li>
+      <li><a href="#s11"><span class="n">11</span>Complex-number view</a></li>
       <li><a href="#s12"><span class="n">12</span>A worked example</a></li>
-      <li><a href="#s13"><span class="n">13</span>Do frequencies interfere?</a></li>
-      <li><a href="#s14"><span class="n">14</span>Are we losing meaning?</a></li>
-      <li><a href="#s15"><span class="n">15</span>Is theta about head_dim?</a></li>
+      <li><a href="#s13"><span class="n">13</span>When frequencies interfere</a></li>
+      <li><a href="#s14"><span class="n">14</span>Why meaning is preserved</a></li>
+      <li><a href="#s15"><span class="n">15</span>What theta really indexes</a></li>
       <li><a href="#s16"><span class="n">16</span>What could be improved</a></li>
       <li><a href="#s17"><span class="n">17</span>Beyond vanilla RoPE</a></li>
       <li><a href="#s18"><span class="n">18</span>Reference implementation</a></li>
@@ -270,17 +286,17 @@
 
   <h2 id="s1"><span class="num">1.</span>Background — where RoPE came from</h2>
 
-  <p><strong>Why we need position encodings at all.</strong> Self-attention is <em>permutation-invariant</em>: the raw <code>Q·K</code> dot product compares token <em>content</em> with no notion of order, so "the cat sat" and "sat the cat" would look identical to it. Something has to tell the model <em>where</em> each token sits in the sequence — otherwise a Transformer is just a bag of words.</p>
+  <p><strong>Why we need position encodings at all.</strong> Self-attention is <em>permutation-invariant</em>: the raw <code>Q·K</code> dot product compares token <em>content</em> with no notion of order. Without an additional signal, "the cat sat" and "sat the cat" present the same set of token vectors. Something has to tell the model where each token sits — otherwise a Transformer is an orderless bag of words.</p>
 
-  <p><strong>What came before RoPE.</strong> The original Transformer (2017) <em>added</em> a fixed <strong>sinusoidal</strong> vector to each token embedding; later models learned an <strong>absolute</strong> position embedding per slot, or added a learned <strong>relative-position bias</strong> directly to the attention scores (e.g. T5). These all work, but they bolt position onto the inputs or the logits rather than into the geometry of <code>Q·K</code> itself — and absolute schemes tend to generalize poorly to lengths unseen in training.</p>
+  <p><strong>What came before RoPE.</strong> The original Transformer (2017) <em>added</em> a fixed <strong>sinusoidal</strong> vector to each token embedding. Later models learned an <strong>absolute</strong> position embedding per slot, or added a learned <strong>relative-position bias</strong> directly to the attention scores (e.g. T5). These approaches work, but they attach position to the inputs or logits rather than to the geometry of <code>Q·K</code> itself — and absolute schemes tend to extrapolate poorly beyond the sequence lengths seen in training.</p>
 
-  <p><strong>RoPE (2021).</strong> <a href="https://arxiv.org/abs/2104.09864"><em>RoFormer</em></a> (Su et al.) took a different route: instead of adding anything, <strong>rotate</strong> Q and K by an angle proportional to their position, so relative position falls out of the dot product directly. GPT-NeoX popularized the half-split / <code>rotate_half</code> form, and LLaMA (2023) made it the default — after which it became near-universal.</p>
+  <p><strong>RoPE (2021).</strong> <a href="https://arxiv.org/abs/2104.09864"><em>RoFormer</em></a> (Su et al.) took a different route: rotate Q and K by an angle proportional to position, so relative distance appears inside the dot product itself. GPT-NeoX popularized the half-split / <code>rotate_half</code> implementation, and LLaMA (2023) made RoPE the default pattern for open decoder LLMs.</p>
 
   <h3>Why it won — and still wins in 2026</h3>
   <ul>
     <li><strong>Relative position, cheaply</strong> — encoded implicitly in <code>Q·K</code>, no extra bias matrix.</li>
     <li><strong>KV-cache friendly</strong> — a per-token rotation applied once, perfect for incremental decoding.</li>
-    <li><strong>Extrapolatable</strong> — with small tweaks it stretches to context lengths far beyond training.</li>
+    <li><strong>Extensible</strong> — with frequency-scaling tweaks, it stretches to context lengths far beyond training.</li>
   </ul>
 
   <p><strong>How it's used in 2026.</strong> RoPE is the de-facto positional encoding for decoder LLMs, almost always with a <strong>long-context extension</strong> layered on (the <code>rope_scaling</code> config): NTK-aware scaling, Position Interpolation, YaRN, and LongRoPE rescale the frequency spectrum so a model trained at 8K runs at 128K–1M+ tokens. <strong>Multimodal RoPE (M-RoPE)</strong> extends the rotation to image/video position grids in vision-language models, and it now appears in some encoders (ModernBERT) and audio/time-series stacks too.</p>
@@ -301,14 +317,14 @@
     <li><strong>Standard half-split RoPE</strong> (the <code>rotate_half</code> code in this tutorial) — Qwen3.5, Gemma 4, Mistral 4, GPT-OSS, MiniMax M2. Shared near line-for-line via <code>transformers</code>' <code>#&nbsp;Copied&nbsp;from</code> / modular mechanism.</li>
     <li><strong>Decoupled RoPE inside MLA</strong> — DeepSeek-V4, GLM-5.2 (<code>glm_moe_dsa</code>), and Kimi K2.7 (DeepSeek-V3 text backbone) rotate only a slice of each head (<code>qk_rope_head_dim</code>), with GLM-5.2 using the <em>interleaved</em> convention. Same rotation math, applied to part of the head.</li>
   </ul>
-  <p>A note on packaging: GLM-5.2 runs on the native <code>glm_moe_dsa</code> class in <code>transformers</code> 5.13, while Kimi K2.7 loads via <code>trust_remote_code=True</code> with its own modeling file (text tower = DeepSeek-V3). Either way, the position encoding underneath is RoPE.</p>
+  <p>A packaging note: GLM-5.2 runs on the native <code>glm_moe_dsa</code> class in <code>transformers</code> 5.13, while Kimi K2.7 loads via <code>trust_remote_code=True</code> with its own modeling file (text tower = DeepSeek-V3). In both cases, the positional signal underneath is still RoPE.</p>
 
   <h2 id="s2"><span class="num">2.</span>Where RoPE plugs in: the attention score</h2>
   <p>Scaled dot-product attention is:</p>
 <pre><code>Attention(Q, K, V) = softmax( (Q @ K^T) / sqrt(head_dim) ) @ V</code></pre>
   <p>The piece we care about is <code>Q @ K^T</code>. For one head it produces a <strong>(seq, seq) matrix of scores</strong>:</p>
 <pre><code>(Q @ K^T)[i, j] = q_i . k_j     <span class="cmt"># similarity between query token i and key token j</span></code></pre>
-  <p>Every entry is a dot product between one query vector and one key vector; after softmax these decide who attends to whom. The problem: <code>q_i . k_j</code> is <strong>position-blind</strong> — it can't tell if token <code>j</code> is adjacent to <code>i</code> or 4000 tokens away. RoPE rotates <code>q</code> and <code>k</code> before the product so the score depends on the gap <code>i - j</code>.</p>
+  <p>Every entry is a dot product between one query vector and one key vector; after softmax these scores decide who attends to whom. The problem: <code>q_i . k_j</code> is <strong>position-blind</strong> — by itself, it cannot tell whether token <code>j</code> is adjacent to <code>i</code> or 4000 tokens away. RoPE rotates <code>q</code> and <code>k</code> before the product so the score depends on the gap <code>i - j</code>.</p>
 
   <h2 id="s3"><span class="num">3.</span>The two axes (don't merge them)</h2>
   <p>Inside a head, Q and K have shape:</p>
@@ -347,7 +363,7 @@ m=10, n=13:  cos(10 - 13) = cos(-3) = -0.990   <span class="cmt"># same gap &rar
   \]
 
   <h2 id="s6"><span class="num">6.</span>One speed isn't enough: the hand wraps onto itself</h2>
-  <p>A single hand comes back to the same spot once per full turn, so different gaps land on the <strong>same angle</strong> and get the <strong>same score</strong> — the model literally cannot tell them apart.</p>
+  <p>A single hand comes back to the same spot once per full turn, so different gaps land on the <strong>same angle</strong> and get the <strong>same score</strong>. A readout based on that one hand cannot tell them apart.</p>
   <p>To see exact collisions, take a hand whose <strong>period is 6 positions</strong> (one full turn every 6 tokens; <code>theta = 2*pi/6 &approx; 1.047</code>). Score for a gap <code>d</code> is <code>cos(theta * d)</code>:</p>
 <pre><code>gap d:          0      1      2      3      4      5      6      7
 cos(theta*d): 1.00   0.50  -0.50  -1.00  -0.50   0.50   1.00   0.50</code></pre>
@@ -355,7 +371,7 @@ cos(theta*d): 1.00   0.50  -0.50  -1.00  -0.50   0.50   1.00   0.50</code></pre>
 <pre><code>gap 0  vs  gap 6              &rarr; both score  1.00
 gap 1  vs  gap 5  vs  gap 7   &rarr; all score  0.50
 gap 2  vs  gap 4              &rarr; both score -0.50</code></pre>
-  <p>So with this one hand, a token <strong>1 position away</strong> is indistinguishable from one <strong>5 or 7 positions away</strong> — identical score, <code>0.50</code>. That's the wrap problem, stated concretely: one speed = one ambiguous dial. We need more hands.</p>
+  <p>So with this one hand, a token <strong>1 position away</strong> is indistinguishable from one <strong>5 or 7 positions away</strong> — identical score, <code>0.50</code>. That's the wrap problem in concrete form: one speed gives one ambiguous dial. We need more hands.</p>
 
   <h2 id="s7"><span class="num">7.</span>Many hands at different speeds (a clock)</h2>
   <p>Add a <strong>slow</strong> hand with <strong>period 60 positions</strong> (<code>theta = 2*pi/60 &approx; 0.105</code>) alongside the fast period-6 hand. Compare the two gaps that collided above — gap 1 vs gap 7:</p>
@@ -369,7 +385,7 @@ gap 6 &rarr; (1.00, 0.809)
 gap 7 &rarr; (0.50, 0.743)     <span class="cmt"># no two pairs match</span></code></pre>
   <p>This is exactly a clock: the second hand pins down <em>where in the minute</em> you are (fine, but wraps every 60s); the hour hand tells you <em>which hour</em> (coarse, but no wrap over 12h). Neither alone gives the time; together they do.</p>
 <pre><code>fast hand (low i):  big move per step  &rarr; separates NEARBY gaps, wraps quickly
-slow hand (high i): tiny move per step &rarr; useless up close, unique over long range</code></pre>
+slow hand (high i): tiny move per step &rarr; coarse nearby, stable over long range</code></pre>
   <p class="codecap">Real models don't pick round periods — they use <code>theta_i = base^(-2i/d)</code>, a whole geometric spread of speeds. Periods 6 and 60 were chosen only so the collisions land on clean integers.</p>
 
   <h2 id="s8"><span class="num">8.</span>Which two channels share a hand?</h2>
@@ -409,10 +425,10 @@ rotate_half(x) = [-3, -4, 1, 2]</code></pre>
 <pre><code>angles = [alpha_0, alpha_1]              <span class="cmt"># one per hand, length d/2</span>
 emb    = concat(angles, angles)          <span class="cmt"># length d</span>
 x_rope = x * cos(emb) + rotate_half(x) * sin(emb)</code></pre>
-  <p>Why it equals §9: the rotation matrix has a <code>cos</code> part (keeps each channel &rarr; <code>x * cos</code>) and a <code>sin</code> part (mixes the paired channel, swapped and sign-flipped &rarr; exactly <code>rotate_half</code>).</p>
+  <p>Why it equals §9: the rotation matrix has a <code>cos</code> part (keeps each channel aligned with itself &rarr; <code>x * cos</code>) and a <code>sin</code> part (pulls in the paired channel, swapped and sign-flipped &rarr; exactly <code>rotate_half</code>).</p>
 
-  <h2 id="s11"><span class="num">11.</span>Aside for CS students: RoPE is just complex multiplication</h2>
-  <p>If you've seen complex numbers, here's the cleanest way to remember all of the above. Treat each pair <code>(x_i, x_{i+d/2})</code> as a single complex number <code>z_i = x_i + j·x_{i+d/2}</code>. Then "rotate the pair by angle <code>alpha</code>" is literally <strong>multiply by a unit complex number</strong>:</p>
+  <h2 id="s11"><span class="num">11.</span>A compact view: complex multiplication</h2>
+  <p>If you've seen complex numbers, here's the cleanest way to remember all of the above. Treat each pair <code>(x_i, x_{i+d/2})</code> as a single complex number <code>z_i = x_i + j·x_{i+d/2}</code>. Then "rotate the pair by angle <code>alpha</code>" is exactly <strong>multiply by a unit complex number</strong>:</p>
   \[
   z_i' = z_i \cdot e^{\,j\,\alpha}, \qquad e^{\,j\alpha} = \cos\alpha + j\sin\alpha
   \]
@@ -440,8 +456,8 @@ q_rot = [-1.9842, 1.9599, 2.4624, 4.0198]</code></pre>
       = 9.864</code></pre>
   <p>The dot product is index-aligned: channel 0 of Q meets channel 0 of K (both the fast hand), channels 1,3 meet their twins (slow hand). Each hand only ever compares against the same hand, so the score splits into per-hand terms, each depending on <code>(m - n) * theta_i</code>.</p>
 
-  <h2 id="s13"><span class="num">13.</span>Confusion point: do the frequencies interfere?</h2>
-  <p><strong>Yes — they can.</strong> The <em>rotations</em> are geometrically independent (each hand on its own channel-pair, no cross-talk). But the final score <strong>sums all hands into one scalar</strong>, and summed sinusoids interfere — so two different gaps can produce the same total score.</p>
+  <h2 id="s13"><span class="num">13.</span>When frequencies interfere</h2>
+  <p><strong>Yes — they can.</strong> The <em>rotations</em> are geometrically independent (each hand lives on its own channel-pair). But the final attention score <strong>sums all hands into one scalar</strong>, and summed sinusoids can interfere — so two different gaps can produce the same total score.</p>
   <p>Concrete collision. Say a head's contributions reduce to <code>score(d) = cos(d) + cos(2d)</code>. Using <code>cos(2d) = 2cos²d − 1</code>, this is <code>2c² + c − 1</code> with <code>c = cos d</code>. Solve <code>score = 0</code>:</p>
 <pre><code>2c^2 + c - 1 = 0  &rarr;  c = 0.5  or  c = -1
 
@@ -452,7 +468,7 @@ check d=1.047:  cos(1.047) + cos(2.094) =  0.5 + (-0.5) = 0
 check d=3.142:  cos(3.142) + cos(6.283) = -1.0 + ( 1.0) = 0</code></pre>
   <p>A gap of <code>&approx;1.047</code> and a gap of <code>&approx;3.142</code> give the <strong>identical</strong> score <code>0</code>. So the rotations are independent, but the scalar score is a sum of all hands &rarr; they <em>do</em> interfere, and one score can alias. What rescues uniqueness is dimensionality: many hands per head (<code>d/2</code>) and many heads. The full <strong>vector</strong> of components is a richer fingerprint than any single scalar — collisions in one number are resolved by the others.</p>
 
-  <h2 id="s14"><span class="num">14.</span>Confusion point: are we destroying meaning by mixing channels?</h2>
+  <h2 id="s14"><span class="num">14.</span>Why meaning is preserved</h2>
   <p>No. Each hand-turn is an <strong>orthogonal rotation</strong> — invertible, length-preserving:</p>
 <pre><code>pair (3,4), length 5, turned by 37 deg (cos=0.8, sin=0.6):
   out_i       = 3*0.8 - 4*0.6 = 0.0
@@ -460,8 +476,8 @@ check d=3.142:  cos(3.142) + cos(6.283) = -1.0 + ( 1.0) = 0</code></pre>
   new length = sqrt(0^2 + 5^2) = 5   <span class="cmt"># unchanged</span></code></pre>
   <p>The vector spins to a new direction; nothing is averaged away.</p>
 
-  <h2 id="s15"><span class="num">15.</span>Confusion point: is <code>theta_i</code> the "position of the head_dim"?</h2>
-  <p>No. The head_dim has no position — channel 5 isn't "after" channel 2. The frequencies encode the <strong>sequence</strong> gap <code>(i - j)</code> at multiple scales. The head_dim is just <em>where the bank of clock hands is stored</em>.</p>
+  <h2 id="s15"><span class="num">15.</span>What <code>theta_i</code> really indexes</h2>
+  <p><code>theta_i</code> is not the "position" of a head-dimension channel. The head dimension has no semantic order — channel 5 is not "after" channel 2. The frequencies encode the <strong>sequence</strong> gap <code>(i - j)</code> at multiple scales. The head dimension is simply <em>where the bank of clock hands is stored</em>.</p>
 
   <h2 id="s16"><span class="num">16.</span>Limitations: what could be improved</h2>
   <p>Vanilla RoPE is elegant but leaves real things on the table. Each item below is a concrete opening for a better position encoding.</p>
@@ -474,7 +490,7 @@ check d=3.142:  cos(3.142) + cos(6.283) = -1.0 + ( 1.0) = 0</code></pre>
     <li><strong>Token-distance only, not semantic distance.</strong> RoPE measures raw index gaps; it has no notion that some tokens "shouldn't count." Content-adaptive positioning is an open direction it doesn't touch.</li>
     <li><strong>One spectrum for all heads and layers.</strong> Letting heads specialize (some short-range, some long-range) <em>explicitly</em>, rather than faking it through learned <code>W_q, W_k</code> magnitudes, could use the budget more deliberately.</li>
   </ol>
-  <p>The throughline: RoPE hands the model a <em>fixed, uniform, content-blind</em> multi-scale ruler. Most improvement ideas amount to making that ruler <strong>learned, adaptive, or better-conditioned for long context</strong> — without losing RoPE's two non-negotiables: the relative-position property and KV-cache compatibility.</p>
+  <p>The throughline: RoPE gives the model a <em>fixed, uniform, content-blind</em> bank of clock hands. Most improvement ideas amount to making those hands <strong>learned, adaptive, or better-conditioned for long context</strong> — without losing RoPE's two non-negotiables: the relative-position property and KV-cache compatibility.</p>
 
   <h2 id="s17"><span class="num">17.</span>Beyond vanilla RoPE</h2>
   <ul>
@@ -509,7 +525,7 @@ seq               &rarr; which token (sets how far each hand turns)</code></pre>
   <p>RoPE turns each token's clock hands by <code>(position * speed)</code>. Because <code>Q·K</code> is index-aligned, each hand compares only against the same hand, so the score depends on the gap <code>(i - j)</code>. One hand is ambiguous (gap 1 looks like gap 7); reading all the hands — like a real clock — pins the gap down, though any single summed score can still alias, which is why we use many hands and heads.</p>
 
   <div class="callout">
-    <p style="margin:0">RoPE isn't a magic matrix — it's <strong>position turned into clock-hand angles, read back as relative distance.</strong></p>
+    <p style="margin:0">RoPE is <strong>position turned into clock-hand angles, read back as relative distance.</strong></p>
   </div>
 
   <h3>Further reading</h3>
