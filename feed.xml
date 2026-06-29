@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Simon Dong Blog</title>
+    <link>https://simondong1.github.io/</link>
+    <description>Machine learning systems, LLM internals, and technical notes by Simon Dong.</description>
+    <language>en-us</language>
+    <atom:link href="https://simondong1.github.io/feed.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Understanding RoPE (Rotary Position Embeddings)</title>
+      <link>https://simondong1.github.io/rope.html</link>
+      <guid isPermaLink="true">https://simondong1.github.io/rope.html</guid>
+      <pubDate>Sun, 28 Jun 2026 00:00:00 +0000</pubDate>
+      <description>A visual, step-by-step explanation of Rotary Position Embeddings and the clock-hand intuition behind modern LLM positional encoding.</description>
+    </item>
+  </channel>
+</rss>
