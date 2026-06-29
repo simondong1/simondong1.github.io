@@ -244,7 +244,7 @@
       <span class="dot">•</span>
       <span>June 2026</span>
       <span class="dot">•</span>
-      <span>~18 min read</span>
+      <span>~16 min read</span>
     </div>
   </div>
 </header>
@@ -272,15 +272,13 @@
       <li><a href="#s8"><span class="n">8</span>Which channels pair up</a></li>
       <li><a href="#s9"><span class="n">9</span>The full formula</a></li>
       <li><a href="#s10"><span class="n">10</span>The vectorized form</a></li>
-      <li><a href="#s11"><span class="n">11</span>Complex-number view</a></li>
-      <li><a href="#s12"><span class="n">12</span>A worked example</a></li>
-      <li><a href="#s13"><span class="n">13</span>When frequencies interfere</a></li>
-      <li><a href="#s14"><span class="n">14</span>Why meaning is preserved</a></li>
-      <li><a href="#s15"><span class="n">15</span>What theta really indexes</a></li>
-      <li><a href="#s16"><span class="n">16</span>What could be improved</a></li>
-      <li><a href="#s17"><span class="n">17</span>Beyond vanilla RoPE</a></li>
-      <li><a href="#s18"><span class="n">18</span>Reference implementation</a></li>
-      <li><a href="#s19"><span class="n">19</span>Summary</a></li>
+      <li><a href="#s11"><span class="n">11</span>A worked example</a></li>
+      <li><a href="#s12"><span class="n">12</span>When frequencies interfere</a></li>
+      <li><a href="#s13"><span class="n">13</span>Why meaning is preserved</a></li>
+      <li><a href="#s14"><span class="n">14</span>What could be improved</a></li>
+      <li><a href="#s15"><span class="n">15</span>Beyond vanilla RoPE</a></li>
+      <li><a href="#s16"><span class="n">16</span>Reference implementation</a></li>
+      <li><a href="#s17"><span class="n">17</span>Summary</a></li>
     </ol>
   </nav>
 
@@ -405,7 +403,8 @@ alpha[p, i] = p * theta_i
 <span class="cmt"># 3. Turn each pair (x_i, x_{i+d/2}) by alpha[p, i]</span>
 x'_i       = x_i       * cos(alpha[p,i]) - x_{i+d/2} * sin(alpha[p,i])
 x'_{i+d/2} = x_{i+d/2} * cos(alpha[p,i]) + x_i       * sin(alpha[p,i])</code></pre>
-  <p><code>p</code> and <code>i</code> are <strong>different axes</strong>: <code>theta_i</code> is a fixed speed per hand, <code>p</code> is the position, the angle is their product. Table for <code>d=4</code>, <code>base=10000</code> (<code>theta_0=1.0</code>, <code>theta_1=0.01</code>):</p>
+  <p><code>p</code> and <code>i</code> are <strong>different axes</strong>: <code>theta_i</code> is a fixed speed per hand, <code>p</code> is the position, the angle is their product. In the original RoPE formulation, and in many standard implementations, the default base is <code>10000</code>. Long-context models often change this value (for example through <code>rope_theta</code> or <code>rope_scaling</code>), but <code>10000</code> is the useful default to learn first.</p>
+  <p>Table for <code>d=4</code>, <code>base=10000</code> (<code>theta_0=1.0</code>, <code>theta_1=0.01</code>):</p>
 <pre><code>                hand i=0       hand i=1
               (theta=1.0)    (theta=0.01)
 position p=0:   0 * 1 = 0.0    0 * 0.01 = 0.00
@@ -427,18 +426,7 @@ emb    = concat(angles, angles)          <span class="cmt"># length d</span>
 x_rope = x * cos(emb) + rotate_half(x) * sin(emb)</code></pre>
   <p>Why it equals §9: the rotation matrix has a <code>cos</code> part (keeps each channel aligned with itself &rarr; <code>x * cos</code>) and a <code>sin</code> part (pulls in the paired channel, swapped and sign-flipped &rarr; exactly <code>rotate_half</code>).</p>
 
-  <h2 id="s11"><span class="num">11.</span>A compact view: complex multiplication</h2>
-  <p>If you've seen complex numbers, here's the cleanest way to remember all of the above. Treat each pair <code>(x_i, x_{i+d/2})</code> as a single complex number <code>z_i = x_i + j·x_{i+d/2}</code>. Then "rotate the pair by angle <code>alpha</code>" is exactly <strong>multiply by a unit complex number</strong>:</p>
-  \[
-  z_i' = z_i \cdot e^{\,j\,\alpha}, \qquad e^{\,j\alpha} = \cos\alpha + j\sin\alpha
-  \]
-  <p>because multiplying complex numbers adds their angles. So RoPE is: <em>for each pair, multiply by</em> \(e^{\,j\,p\,\theta_i}\). The relative-position property then falls out in one line — a real dot product equals the real part of a Hermitian inner product:</p>
-  \[
-  \langle R_m q,\, R_n k\rangle = \mathrm{Re}\!\sum_i q_i\,\overline{k_i}\; e^{\,j\,(m-n)\,\theta_i}
-  \]
-  <p>The \(e^{\,j(m-n)\theta_i}\) makes the dependence on the gap <code>m - n</code> obvious — no trig identities needed. This is exactly how the RoFormer paper derives RoPE, and why some kernels store the frequencies as complex exponentials.</p>
-
-  <h2 id="s12"><span class="num">12.</span>A full worked example (two hands active)</h2>
+  <h2 id="s11"><span class="num">11.</span>A full worked example (two hands active)</h2>
   <p><code>d = 4</code>, <code>theta_0 = 1</code>, <code>theta_1 = 0.01</code>.</p>
 <pre><code>q = [1, 2, 3, 4]   at position m = 1
 k = [1, 1, 1, 1]   at position n = 2</code></pre>
@@ -456,7 +444,7 @@ q_rot = [-1.9842, 1.9599, 2.4624, 4.0198]</code></pre>
       = 9.864</code></pre>
   <p>The dot product is index-aligned: channel 0 of Q meets channel 0 of K (both the fast hand), channels 1,3 meet their twins (slow hand). Each hand only ever compares against the same hand, so the score splits into per-hand terms, each depending on <code>(m - n) * theta_i</code>.</p>
 
-  <h2 id="s13"><span class="num">13.</span>When frequencies interfere</h2>
+  <h2 id="s12"><span class="num">12.</span>When frequencies interfere</h2>
   <p><strong>Yes — they can.</strong> The <em>rotations</em> are geometrically independent (each hand lives on its own channel-pair). But the final attention score <strong>sums all hands into one scalar</strong>, and summed sinusoids can interfere — so two different gaps can produce the same total score.</p>
   <p>Concrete collision. Say a head's contributions reduce to <code>score(d) = cos(d) + cos(2d)</code>. Using <code>cos(2d) = 2cos²d − 1</code>, this is <code>2c² + c − 1</code> with <code>c = cos d</code>. Solve <code>score = 0</code>:</p>
 <pre><code>2c^2 + c - 1 = 0  &rarr;  c = 0.5  or  c = -1
@@ -468,31 +456,33 @@ check d=1.047:  cos(1.047) + cos(2.094) =  0.5 + (-0.5) = 0
 check d=3.142:  cos(3.142) + cos(6.283) = -1.0 + ( 1.0) = 0</code></pre>
   <p>A gap of <code>&approx;1.047</code> and a gap of <code>&approx;3.142</code> give the <strong>identical</strong> score <code>0</code>. So the rotations are independent, but the scalar score is a sum of all hands &rarr; they <em>do</em> interfere, and one score can alias. What rescues uniqueness is dimensionality: many hands per head (<code>d/2</code>) and many heads. The full <strong>vector</strong> of components is a richer fingerprint than any single scalar — collisions in one number are resolved by the others.</p>
 
-  <h2 id="s14"><span class="num">14.</span>Why meaning is preserved</h2>
-  <p>No. Each hand-turn is an <strong>orthogonal rotation</strong> — invertible, length-preserving:</p>
+  <h2 id="s13"><span class="num">13.</span>Why meaning is preserved</h2>
+  <p>RoPE mixes two numbers inside each pair, but it does not compress them into one number. It applies a <strong>rotation</strong>: two inputs go in, two outputs come out, and the transformation is exactly reversible if you rotate back by the negative angle.</p>
+  <p>That distinction matters. An average like <code>(x + y) / 2</code> loses information because many pairs can produce the same average. A rotation keeps the pair as a 2-D point and only changes its coordinate system.</p>
 <pre><code>pair (3,4), length 5, turned by 37 deg (cos=0.8, sin=0.6):
   out_i       = 3*0.8 - 4*0.6 = 0.0
   out_{i+d/2} = 4*0.8 + 3*0.6 = 5.0
-  new length = sqrt(0^2 + 5^2) = 5   <span class="cmt"># unchanged</span></code></pre>
-  <p>The vector spins to a new direction; nothing is averaged away.</p>
+  new length = sqrt(0^2 + 5^2) = 5   <span class="cmt"># unchanged</span>
 
-  <h2 id="s15"><span class="num">15.</span>What <code>theta_i</code> really indexes</h2>
-  <p><code>theta_i</code> is not the "position" of a head-dimension channel. The head dimension has no semantic order — channel 5 is not "after" channel 2. The frequencies encode the <strong>sequence</strong> gap <code>(i - j)</code> at multiple scales. The head dimension is simply <em>where the bank of clock hands is stored</em>.</p>
+recover the original by rotating back:
+  x = out_i*0.8 + out_{i+d/2}*0.6 = 0*0.8 + 5*0.6 = 3
+  y = out_{i+d/2}*0.8 - out_i*0.6 = 5*0.8 - 0*0.6 = 4</code></pre>
+  <p>The two values are mixed, but not destroyed. RoPE changes the direction of the 2-D pair so position can influence attention; it does not average, pool, or discard the original information.</p>
 
-  <h2 id="s16"><span class="num">16.</span>Limitations: what could be improved</h2>
+  <h2 id="s14"><span class="num">14.</span>Limitations: what could be improved</h2>
   <p>Vanilla RoPE is elegant but leaves real things on the table. Each item below is a concrete opening for a better position encoding.</p>
   <ol>
     <li><strong>No built-in distance emphasis.</strong> RoPE applies every hand at every gap, with no mechanism to say "this is a far pair, lean on the slow hands." An improved scheme could <em>learn</em> how much each frequency band should count as a function of gap or content.</li>
     <li><strong>Fixed, hand-set frequencies.</strong> The spectrum <code>theta_i = base^(-2i/d)</code> is set by one constant (<code>base</code>), not learned, not per-head, not data-dependent. A model that <em>learns</em> its frequencies could allocate resolution where the task needs it.</li>
     <li><strong>Poor native length extrapolation.</strong> Far beyond training length, the fast hands hit angle regimes never seen in training and quality collapses — hence the bolt-on patches (NTK/YaRN/LongRoPE). A scheme that <em>extrapolates by design</em> wouldn't need them.</li>
-    <li><strong>Scalar aliasing.</strong> As §13 showed, summing hands into one score lets distinct gaps collide. The frequency set isn't chosen to <em>minimize</em> collisions over a target window — one could design the spectrum for maximal separability up to, say, 1M tokens.</li>
+    <li><strong>Scalar aliasing.</strong> As §12 showed, summing hands into one score lets distinct gaps collide. The frequency set isn't chosen to <em>minimize</em> collisions over a target window — one could design the spectrum for maximal separability up to, say, 1M tokens.</li>
     <li><strong>Wasted capacity at long range.</strong> Many high-frequency channels contribute near-noise once tokens are far apart, so part of <code>head_dim</code> does little useful work in long-context regimes.</li>
     <li><strong>Token-distance only, not semantic distance.</strong> RoPE measures raw index gaps; it has no notion that some tokens "shouldn't count." Content-adaptive positioning is an open direction it doesn't touch.</li>
     <li><strong>One spectrum for all heads and layers.</strong> Letting heads specialize (some short-range, some long-range) <em>explicitly</em>, rather than faking it through learned <code>W_q, W_k</code> magnitudes, could use the budget more deliberately.</li>
   </ol>
   <p>The throughline: RoPE gives the model a <em>fixed, uniform, content-blind</em> bank of clock hands. Most improvement ideas amount to making those hands <strong>learned, adaptive, or better-conditioned for long context</strong> — without losing RoPE's two non-negotiables: the relative-position property and KV-cache compatibility.</p>
 
-  <h2 id="s17"><span class="num">17.</span>Beyond vanilla RoPE</h2>
+  <h2 id="s15"><span class="num">15.</span>Beyond vanilla RoPE</h2>
   <ul>
     <li><strong>xPos</strong> — bakes per-frequency decay into the rotation (attenuates fast hands with distance).</li>
     <li><strong>ALiBi</strong> — drops rotation; adds a per-head linear distance penalty.</li>
@@ -500,7 +490,7 @@ check d=3.142:  cos(3.142) + cos(6.283) = -1.0 + ( 1.0) = 0</code></pre>
   </ul>
   <p>Open challenge: <strong>learned, content-adaptive emphasis</strong> that stays KV-cache-friendly and keeps long-range retrieval intact.</p>
 
-  <h2 id="s18"><span class="num">18.</span>The reference implementation</h2>
+  <h2 id="s16"><span class="num">16.</span>The reference implementation</h2>
   <p>The models in §1 share this exact code (the half-split dialect) via <code>transformers</code>' <code>#&nbsp;Copied&nbsp;from</code> / modular mechanism — learn it once, read almost every modern open LLM's attention:</p>
 <pre><code><span class="cmt"># transformers/models/qwen3/modeling_qwen3.py  (lines 151-180)</span>
 def rotate_half(x):
@@ -517,7 +507,7 @@ def apply_rotary_pos_emb(q, k, cos, sin, unsqueeze_dim=1):
     sin = sin.unsqueeze(unsqueeze_dim)
     q_embed = (q * cos) + (rotate_half(q) * sin)</code></pre>
 
-  <h2 id="s19"><span class="num">19.</span>Summary — the one-paragraph mental model</h2>
+  <h2 id="s17"><span class="num">17.</span>Summary — the one-paragraph mental model</h2>
 <pre><code>position p        &rarr; how far along the sequence (one number)
 speed theta_i     &rarr; how fast that hand turns (a spectrum of speeds)
 head_dim          &rarr; where the bank of clock hands is stored (orthogonal pairs)
@@ -538,7 +528,7 @@ seq               &rarr; which token (sets how far each hand turns)</code></pre>
 
   <div class="callout warn">
     <span class="label">Note</span>
-    <p style="margin:0">The frequency values in §16's discussion and the period-6/60 hands in §6–7 are illustrative — chosen for clean arithmetic, not a specific model's exact spectrum (real models use <code>theta_i = base^(-2i/d)</code>).</p>
+    <p style="margin:0">The period-6/60 hands in §6–7 are illustrative — chosen for clean arithmetic, not a specific model's exact spectrum. Standard RoPE commonly uses <code>base=10000</code>; long-context models often change that through <code>rope_theta</code> or <code>rope_scaling</code>.</p>
   </div>
 
 </main>
