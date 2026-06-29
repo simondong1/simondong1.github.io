@@ -619,11 +619,12 @@ def apply_rotary_pos_emb(q, k, cos, sin, unsqueeze_dim=1):
     q_embed = (q * cos) + (rotate_half(q) * sin)</code></pre>
 
   <h2 id="s17"><span class="num">17.</span>Summary — the one-paragraph mental model</h2>
-<pre><code>position p        &rarr; how far along the sequence (one number)
-speed theta_i     &rarr; how fast that hand turns (a spectrum of speeds)
-head_dim          &rarr; where the bank of clock hands is stored (orthogonal pairs)
-seq               &rarr; which token (sets how far each hand turns)</code></pre>
-  <p>RoPE turns each token's clock hands by <code>(position * speed)</code>. Because <code>Q·K</code> is index-aligned, each hand compares only against the same hand, so the score depends on the gap <code>(i - j)</code>. One hand is ambiguous (gap 1 looks like gap 7); reading all the hands — like a real clock — pins the gap down, though any single summed score can still alias, which is why we use many hands and heads.</p>
+<pre><code>seq axis        &rarr; chooses the token position p
+head_dim        &rarr; split into d/2 channel-pairs
+pair i          &rarr; gets one speed theta_i = base^(-2i/d)
+angle[p, i]     &rarr; position p * speed theta_i
+RoPE            &rarr; rotate pair i by angle[p, i]</code></pre>
+  <p>The important relationship is: <strong>sequence position chooses how far to turn; head dimension provides the bank of clock hands.</strong> If a head has dimension <code>d</code>, RoPE forms <code>d/2</code> two-dimensional pairs, so there are <code>d/2</code> speeds <code>theta_i</code>. Low-index pairs turn quickly and distinguish nearby positions; high-index pairs turn slowly and stay useful over longer ranges. When query position <code>m</code> meets key position <code>n</code> in <code>Q·K</code>, matching pairs compare against matching pairs, so each speed sees the relative gap <code>m - n</code>. One speed is ambiguous, but the whole bank of speeds forms a multi-scale clock for relative position.</p>
 
   <div class="callout">
     <p style="margin:0">RoPE is <strong>position turned into clock-hand angles, read back as relative distance.</strong></p>
