@@ -307,7 +307,7 @@
   <div class="wrap">
     <p class="eyebrow">Transformers · Position Encoding</p>
     <h1 class="title">Understanding RoPE <span class="title-expansion">(Rotary Position Embeddings)</span></h1>
-    <p class="subtitle">A visual tutorial on Rotary Position Embeddings: why Transformers need position, how RoPE turns it into rotation, and why the clock-hand intuition explains the math.</p>
+    <p class="subtitle">A visual tutorial on Rotary Position Embeddings: position chooses how far to turn, head-dim pairs choose which clock speed to use, and the attention score reads the relative angle.</p>
     <div class="byline">
       <a class="who" href="https://x.com/dongsixiang">Simon Dong</a>
       <span class="dot">•</span>
@@ -320,12 +320,12 @@
 
 <main class="wrap">
 
-  <p class="lede"><strong>RoPE is one of the quiet pieces of infrastructure behind modern language models.</strong> It does not add a learned position vector or a bias table. It rotates queries and keys so that the attention score naturally depends on relative distance. This article builds that idea from a single 2-D clock hand to the full multi-frequency implementation used in contemporary LLMs.</p>
+  <p class="lede"><strong>RoPE is one of the quiet pieces of infrastructure behind modern language models.</strong> It does not add a learned position vector or a bias table. It rotates queries and keys so that the attention score naturally depends on relative distance. The key mental model: RoPE does one rotation per channel-pair; the token position says <em>how far</em> to turn, and the channel-pair index says <em>which clock speed</em> to use.</p>
 
   <div class="callout note">
     <span class="label">What you'll need</span>
     <p>You should be comfortable with vectors and dot products, basic trig (<code>sin</code>/<code>cos</code>), matrix multiplication, and the rough idea of self-attention (Q, K, V). Everything else is built up from scratch.</p>
-    <p style="margin-bottom:0">Notation: <code>d</code> = head dimension, <code>p</code>/<code>m</code>/<code>n</code> = token positions, <code>i</code> = channel-pair index, <code>theta_i</code> = a frequency, <code>@</code> = matrix multiply.</p>
+    <p style="margin-bottom:0">Notation: <code>d</code> = head dimension, <code>p</code>/<code>m</code>/<code>n</code> = token positions, <code>i</code> = channel-pair index, <code>theta_i</code> = the speed of pair <code>i</code>, and <code>angle[p,i] = p * theta_i</code>.</p>
   </div>
 
   <nav class="toc">
@@ -396,13 +396,14 @@
   <h2 id="s3"><span class="num">3.</span>The two axes (don't merge them)</h2>
   <p>Inside a head, Q and K have shape:</p>
 <pre><code>query / key:  (batch, n_heads, seq, head_dim)</code></pre>
-  <p>Two axes drive RoPE:</p>
-<pre><code>seq       &rarr; WHICH token = its position   &rarr; how MUCH to rotate
-head_dim  &rarr; the token's feature vector   &rarr; the thing being rotated</code></pre>
-  <p>Position is just an integer per token: <code>position_ids = [0, 1, 2, 3, ...]</code>.</p>
+  <p>Two axes drive RoPE, and they play different roles:</p>
+<pre><code>seq axis   &rarr; chooses position p       &rarr; how FAR to rotate
+head_dim   &rarr; split into pairs i      &rarr; which clock speed theta_i to use</code></pre>
+  <p>Position is just an integer per token: <code>position_ids = [0, 1, 2, 3, ...]</code>. Head dimension is where the clocks live: a head of size <code>d</code> gives <code>d/2</code> two-dimensional pairs, and each pair gets its own speed <code>theta_i</code>. The actual rotation angle is the product:</p>
+<pre><code>angle[p, i] = position p * speed theta_i</code></pre>
 
   <h2 id="s4"><span class="num">4.</span>One clock hand: rotating a single 2-D pair</h2>
-  <p>Smallest case: <code>head_dim = 2</code>, so each token's vector is the <strong>tip of a clock hand</strong>. Pick a turning speed <code>theta = 1</code> rad per position. A hand starting at <code>(1, 0)</code>:</p>
+  <p>Smallest case: <code>head_dim = 2</code>, so there is only one pair and therefore only one clock. In this toy case, freeze the speed at <code>theta = 1</code> rad per position. Now the only thing changing is the token position <code>p</code>: bigger <code>p</code> means turn the same hand farther. A hand starting at <code>(1, 0)</code>:</p>
 <pre><code>position p=0:  turned 0 rad &rarr; ( 1.000,  0.000)
 position p=1:  turned 1 rad &rarr; ( 0.540,  0.841)
 position p=2:  turned 2 rad &rarr; (-0.416,  0.909)
@@ -455,7 +456,7 @@ position p=3:  turned 3 rad &rarr; (-0.990,  0.141)</code></pre>
   \begin{pmatrix} \cos a & -\sin a \\ \sin a & \cos a \end{pmatrix}
   \begin{pmatrix} x \\ y \end{pmatrix}
   \]
-  <p>A clock hand has fixed length — only its direction changes. Position has become <strong>an angle</strong>.</p>
+  <p>A clock hand has fixed length — only its direction changes. In this one-pair example, position has become <strong>an angle</strong>. Later, with more head dimensions, we will have many clocks with different speeds; position still tells each clock how far to turn.</p>
 
   <h2 id="s5"><span class="num">5.</span>Why turning hands? The relative-position property</h2>
   <p>Query at position <code>m</code>, key at position <code>n</code>, both hands starting at <code>(1, 0)</code>:</p>
@@ -483,7 +484,7 @@ gap 2  vs  gap 4              &rarr; both score -0.50</code></pre>
   <p>So with this one hand, a token <strong>1 position away</strong> is indistinguishable from one <strong>5 or 7 positions away</strong> — identical score, <code>0.50</code>. That's the wrap problem in concrete form: one speed gives one ambiguous dial. We need more hands.</p>
 
   <h2 id="s7"><span class="num">7.</span>Many hands at different speeds (a clock)</h2>
-  <p>Add a <strong>slow</strong> hand with <strong>period 60 positions</strong> (<code>theta = 2*pi/60 &approx; 0.105</code>) alongside the fast period-6 hand. Compare the two gaps that collided above — gap 1 vs gap 7:</p>
+  <p>Now add a second pair in the head dimension: a <strong>slow</strong> hand with <strong>period 60 positions</strong> (<code>theta = 2*pi/60 &approx; 0.105</code>) alongside the fast period-6 hand. This is not a second rotation applied to the same pair; it is a different pair in <code>head_dim</code>, with a different speed. Compare the two gaps that collided above — gap 1 vs gap 7:</p>
 <pre><code>gap d:            0       1       6       7
 fast hand (T=6):  1.00    0.50    1.00    0.50      <span class="cmt">&larr; 0&amp;6 collide, 1&amp;7 collide</span>
 slow hand (T=60): 1.00    0.995   0.809   0.743     <span class="cmt">&larr; all four distinct</span></code></pre>
@@ -492,19 +493,19 @@ slow hand (T=60): 1.00    0.995   0.809   0.743     <span class="cmt">&larr; all
 gap 1 &rarr; (0.50, 0.995)
 gap 6 &rarr; (1.00, 0.809)
 gap 7 &rarr; (0.50, 0.743)     <span class="cmt"># no two pairs match</span></code></pre>
-  <p>This is exactly a clock: the second hand pins down <em>where in the minute</em> you are (fine, but wraps every 60s); the hour hand tells you <em>which hour</em> (coarse, but no wrap over 12h). Neither alone gives the time; together they do.</p>
+  <p>This is exactly a clock: the second hand and hour hand are different hands, not two turns of the same hand. Each hand has its own speed; the same position gap turns each hand by a different amount. The fast hand pins down fine local differences, while the slow hand keeps long-range gaps from wrapping into the same reading.</p>
 <pre><code>fast hand (low i):  big move per step  &rarr; separates NEARBY gaps, wraps quickly
 slow hand (high i): tiny move per step &rarr; coarse nearby, stable over long range</code></pre>
   <p class="codecap">Real models don't pick round periods — they use <code>theta_i = base^(-2i/d)</code>, a whole geometric spread of speeds. Periods 6 and 60 were chosen only so the collisions land on clean integers.</p>
 
   <h2 id="s8"><span class="num">8.</span>Which two channels share a hand?</h2>
-  <p>With many pairs, we choose <em>which</em> two channels form each rotating pair. The convention in essentially all current models is <strong>half-split</strong>: pair channel <code>i</code> with channel <code>i + d/2</code>.</p>
+  <p>With many pairs, we choose <em>which</em> two channels form each clock hand. Each pair is one two-dimensional plane that gets one speed <code>theta_i</code>. The convention in essentially all current models is <strong>half-split</strong>: pair channel <code>i</code> with channel <code>i + d/2</code>.</p>
 <pre><code>d = 4:   pair 0 = (channel 0, channel 2)    <span class="cmt"># share the fast hand</span>
          pair 1 = (channel 1, channel 3)    <span class="cmt"># share the slow hand</span></code></pre>
   <p>The original paper paired adjacent channels <code>(0,1),(2,3)</code>; half-split is equivalent up to a fixed permutation but slices contiguously — faster on GPUs.</p>
 
   <h2 id="s9"><span class="num">9.</span>The full formula, broken down</h2>
-  <p>For a token at position <code>p</code>:</p>
+  <p>For a token at position <code>p</code>, RoPE performs <strong>one rotation per pair</strong>. The angle of that rotation combines the two ideas we've been separating: position chooses <em>how far</em>, and pair index chooses <em>which speed</em>.</p>
 <pre><code><span class="cmt"># 1. Speeds, one per hand/pair  (i = 0 .. d/2 - 1)</span>
 theta_i = base ** (-2*i / d)
 
@@ -514,7 +515,7 @@ alpha[p, i] = p * theta_i
 <span class="cmt"># 3. Turn each pair (x_i, x_{i+d/2}) by alpha[p, i]</span>
 x'_i       = x_i       * cos(alpha[p,i]) - x_{i+d/2} * sin(alpha[p,i])
 x'_{i+d/2} = x_{i+d/2} * cos(alpha[p,i]) + x_i       * sin(alpha[p,i])</code></pre>
-  <p><code>p</code> and <code>i</code> are <strong>different axes</strong>: <code>theta_i</code> is a fixed speed per hand, <code>p</code> is the position, the angle is their product. In the original RoPE formulation, and in many standard implementations, the default base is <code>10000</code>. Long-context models often change this value (for example through <code>rope_theta</code> or <code>rope_scaling</code>), but <code>10000</code> is the useful default to learn first.</p>
+  <p><code>p</code> and <code>i</code> are <strong>different axes</strong>: <code>p</code> comes from the sequence axis; <code>i</code> comes from the head-dim pair. <code>theta_i</code> is the fixed speed of pair <code>i</code>; the angle is <code>p * theta_i</code>. In the original RoPE formulation, and in many standard implementations, the default base is <code>10000</code>. Long-context models often change this value (for example through <code>rope_theta</code> or <code>rope_scaling</code>), but <code>10000</code> is the useful default to learn first.</p>
   <p>Table for <code>d=4</code>, <code>base=10000</code> (<code>theta_0=1.0</code>, <code>theta_1=0.01</code>):</p>
 <pre><code>                hand i=0       hand i=1
               (theta=1.0)    (theta=0.01)
@@ -535,7 +536,7 @@ rotate_half(x) = [-3, -4, 1, 2]</code></pre>
 <pre><code>angles = [alpha_0, alpha_1]              <span class="cmt"># one per hand, length d/2</span>
 emb    = concat(angles, angles)          <span class="cmt"># length d</span>
 x_rope = x * cos(emb) + rotate_half(x) * sin(emb)</code></pre>
-  <p>Why it equals §9: the rotation matrix has a <code>cos</code> part (keeps each channel aligned with itself &rarr; <code>x * cos</code>) and a <code>sin</code> part (pulls in the paired channel, swapped and sign-flipped &rarr; exactly <code>rotate_half</code>).</p>
+  <p>Why it equals §9: <code>emb</code> stores the angle <code>p * theta_i</code> for every pair, duplicated so both channels in the pair see the same angle. The rotation matrix has a <code>cos</code> part (keeps each channel aligned with itself &rarr; <code>x * cos</code>) and a <code>sin</code> part (pulls in the paired channel, swapped and sign-flipped &rarr; exactly <code>rotate_half</code>).</p>
 
   <h2 id="s11"><span class="num">11.</span>A full worked example (two hands active)</h2>
   <p><code>d = 4</code>, <code>theta_0 = 1</code>, <code>theta_1 = 0.01</code>.</p>
@@ -619,12 +620,12 @@ def apply_rotary_pos_emb(q, k, cos, sin, unsqueeze_dim=1):
     q_embed = (q * cos) + (rotate_half(q) * sin)</code></pre>
 
   <h2 id="s17"><span class="num">17.</span>Summary — the one-paragraph mental model</h2>
-<pre><code>seq axis        &rarr; chooses the token position p
+<pre><code>seq axis        &rarr; gives position p
 head_dim        &rarr; split into d/2 channel-pairs
-pair i          &rarr; gets one speed theta_i = base^(-2i/d)
-angle[p, i]     &rarr; position p * speed theta_i
-RoPE            &rarr; rotate pair i by angle[p, i]</code></pre>
-  <p>The important relationship is: <strong>sequence position chooses how far to turn; head dimension provides the bank of clock hands.</strong> If a head has dimension <code>d</code>, RoPE forms <code>d/2</code> two-dimensional pairs, so there are <code>d/2</code> speeds <code>theta_i</code>. Low-index pairs turn quickly and distinguish nearby positions; high-index pairs turn slowly and stay useful over longer ranges. When query position <code>m</code> meets key position <code>n</code> in <code>Q·K</code>, matching pairs compare against matching pairs, so each speed sees the relative gap <code>m - n</code>. One speed is ambiguous, but the whole bank of speeds forms a multi-scale clock for relative position.</p>
+pair i          &rarr; chooses speed theta_i = base^(-2i/d)
+angle[p, i]     &rarr; p * theta_i
+RoPE            &rarr; one rotation of pair i by angle[p, i]</code></pre>
+  <p>The important relationship is: <strong>there are not two rotations; there is one rotation whose angle has two inputs.</strong> The sequence axis gives <code>p</code>, the head-dim pair gives <code>theta_i</code>, and their product gives the angle. If a head has dimension <code>d</code>, RoPE forms <code>d/2</code> two-dimensional pairs, so there are <code>d/2</code> speeds. Low-index pairs turn quickly and distinguish nearby positions; high-index pairs turn slowly and stay useful over longer ranges. When query position <code>m</code> meets key position <code>n</code> in <code>Q·K</code>, matching pairs compare against matching pairs, so each speed sees the relative gap <code>m - n</code>. One speed is ambiguous, but the whole bank of speeds forms a multi-scale clock for relative position.</p>
 
   <div class="callout">
     <p style="margin:0">RoPE is <strong>position turned into clock-hand angles, read back as relative distance.</strong></p>
