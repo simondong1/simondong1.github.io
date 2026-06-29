@@ -3,30 +3,37 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Simon Dong</title>
+  <title>Simon Dong — Blog</title>
   <style>
     body{margin:0;background:#fbfbfa;color:#1f2328;
       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;line-height:1.6}
-    main{max-width:680px;margin:0 auto;padding:64px 24px}
-    h1{font-size:2rem;letter-spacing:-.02em;margin:0 0 .3rem}
-    .sub{color:#6a737d;margin:0 0 2.5rem}
+    main{max-width:760px;margin:0 auto;padding:72px 24px}
+    h1{font-size:2.3rem;letter-spacing:-.035em;margin:0 0 .35rem;line-height:1.1}
+    .sub{color:#57606a;margin:0 0 3rem;font-size:1.05rem;max-width:560px}
     a{color:#4f46e5;text-decoration:none}
     a:hover{text-decoration:underline}
-    .card{margin-top:16px;padding:18px 20px;border:1px solid #e8e8e6;
-      border-radius:12px;background:#fff}
-    .card h2{font-size:1rem;text-transform:uppercase;letter-spacing:.08em;
-      color:#8b949e;margin:0 0 10px}
-    .card p{margin:.4rem 0}
+    .section-title{font-size:.82rem;text-transform:uppercase;letter-spacing:.12em;
+      color:#8b949e;font-weight:700;margin:0 0 14px}
+    .post{display:block;margin-top:16px;padding:22px 24px;border:1px solid #e8e8e6;
+      border-radius:14px;background:#fff;color:inherit;text-decoration:none;
+      box-shadow:0 18px 42px -34px rgba(13,17,23,.35)}
+    .post:hover{text-decoration:none;border-color:#d8daf8}
+    .meta{font-size:.84rem;color:#8b949e;margin:0 0 8px}
+    .post h2{font-size:1.28rem;letter-spacing:-.02em;margin:0 0 8px;line-height:1.25}
+    .post p{margin:0;color:#57606a}
   </style>
 </head>
 <body>
   <main>
     <h1>Simon Dong</h1>
-    <p class="sub">MLE @ Roblox · CS @ CMU</p>
-    <div class="card">
-      <h2>Learning Notes</h2>
-      <p><a href="rope.html">Understanding RoPE — A Step-by-Step Tutorial on Rotary Position Embeddings</a></p>
-    </div>
+    <p class="sub">MLE @ Roblox · CS @ CMU. Writing about machine learning systems, LLM internals, and the engineering details behind modern models.</p>
+
+    <h2 class="section-title">Blog</h2>
+    <a class="post" href="rope.html">
+      <p class="meta">June 2026 · Transformers · Position Encoding</p>
+      <h2>Understanding RoPE — A Step-by-Step Tutorial on Rotary Position Embeddings</h2>
+      <p>A visual explanation of how RoPE turns token position into rotation, why the clock-hand intuition works, and why modern LLMs still use it.</p>
+    </a>
   </main>
 </body>
 </html>
