@@ -232,25 +232,29 @@ KV head g(h):   0   0   0   0   1   1   1   1
   <p>GQA trades a little expressiveness — query heads in a group can no longer attend to fully independent key/value subspaces — for a large reduction in KV-cache memory and the memory-bandwidth that bottlenecks decoding. Empirically (Ainslie et al., 2023), a moderate \(r\) (e.g. 4–8) recovers nearly all of MHA's quality while cutting the cache several-fold.</p>
   <p>One thing must stay consistent: the grouping is a <strong>convention fixed at training time</strong>. A checkpoint trained with contiguous interleaved groups must be served the same way; swapping the pattern at inference silently corrupts attention. Hugging Face standardized on <code>repeat_interleave</code>-style contiguous groups, so all its checkpoints assume \(g(h)=\lfloor h/r\rfloor\).</p>
 
-  <h2 id="s6"><span class="num">6.</span>GQA in 2026 models</h2>
-  <p>Is GQA still used in 2026? <strong>Yes — but increasingly as the <em>baseline</em> and <em>backbone</em> rather than the whole story.</strong> Mid-size and open models still ship plain GQA; frontier long-context models keep a GQA-style backbone and add <em>sparse selection</em> on top, or replace KV-sharing with <em>Multi-head Latent Attention</em> (MLA).</p>
+  <h2 id="s6"><span class="num">6.</span>GQA across open models (2026)</h2>
+  <p>Is GQA still used in 2026? <strong>Yes — it is still the most common attention scheme in open models.</strong> In one architecture survey of ~80 recent open models, about two-thirds use GQA-family attention. It's the default in most of the big open releases. (Here "GQA" means <em>standard</em> grouped-query attention as in Qwen3 — not MLA, sparse, or linear variants, which are separate designs.)</p>
   <div class="wrapscroll">
   <table class="ptable">
-    <thead><tr><th>Model (2026)</th><th>KV scheme</th><th>Notes</th></tr></thead>
+    <thead><tr><th>Model</th><th>Attention</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td>Gemma 4</td><td>GQA + sliding window</td><td>classic GQA, local/global attention interleave</td></tr>
-      <tr><td>MiniMax M3</td><td>GQA + MSA (sparse)</td><td>MiniMax Sparse Attention selects KV blocks per GQA group</td></tr>
-      <tr><td>DeepSeek-V4</td><td>Sparse (CSA / HCA)</td><td>moved past MLA; benchmarks vs a GQA-8 baseline</td></tr>
-      <tr><td>GLM-5.2</td><td>MLA + DSA (sparse)</td><td>DeepSeek Sparse Attention on a latent-attention backbone</td></tr>
-      <tr><td>Kimi K2.7</td><td>MLA (+ sparse)</td><td>DeepSeek-V3-style latent attention text backbone</td></tr>
-      <tr><td>Mistral 4</td><td>MLA-style (low-rank KV)</td><td>config carries <code>kv_lora_rank</code></td></tr>
+      <tr><td>Llama 4 (Scout / Maverick)</td><td>GQA</td><td>with chunked local / global layers</td></tr>
+      <tr><td>Gemma 3 / Gemma 4</td><td>GQA</td><td>~5:1 sliding-window / global interleave</td></tr>
+      <tr><td>gpt-oss 120B / 20B</td><td>GQA (64 q : 8 kv)</td><td>alternating banded / dense attention</td></tr>
+      <tr><td>Qwen3 (32B, 235B)</td><td>GQA</td><td>the canonical GQA design</td></tr>
+      <tr><td>Mistral Small 3.x</td><td>GQA</td><td>dense</td></tr>
+      <tr><td>OLMo 3</td><td>GQA</td><td>fully open weights + data</td></tr>
+      <tr><td>Nemotron 3 (Nano/Super/Ultra)</td><td>GQA</td><td>attention layers; hybrid with Mamba</td></tr>
+      <tr><td>Granite 4</td><td>GQA</td><td>hybrid with Mamba layers</td></tr>
+      <tr><td>Phi-4</td><td>GQA</td><td>dense</td></tr>
+      <tr><td>Command A+</td><td>GQA</td><td>Cohere; agentic / RAG focus</td></tr>
     </tbody>
   </table>
   </div>
-  <p>The 2026 takeaway: <strong>GQA didn't go away — it became the reference point.</strong> Sparse designs like MiniMax's MSA explicitly operate "per GQA group," and DeepSeek-V4 still quotes "GQA-8, head dim 128" as the standard cost baseline. The frontier moves are (a) <strong>sparse attention</strong> — only attend to selected KV blocks — and (b) <strong>latent attention (MLA)</strong> — compress K/V into a shared low-rank latent. Both are best understood as answers to the same KV-cache pressure that motivated GQA in the first place. Those are the next posts in this series.</p>
+  <p>What about the very top of the 2026 open leaderboard (Artificial Analysis)? Those have mostly moved <em>beyond</em> plain GQA — and each is a future post in this series: <strong>GLM-5.2</strong> and <strong>Kimi K2.7</strong> use Multi-head Latent Attention (MLA); <strong>DeepSeek-V4</strong> uses sparse attention (CSA / HCA); <strong>MiniMax-M3</strong> keeps a GQA backbone but adds sparse block selection (MSA); <strong>Qwen3.5</strong> uses a gated linear-attention hybrid. Plain GQA — the kind in this post — is the broad baseline those specializations are built on, or measured against.</p>
 
   <h2 id="s7"><span class="num">7.</span>Summary</h2>
-  <p>GQA = full query heads, fewer KV heads, with a fixed <strong>group mapping</strong> \(g(h)=\lfloor h/r\rfloor\) realized by an <em>interleaved</em> <code>repeat_kv</code>. It shrinks the KV cache by a factor of \(r\) while keeping nearly all of MHA's quality, which is why it underpins almost every modern LLM — and remains the baseline that 2026's sparse and latent attention variants are measured against.</p>
+  <p>GQA = full query heads, fewer KV heads, with a fixed <strong>group mapping</strong> \(g(h)=\lfloor h/r\rfloor\) realized by an <em>interleaved</em> <code>repeat_kv</code>. It shrinks the KV cache by a factor of \(r\) while keeping nearly all of MHA's quality, which is why it underpins most open LLMs — and remains the baseline that 2026's sparse, latent, and linear attention variants are measured against.</p>
 
   <div class="callout">
     <p style="margin:0">GQA in one line: <strong>keep every query head, share the keys and values in groups.</strong></p>
@@ -264,6 +268,8 @@ KV head g(h):   0   0   0   0   1   1   1   1
     <li>Harvard NLP, <a href="https://nlp.seas.harvard.edu/annotated-transformer/"><em>The Annotated Transformer</em></a> — line-by-line implementation.</li>
     <li>Shazeer, <em>Fast Transformer Decoding (MQA)</em> (arXiv 1911.02150) — multi-query attention.</li>
     <li>Ainslie et al., <em>GQA: Training Generalized Multi-Query Transformer Models</em> (arXiv 2305.13245) — the GQA paper.</li>
+    <li>Sebastian Raschka, <a href="https://sebastianraschka.com/llm-architecture-gallery/">LLM Architecture Gallery</a> — attention-mechanism distribution across open models.</li>
+    <li><a href="https://artificialanalysis.ai/leaderboards/models">Artificial Analysis LLM Leaderboard</a> — 2026 open-weights model rankings.</li>
   </ul>
 
   <h3>How to cite this post</h3>
