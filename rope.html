@@ -78,6 +78,15 @@
     font-size:1.22rem;color:var(--ink-soft);
     margin:0 0 1.9rem;line-height:1.55;max-width:42rem;
   }
+  .acronym{
+    display:inline-flex;align-items:center;gap:.5rem;
+    font-family:"Inter",system-ui,sans-serif;
+    font-size:.9rem;font-weight:600;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:.45rem .8rem;margin:0 0 1.35rem;
+    box-shadow:0 10px 24px -22px rgba(13,17,23,.45);
+  }
+  .acronym .abbr{color:var(--accent);letter-spacing:.04em}
   .byline{
     font-family:"Inter",system-ui,sans-serif;
     display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;
@@ -238,6 +247,7 @@
   <div class="wrap">
     <p class="eyebrow">Transformers · Position Encoding</p>
     <h1 class="title">Understanding RoPE</h1>
+    <div class="acronym"><span class="abbr">RoPE</span><span>=</span><span>Rotary Position Embeddings</span></div>
     <p class="subtitle">A visual tutorial on Rotary Position Embeddings: why Transformers need position, how RoPE turns it into rotation, and why the clock-hand intuition explains the math.</p>
     <div class="byline">
       <span class="who">sdong</span>
