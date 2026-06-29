@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Understanding GQA (Grouped-Query Attention)</title>
+<meta name="description" content="A brief, visual explanation of Grouped-Query Attention: the query-to-KV head mapping, why it shrinks the KV cache, and where it stands among 2026 attention variants." />
+<link rel="canonical" href="https://simondong1.github.io/gqa.html" />
+<link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
+<meta property="og:title" content="Understanding GQA (Grouped-Query Attention)" />
+<meta property="og:description" content="The query-to-KV head mapping, why it shrinks the KV cache, and where GQA stands among 2026 attention variants." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/gqa.html" />
+<meta property="og:site_name" content="Simon Dong" />
+<meta property="og:image" content="https://simondong1.github.io/assets/gqa-og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Grouped-Query Attention: many query heads share each key/value head." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Understanding GQA (Grouped-Query Attention)" />
+<meta name="twitter:description" content="The query-to-KV head mapping, why it shrinks the KV cache, and where GQA stands among 2026 attention variants." />
+<meta name="twitter:image" content="https://simondong1.github.io/assets/gqa-og.png" />
+<meta name="author" content="Simon Dong" />
+<meta name="citation_title" content="Understanding GQA (Grouped-Query Attention)" />
+<meta name="citation_author" content="Dong, Simon" />
+<meta name="citation_publication_date" content="2026/06/29" />
+<meta name="citation_fulltext_html_url" content="https://simondong1.github.io/gqa.html" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Understanding GQA (Grouped-Query Attention)",
+  "description": "A brief, visual explanation of Grouped-Query Attention: the query-to-KV head mapping, why it shrinks the KV cache, and where it stands among 2026 attention variants.",
+  "author": { "@type": "Person", "name": "Simon Dong", "url": "https://www.linkedin.com/in/sixiangdong1/" },
+  "datePublished": "2026-06-29",
+  "dateModified": "2026-06-29",
+  "mainEntityOfPage": "https://simondong1.github.io/gqa.html",
+  "image": "https://simondong1.github.io/assets/gqa-og.png"
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<script>
+  MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  :root{
+    --bg:#fbfbfa; --surface:#ffffff; --ink:#1f2328; --ink-soft:#475059;
+    --muted:#8b949e; --line:#e8e8e6; --accent:#4f46e5; --accent-soft:#eef0fe;
+    --code-bg:#0d1117; --code-ink:#e6edf3; --code-dim:#8b949e; --maxw:46rem;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:1.05rem;line-height:1.68;-webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;font-feature-settings:"kern" 1,"liga" 1,"calt" 1;
+  }
+  ::selection{background:var(--accent-soft)}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+
+  header.hero{padding:6rem 0 2.8rem;border-bottom:1px solid var(--line);margin-bottom:3.4rem}
+  .eyebrow{font-family:"Inter",sans-serif;font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 1.1rem}
+  h1.title{font-family:"Inter",sans-serif;font-weight:800;font-size:clamp(2.4rem,5.6vw,4rem);line-height:1.08;letter-spacing:-.03em;margin:0 0 1rem;color:var(--ink)}
+  .title-expansion{display:block;margin-top:.35rem;font-size:clamp(1.15rem,2.4vw,1.65rem);line-height:1.2;letter-spacing:-.02em;color:var(--ink-soft);font-weight:650}
+  .subtitle{font-size:1.22rem;color:var(--ink-soft);margin:0 0 1.9rem;line-height:1.55;max-width:42rem}
+  .byline{font-family:"Inter",sans-serif;display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-size:.9rem;color:var(--muted)}
+  .byline .who{color:var(--ink);font-weight:600}
+  .byline .dot{color:var(--line)}
+
+  h2{font-family:"Inter",sans-serif;font-weight:700;font-size:1.7rem;letter-spacing:-.02em;line-height:1.2;margin:3.4rem 0 1rem;scroll-margin-top:1.5rem}
+  h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}
+  h3{font-family:"Inter",sans-serif;font-weight:600;font-size:1.18rem;margin:2rem 0 .6rem;letter-spacing:-.01em}
+  p{margin:1.05rem 0}
+  .lede{font-size:1.22rem;line-height:1.62;letter-spacing:-.01em;color:var(--ink);margin:0 0 1.8rem}
+  .lede strong{font-weight:650}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+  a:hover{border-color:var(--accent)}
+  strong{font-weight:600;color:var(--ink)}
+  em{font-style:italic}
+  ul,ol{margin:1.1rem 0;padding-left:1.3rem}
+  li{margin:.45rem 0}
+
+  code{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em;background:#f0f1f4;color:#cf2a6b;padding:.12em .4em;border-radius:5px;border:1px solid #e7e8ec}
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:1.3rem 1.4rem;margin:1.6rem 0;overflow-x:auto;font-size:.83rem;line-height:1.62;box-shadow:0 10px 30px -18px rgba(13,17,23,.55);border:1px solid #1c2230}
+  pre code{background:none;border:none;color:inherit;padding:0;font-size:.92rem;font-family:"JetBrains Mono",ui-monospace,monospace}
+  pre .cmt{color:var(--code-dim)}
+
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:1.1rem 1.3rem;margin:1.8rem 0;font-size:1rem;line-height:1.6}
+  .callout.note{border-left-color:#0ea5e9}
+  .callout.warn{border-left-color:#f59e0b}
+  .callout .label{font-family:"Inter",sans-serif;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);display:block;margin-bottom:.35rem}
+  .callout.note .label{color:#0ea5e9}
+  .callout.warn .label{color:#d97706}
+  .callout p{margin:.4rem 0}
+
+  nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.5rem;margin:0 0 2rem;font-family:"Inter",sans-serif}
+  nav.toc .toc-title{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.8rem}
+  nav.toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2rem;font-size:.93rem}
+  nav.toc li{margin:.3rem 0;break-inside:avoid}
+  nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.16rem .5rem;border-radius:6px;line-height:1.4;transition:background .15s,color .15s}
+  nav.toc a:hover{color:var(--accent);background:var(--accent-soft)}
+  nav.toc a.active{color:var(--accent);background:var(--accent-soft);font-weight:600}
+  nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}
+  @media (min-width:1280px){
+    nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 46rem)/2 - 15.5rem);width:13.5rem;max-height:calc(100vh - 7rem);overflow-y:auto;background:none;border:none;border-radius:0;padding:0;margin:0}
+    nav.toc ol{columns:1;column-gap:0;font-size:.82rem}
+    nav.toc .toc-title{margin-bottom:.7rem}
+    nav.toc::-webkit-scrollbar{width:6px}
+    nav.toc::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  }
+
+  table.ptable{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.92rem}
+  table.ptable th,table.ptable td{text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+  table.ptable th{font-family:"Inter",sans-serif;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+  table.ptable td:first-child{font-weight:600;white-space:nowrap}
+  .wrapscroll{overflow-x:auto}
+
+  mjx-container[display="true"]{margin:1.5rem 0 !important;overflow-x:auto;overflow-y:hidden}
+
+  footer{border-top:1px solid var(--line);margin-top:4rem;padding:2.5rem 0 4rem;font-family:"Inter",sans-serif;font-size:.9rem;color:var(--muted)}
+  footer a{color:var(--ink-soft)}
+
+  @media (max-width:640px){
+    body{font-size:1.06rem}
+    header.hero{padding:3.5rem 0 2rem}
+    nav.toc ol{columns:1}
+    h2{font-size:1.45rem}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Attention Variants · Part 1</p>
+    <h1 class="title">Understanding GQA <span class="title-expansion">(Grouped-Query Attention)</span></h1>
+    <p class="subtitle">How many query heads come to share a single key/value head — the mapping that powers the KV cache of nearly every modern LLM.</p>
+    <div class="byline">
+      <span class="who">sdong</span>
+      <span class="dot">•</span>
+      <span>June 2026</span>
+      <span class="dot">•</span>
+      <span>~9 min read</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <p class="lede"><strong>Grouped-Query Attention (GQA) is the quiet default of modern attention.</strong> It keeps full multi-head queries but lets several query heads share one key/value head — shrinking the KV cache with almost no quality loss. This post focuses on the part people gloss over: the exact <em>query-to-KV mapping</em>.</p>
+
+  <div class="callout note">
+    <span class="label">First in a series</span>
+    <p>This is part 1 of a series working through the attention variants you actually see in 2026 models — <strong>MHA, MQA, GQA, MLA, sliding-window, and the new sparse-attention designs (DSA, MSA)</strong>. We start with GQA because every later variant is described relative to it.</p>
+    <p style="margin-bottom:0">Assumed background: self-attention and multi-head attention. If those are rusty, see the references in §6 first.</p>
+  </div>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#s1"><span class="n">1</span>Why GQA exists</a></li>
+      <li><a href="#s2"><span class="n">2</span>MHA &rarr; MQA &rarr; GQA</a></li>
+      <li><a href="#s3"><span class="n">3</span>The query&rarr;KV mapping</a></li>
+      <li><a href="#s4"><span class="n">4</span>A worked example</a></li>
+      <li><a href="#s5"><span class="n">5</span>The trade-off</a></li>
+      <li><a href="#s6"><span class="n">6</span>GQA in 2026 models</a></li>
+      <li><a href="#s7"><span class="n">7</span>Summary &amp; references</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="s1"><span class="num">1.</span>Why GQA exists: the KV-cache bottleneck</h2>
+  <p>During generation, a Transformer caches the keys and values of every past token so it doesn't recompute them each step. That <strong>KV cache</strong> grows with sequence length and dominates memory and bandwidth at long context.</p>
+  <p>Its size scales with the number of <em>key/value heads</em>:</p>
+  \[
+  \text{KV cache} \;=\; 2 \times L \times T \times H_{kv} \times d \times \text{(bytes)}
+  \]
+  <p>where \(L\) = layers, \(T\) = tokens, \(H_{kv}\) = KV heads, \(d\) = head dim. Standard multi-head attention sets \(H_{kv}=H\) (one KV head per query head). The KV cache, not the parameters, is what makes long-context decoding expensive — so the obvious lever is to <strong>reduce \(H_{kv}\)</strong> while keeping the query heads intact. That is exactly what GQA does.</p>
+
+  <h2 id="s2"><span class="num">2.</span>The spectrum: MHA &rarr; MQA &rarr; GQA</h2>
+  <p>All three use the same per-head attention math. They differ only in <strong>how many KV heads exist</strong> and therefore how query heads share them.</p>
+  <div class="wrapscroll">
+  <table class="ptable">
+    <thead><tr><th>Scheme</th><th>KV heads</th><th>Sharing</th><th>KV cache</th></tr></thead>
+    <tbody>
+      <tr><td>MHA</td><td><code>H_kv = H</code></td><td>1 query head &rarr; 1 KV head</td><td>largest</td></tr>
+      <tr><td>GQA</td><td><code>1 &lt; H_kv &lt; H</code></td><td>a group of query heads &rarr; 1 KV head</td><td>medium</td></tr>
+      <tr><td>MQA</td><td><code>H_kv = 1</code></td><td>all query heads &rarr; 1 KV head</td><td>smallest</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>MQA (one KV head for everything) saves the most memory but can hurt quality and training stability. MHA is highest quality but heaviest. <strong>GQA is the interpolation</strong>: a few KV heads, each shared by a small group of query heads — most of MHA's quality at a fraction of the cache. The group size is the single knob:</p>
+  \[
+  r \;=\; \frac{H}{H_{kv}} \quad\text{(query heads per KV head)}
+  \]
+  <p>\(r=1\) is MHA; \(r=H\) is MQA; anything in between is GQA.</p>
+
+  <h2 id="s3"><span class="num">3.</span>The query&rarr;KV mapping (the part that matters)</h2>
+  <p>The whole idea of GQA lives in one function: which KV head does query head \(h\) use? With contiguous groups of size \(r\),</p>
+  \[
+  g(h) \;=\; \left\lfloor \frac{h}{r} \right\rfloor \qquad (h = 0,\dots,H-1)
+  \]
+  <p>So query heads <code>0..r-1</code> share KV head 0, the next <code>r</code> share KV head 1, and so on. In code this is realized by <em>replicating</em> each KV head \(r\) times so the head counts line up for the matmuls — the standard <code>repeat_kv</code>:</p>
+<pre><code><span class="cmt"># key/value: (batch, H_kv, seq, d)  ->  (batch, H, seq, d)</span>
+def repeat_kv(x, r):
+    b, h_kv, t, d = x.shape
+    x = x[:, :, None, :, :].expand(b, h_kv, r, t, d)
+    return x.reshape(b, h_kv * r, t, d)</code></pre>
+  <p>The critical detail is the <strong>order</strong> of replication. It must <em>interleave</em> (repeat each head in place), not <em>tile</em> (repeat the whole block):</p>
+<pre><code>interleave (correct):  [k0, k0, k1, k1]     <span class="cmt"># each KV head duplicated consecutively</span>
+tile       (wrong):    [k0, k1, k0, k1]     <span class="cmt"># whole block repeated</span></code></pre>
+  <p>Only the interleave order makes contiguous query-head groups line up with their intended KV head. Tiling would silently pair query head 1 with the wrong KV head — no error, just wrong results. (The <code>expand</code>+<code>reshape</code> above is a zero-copy way to produce the interleave pattern; fused kernels like FlashAttention skip the copy entirely and broadcast on the fly, which is where the real bandwidth savings come from.)</p>
+  <p><strong>Both K and V are repeated</strong>, for the two different matmuls: K to compute the scores \(QK^\top\) per query head, and V to compute the weighted sum \(AV\) per query head.</p>
+
+  <h2 id="s4"><span class="num">4.</span>A worked example</h2>
+  <p>Take \(H=8\) query heads and \(H_{kv}=2\) KV heads, so \(r = 8/2 = 4\). The mapping \(g(h)=\lfloor h/4\rfloor\) gives:</p>
+<pre><code>query head h:   0   1   2   3   4   5   6   7
+KV head g(h):   0   0   0   0   1   1   1   1
+                └──── group 0 ────┘└──── group 1 ────┘</code></pre>
+  <p>Query heads 0–3 all read KV head 0; query heads 4–7 all read KV head 1. Each query head still has its <em>own</em> query vector, so it produces its own attention weights and its own output — the only thing shared is the K/V <em>content</em> within a group. The KV cache here is <strong>4× smaller</strong> than MHA (2 KV heads instead of 8), while all 8 query heads remain.</p>
+
+  <h2 id="s5"><span class="num">5.</span>The trade-off (and one convention to respect)</h2>
+  <p>GQA trades a little expressiveness — query heads in a group can no longer attend to fully independent key/value subspaces — for a large reduction in KV-cache memory and the memory-bandwidth that bottlenecks decoding. Empirically (Ainslie et al., 2023), a moderate \(r\) (e.g. 4–8) recovers nearly all of MHA's quality while cutting the cache several-fold.</p>
+  <p>One thing must stay consistent: the grouping is a <strong>convention fixed at training time</strong>. A checkpoint trained with contiguous interleaved groups must be served the same way; swapping the pattern at inference silently corrupts attention. Hugging Face standardized on <code>repeat_interleave</code>-style contiguous groups, so all its checkpoints assume \(g(h)=\lfloor h/r\rfloor\).</p>
+
+  <h2 id="s6"><span class="num">6.</span>GQA in 2026 models</h2>
+  <p>Is GQA still used in 2026? <strong>Yes — but increasingly as the <em>baseline</em> and <em>backbone</em> rather than the whole story.</strong> Mid-size and open models still ship plain GQA; frontier long-context models keep a GQA-style backbone and add <em>sparse selection</em> on top, or replace KV-sharing with <em>Multi-head Latent Attention</em> (MLA).</p>
+  <div class="wrapscroll">
+  <table class="ptable">
+    <thead><tr><th>Model (2026)</th><th>KV scheme</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Gemma 4</td><td>GQA + sliding window</td><td>classic GQA, local/global attention interleave</td></tr>
+      <tr><td>MiniMax M3</td><td>GQA + MSA (sparse)</td><td>MiniMax Sparse Attention selects KV blocks per GQA group</td></tr>
+      <tr><td>DeepSeek-V4</td><td>Sparse (CSA / HCA)</td><td>moved past MLA; benchmarks vs a GQA-8 baseline</td></tr>
+      <tr><td>GLM-5.2</td><td>MLA + DSA (sparse)</td><td>DeepSeek Sparse Attention on a latent-attention backbone</td></tr>
+      <tr><td>Kimi K2.7</td><td>MLA (+ sparse)</td><td>DeepSeek-V3-style latent attention text backbone</td></tr>
+      <tr><td>Mistral 4</td><td>MLA-style (low-rank KV)</td><td>config carries <code>kv_lora_rank</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>The 2026 takeaway: <strong>GQA didn't go away — it became the reference point.</strong> Sparse designs like MiniMax's MSA explicitly operate "per GQA group," and DeepSeek-V4 still quotes "GQA-8, head dim 128" as the standard cost baseline. The frontier moves are (a) <strong>sparse attention</strong> — only attend to selected KV blocks — and (b) <strong>latent attention (MLA)</strong> — compress K/V into a shared low-rank latent. Both are best understood as answers to the same KV-cache pressure that motivated GQA in the first place. Those are the next posts in this series.</p>
+
+  <h2 id="s7"><span class="num">7.</span>Summary</h2>
+  <p>GQA = full query heads, fewer KV heads, with a fixed <strong>group mapping</strong> \(g(h)=\lfloor h/r\rfloor\) realized by an <em>interleaved</em> <code>repeat_kv</code>. It shrinks the KV cache by a factor of \(r\) while keeping nearly all of MHA's quality, which is why it underpins almost every modern LLM — and remains the baseline that 2026's sparse and latent attention variants are measured against.</p>
+
+  <div class="callout">
+    <p style="margin:0">GQA in one line: <strong>keep every query head, share the keys and values in groups.</strong></p>
+  </div>
+
+  <h3>References &amp; good background reading</h3>
+  <ul>
+    <li>Vaswani et al., <em>Attention Is All You Need</em> (arXiv 1706.03762) — original multi-head attention.</li>
+    <li>Jay Alammar, <a href="https://jalammar.github.io/illustrated-transformer/"><em>The Illustrated Transformer</em></a> — the best visual intro to self-attention and MHA.</li>
+    <li>Lilian Weng, <a href="https://lilianweng.github.io/posts/2018-06-24-attention/"><em>Attention? Attention!</em></a> — attention mechanisms from scratch.</li>
+    <li>Harvard NLP, <a href="https://nlp.seas.harvard.edu/annotated-transformer/"><em>The Annotated Transformer</em></a> — line-by-line implementation.</li>
+    <li>Shazeer, <em>Fast Transformer Decoding (MQA)</em> (arXiv 1911.02150) — multi-query attention.</li>
+    <li>Ainslie et al., <em>GQA: Training Generalized Multi-Query Transformer Models</em> (arXiv 2305.13245) — the GQA paper.</li>
+  </ul>
+
+  <h3>How to cite this post</h3>
+<pre><code>Dong, S. (2026). Understanding GQA (Grouped-Query Attention).
+https://simondong1.github.io/gqa.html</code></pre>
+<pre><code>@misc{dong2026understandinggqa,
+  author = {Dong, Simon},
+  title  = {Understanding GQA (Grouped-Query Attention)},
+  year   = {2026},
+  month  = {June},
+  url    = {https://simondong1.github.io/gqa.html},
+  note   = {Technical blog post, Attention Variants series, Part 1}
+}</code></pre>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Written by <strong>sdong</strong> · June 2026 · Attention Variants series, Part 1.</p>
+    <p><a href="/">&larr; Back to blog</a></p>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var byId = {};
+    links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+    var heads = Array.prototype.slice.call(document.querySelectorAll('main h2[id]'));
+    if (!('IntersectionObserver' in window) || !heads.length) return;
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){ links.forEach(function(l){ l.classList.remove('active'); }); if (byId[e.target.id]) byId[e.target.id].classList.add('active'); }
+      });
+    }, { rootMargin: '-12% 0px -78% 0px', threshold: 0 });
+    heads.forEach(function(h){ obs.observe(h); });
+  })();
+</script>
+
+</body>
+</html>

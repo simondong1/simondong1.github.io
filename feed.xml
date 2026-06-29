@@ -7,6 +7,13 @@
     <language>en-us</language>
     <atom:link href="https://simondong1.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Understanding GQA (Grouped-Query Attention)</title>
+      <link>https://simondong1.github.io/gqa.html</link>
+      <guid isPermaLink="true">https://simondong1.github.io/gqa.html</guid>
+      <pubDate>Mon, 29 Jun 2026 00:00:00 +0000</pubDate>
+      <description>The query-to-KV head mapping that shrinks the KV cache of modern LLMs, and where GQA stands among 2026 attention variants. Part 1 of the Attention Variants series.</description>
+    </item>
+    <item>
       <title>Understanding RoPE (Rotary Position Embeddings)</title>
       <link>https://simondong1.github.io/rope.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/rope.html</guid>
