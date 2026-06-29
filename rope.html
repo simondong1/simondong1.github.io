@@ -188,6 +188,32 @@
     font-size:.78rem;color:var(--muted);
     margin:-1.2rem 0 1.8rem;padding-left:.2rem;
   }
+  .clock-strip{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:.8rem;
+    margin:1.5rem 0 1.7rem;
+  }
+  .mini-clock{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:.9rem .75rem;
+    text-align:center;
+    box-shadow:0 14px 34px -32px rgba(13,17,23,.5);
+  }
+  .mini-clock svg{display:block;width:100%;max-width:112px;margin:0 auto .55rem}
+  .mini-clock .label{
+    display:block;
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.78rem;
+    color:var(--ink-soft);
+    line-height:1.35;
+  }
+  .clock-axis{stroke:#d8dee4;stroke-width:1}
+  .clock-circle{fill:#fff;stroke:#d8dee4;stroke-width:2}
+  .clock-hand{stroke:var(--accent);stroke-width:5;stroke-linecap:round}
+  .clock-dot{fill:var(--accent)}
 
   /* ---------- Callouts ---------- */
   .callout{
@@ -271,6 +297,7 @@
     header.hero{padding:3.5rem 0 2rem}
     nav.toc ol{columns:1}
     h2{font-size:1.45rem}
+    .clock-strip{grid-template-columns:repeat(2,1fr)}
   }
 </style>
 </head>
@@ -380,6 +407,48 @@ head_dim  &rarr; the token's feature vector   &rarr; the thing being rotated</co
 position p=1:  turned 1 rad &rarr; ( 0.540,  0.841)
 position p=2:  turned 2 rad &rarr; (-0.416,  0.909)
 position p=3:  turned 3 rad &rarr; (-0.990,  0.141)</code></pre>
+  <div class="clock-strip" aria-label="The same vector rotated by increasing position">
+    <div class="mini-clock">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <line class="clock-axis" x1="18" y1="60" x2="102" y2="60" />
+        <line class="clock-axis" x1="60" y1="18" x2="60" y2="102" />
+        <circle class="clock-circle" cx="60" cy="60" r="42" />
+        <line class="clock-hand" x1="60" y1="60" x2="100" y2="60" />
+        <circle class="clock-dot" cx="60" cy="60" r="5" />
+      </svg>
+      <span class="label">p=0<br>angle 0</span>
+    </div>
+    <div class="mini-clock">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <line class="clock-axis" x1="18" y1="60" x2="102" y2="60" />
+        <line class="clock-axis" x1="60" y1="18" x2="60" y2="102" />
+        <circle class="clock-circle" cx="60" cy="60" r="42" />
+        <line class="clock-hand" x1="60" y1="60" x2="82" y2="26" />
+        <circle class="clock-dot" cx="60" cy="60" r="5" />
+      </svg>
+      <span class="label">p=1<br>angle 1</span>
+    </div>
+    <div class="mini-clock">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <line class="clock-axis" x1="18" y1="60" x2="102" y2="60" />
+        <line class="clock-axis" x1="60" y1="18" x2="60" y2="102" />
+        <circle class="clock-circle" cx="60" cy="60" r="42" />
+        <line class="clock-hand" x1="60" y1="60" x2="44" y2="23" />
+        <circle class="clock-dot" cx="60" cy="60" r="5" />
+      </svg>
+      <span class="label">p=2<br>angle 2</span>
+    </div>
+    <div class="mini-clock">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <line class="clock-axis" x1="18" y1="60" x2="102" y2="60" />
+        <line class="clock-axis" x1="60" y1="18" x2="60" y2="102" />
+        <circle class="clock-circle" cx="60" cy="60" r="42" />
+        <line class="clock-hand" x1="60" y1="60" x2="20" y2="54" />
+        <circle class="clock-dot" cx="60" cy="60" r="5" />
+      </svg>
+      <span class="label">p=3<br>angle 3</span>
+    </div>
+  </div>
   <p>Rotation of a point <code>(x, y)</code> by angle <code>a</code> is the standard 2-D rotation matrix:</p>
   \[
   \begin{pmatrix} x' \\ y' \end{pmatrix}=
