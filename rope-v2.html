@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Understanding RoPE (Rotary Position Embeddings)</title>
+<meta name="description" content="A visual, step-by-step explanation of Rotary Position Embeddings: why Transformers need position, how RoPE turns position into rotation, and why modern LLMs still use it." />
+<link rel="canonical" href="https://simondong1.github.io/rope-v2.html" />
+<link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
+<meta property="og:title" content="Understanding RoPE" />
+<meta property="og:description" content="A visual, step-by-step explanation of Rotary Position Embeddings and the clock-hand intuition behind modern LLM positional encoding." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/rope-v2.html" />
+<meta property="og:site_name" content="Simon Dong" />
+<meta property="og:image" content="https://simondong1.github.io/assets/rope-og-v2.png?v=2" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Understanding RoPE: angle[p,i] = p theta_i and (R_m q)^T(R_n k)=q^T R_(n-m)k." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Understanding RoPE" />
+<meta name="twitter:description" content="A visual, step-by-step explanation of Rotary Position Embeddings and the clock-hand intuition behind modern LLM positional encoding." />
+<meta name="twitter:image" content="https://simondong1.github.io/assets/rope-og-v2.png?v=2" />
+<meta name="author" content="Simon Dong" />
+<meta name="citation_title" content="Understanding RoPE (Rotary Position Embeddings)" />
+<meta name="citation_author" content="Dong, Simon" />
+<meta name="citation_publication_date" content="2026/06/28" />
+<meta name="citation_online_date" content="2026/06/28" />
+<meta name="citation_fulltext_html_url" content="https://simondong1.github.io/rope-v2.html" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Understanding RoPE (Rotary Position Embeddings)",
+  "description": "A visual, step-by-step explanation of Rotary Position Embeddings: why Transformers need position, how RoPE turns position into rotation, and why modern LLMs still use it.",
+  "author": {
+    "@type": "Person",
+    "name": "Simon Dong",
+    "url": "https://x.com/dongsixiang"
+  },
+  "datePublished": "2026-06-28",
+  "dateModified": "2026-06-28",
+  "mainEntityOfPage": "https://simondong1.github.io/rope.html",
+  "image": "https://simondong1.github.io/assets/rope-og-v2.png?v=2"
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<script>
+  MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  :root{
+    --bg:#fbfbfa;
+    --surface:#ffffff;
+    --ink:#1f2328;
+    --ink-soft:#475059;
+    --muted:#8b949e;
+    --line:#e8e8e6;
+    --accent:#4f46e5;
+    --accent-soft:#eef0fe;
+    --code-bg:#0d1117;
+    --code-ink:#e6edf3;
+    --code-dim:#8b949e;
+    --code-key:#79c0ff;
+    --maxw:46rem;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:1.05rem;
+    line-height:1.68;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    font-feature-settings:"kern" 1,"liga" 1,"calt" 1;
+  }
+  ::selection{background:var(--accent-soft)}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+
+  /* ---------- Hero ---------- */
+  header.hero{
+    padding:6rem 0 2.8rem;
+    border-bottom:1px solid var(--line);
+    margin-bottom:3.4rem;
+  }
+  .eyebrow{
+    font-family:"Inter",system-ui,sans-serif;
+    font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin:0 0 1.1rem;
+  }
+  h1.title{
+    font-family:"Inter",system-ui,sans-serif;
+    font-weight:800;
+    font-size:clamp(2.4rem,5.6vw,4rem);
+    line-height:1.08;letter-spacing:-.03em;
+    margin:0 0 1rem;color:var(--ink);
+  }
+  .title-expansion{
+    display:block;
+    margin-top:.35rem;
+    font-size:clamp(1.15rem,2.4vw,1.65rem);
+    line-height:1.2;
+    letter-spacing:-.02em;
+    color:var(--ink-soft);
+    font-weight:650;
+  }
+  .subtitle{
+    font-size:1.22rem;color:var(--ink-soft);
+    margin:0 0 1.9rem;line-height:1.55;max-width:42rem;
+  }
+  .byline{
+    font-family:"Inter",system-ui,sans-serif;
+    display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;
+    font-size:.9rem;color:var(--muted);
+  }
+  .byline .who{color:var(--ink);font-weight:600}
+  .byline .dot{color:var(--line)}
+
+  /* ---------- Typography ---------- */
+  h2{
+    font-family:"Inter",system-ui,sans-serif;
+    font-weight:700;font-size:1.7rem;letter-spacing:-.02em;
+    line-height:1.2;margin:3.4rem 0 1rem;scroll-margin-top:1.5rem;
+  }
+  h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}
+  h3{
+    font-family:"Inter",system-ui,sans-serif;
+    font-weight:600;font-size:1.18rem;margin:2rem 0 .6rem;letter-spacing:-.01em;
+  }
+  p{margin:1.05rem 0}
+  .lede{
+    font-size:1.22rem;
+    line-height:1.62;
+    letter-spacing:-.01em;
+    color:var(--ink);
+    margin:0 0 1.8rem;
+  }
+  .lede strong{font-weight:650}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s}
+  a:hover{border-color:var(--accent)}
+  strong{font-weight:600;color:var(--ink)}
+  em{font-style:italic}
+  ul,ol{margin:1.1rem 0;padding-left:1.3rem}
+  li{margin:.45rem 0}
+  hr{border:none;border-top:1px solid var(--line);margin:3rem 0}
+
+  /* ---------- Inline + block code ---------- */
+  code{
+    font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.86em;
+    background:#f0f1f4;
+    color:#cf2a6b;
+    padding:.12em .4em;border-radius:5px;
+    border:1px solid #e7e8ec;
+  }
+  pre{
+    background:var(--code-bg);
+    color:var(--code-ink);
+    border-radius:14px;
+    padding:1.3rem 1.4rem;
+    margin:1.6rem 0;
+    overflow-x:auto;
+    font-size:.83rem;
+    line-height:1.62;
+    box-shadow:0 10px 30px -18px rgba(13,17,23,.55);
+    border:1px solid #1c2230;
+  }
+  pre code{
+    background:none;border:none;color:inherit;padding:0;font-size:.92rem;
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+  }
+  pre .cmt{color:var(--code-dim)}
+
+  .codecap{
+    font-family:"Inter",system-ui,sans-serif;
+    font-size:.78rem;color:var(--muted);
+    margin:-1.2rem 0 1.8rem;padding-left:.2rem;
+  }
+  .clock-strip{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:.8rem;
+    margin:1.5rem 0 1.7rem;
+  }
+  .mini-clock{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:.9rem .75rem;
+    text-align:center;
+    box-shadow:0 14px 34px -32px rgba(13,17,23,.5);
+  }
+  .mini-clock svg{display:block;width:100%;max-width:112px;margin:0 auto .55rem}
+  .mini-clock .label{
+    display:block;
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.78rem;
+    color:var(--ink-soft);
+    line-height:1.35;
+  }
+  .clock-axis{stroke:#d8dee4;stroke-width:1}
+  .clock-circle{fill:#fff;stroke:#d8dee4;stroke-width:2}
+  .clock-hand{stroke:var(--accent);stroke-width:5;stroke-linecap:round}
+  .clock-dot{fill:var(--accent)}
+
+  /* ---------- Callouts ---------- */
+  .callout{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:4px solid var(--accent);
+    border-radius:10px;
+    padding:1.1rem 1.3rem;
+    margin:1.8rem 0;
+    font-size:1rem;
+    line-height:1.6;
+  }
+  .callout.note{border-left-color:#0ea5e9}
+  .callout.warn{border-left-color:#f59e0b}
+  .callout .label{
+    font-family:"Inter",system-ui,sans-serif;
+    font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+    font-weight:700;color:var(--accent);display:block;margin-bottom:.35rem;
+  }
+  .callout.note .label{color:#0ea5e9}
+  .callout.warn .label{color:#d97706}
+  .callout p{margin:.4rem 0}
+
+  /* ---------- TOC ---------- */
+  nav.toc{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:1.3rem 1.5rem;
+    margin:0 0 2rem;
+    font-family:"Inter",system-ui,sans-serif;
+  }
+  nav.toc .toc-title{
+    font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);font-weight:700;margin-bottom:.8rem;
+  }
+  nav.toc ol{margin:0;padding:0;list-style:none;
+    columns:2;column-gap:2rem;font-size:.93rem}
+  nav.toc li{margin:.3rem 0;break-inside:avoid}
+  nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.16rem .5rem;border-radius:6px;line-height:1.4;transition:background .15s,color .15s}
+  nav.toc a:hover{color:var(--accent);background:var(--accent-soft)}
+  nav.toc a.active{color:var(--accent);background:var(--accent-soft);font-weight:600}
+  nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}
+
+  /* Desktop: dock the contents bar as a fixed left sidebar */
+  @media (min-width:1280px){
+    nav.toc{
+      position:fixed;top:5.5rem;
+      left:calc((100vw - 46rem)/2 - 15.5rem);
+      width:13.5rem;max-height:calc(100vh - 7rem);overflow-y:auto;
+      background:none;border:none;border-radius:0;padding:0;margin:0;
+    }
+    nav.toc ol{columns:1;column-gap:0;font-size:.82rem}
+    nav.toc .toc-title{margin-bottom:.7rem}
+    nav.toc::-webkit-scrollbar{width:6px}
+    nav.toc::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  }
+
+  /* ---------- Models chips ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.2rem 0 1.6rem}
+  .chip{
+    font-family:"Inter",system-ui,sans-serif;font-size:.82rem;font-weight:500;
+    background:var(--accent-soft);color:var(--accent);
+    padding:.35rem .7rem;border-radius:999px;border:1px solid #dfe2fb;
+  }
+
+  /* ---------- Math display ---------- */
+  mjx-container[display="true"]{margin:1.5rem 0 !important;overflow-x:auto;overflow-y:hidden}
+
+  /* ---------- Footer ---------- */
+  footer{
+    border-top:1px solid var(--line);
+    margin-top:4rem;padding:2.5rem 0 4rem;
+    font-family:"Inter",system-ui,sans-serif;
+    font-size:.9rem;color:var(--muted);
+  }
+  footer a{color:var(--ink-soft)}
+
+  @media (max-width:640px){
+    body{font-size:1.12rem}
+    header.hero{padding:3.5rem 0 2rem}
+    nav.toc ol{columns:1}
+    h2{font-size:1.45rem}
+    .clock-strip{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Transformers · Position Encoding</p>
+    <h1 class="title">Understanding RoPE <span class="title-expansion">(Rotary Position Embeddings)</span></h1>
+    <p class="subtitle">A visual tutorial on Rotary Position Embeddings: position chooses how far to turn, head-dim pairs choose which clock speed to use, and the attention score reads the relative angle.</p>
+    <div class="byline">
+      <a class="who" href="https://x.com/dongsixiang">Simon Dong</a>
+      <span class="dot">•</span>
+      <span>June 2026</span>
+      <span class="dot">•</span>
+      <span>~16 min read</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <p class="lede"><strong>RoPE is one of the quiet pieces of infrastructure behind modern language models.</strong> It does not add a learned position vector or a bias table. It rotates queries and keys so that the attention score naturally depends on relative distance. The key mental model: RoPE does one rotation per channel-pair; the token position says <em>how far</em> to turn, and the channel-pair index says <em>which clock speed</em> to use.</p>
+
+  <div class="callout note">
+    <span class="label">What you'll need</span>
+    <p>You should be comfortable with vectors and dot products, basic trig (<code>sin</code>/<code>cos</code>), matrix multiplication, and the rough idea of self-attention (Q, K, V). Everything else is built up from scratch.</p>
+    <p style="margin-bottom:0">Notation: <code>d</code> = head dimension, <code>p</code>/<code>m</code>/<code>n</code> = token positions, <code>i</code> = channel-pair index, <code>theta_i</code> = the speed of pair <code>i</code>, and <code>angle[p,i] = p * theta_i</code>.</p>
+  </div>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#s1"><span class="n">1</span>Background</a></li>
+      <li><a href="#s2"><span class="n">2</span>Where RoPE plugs in</a></li>
+      <li><a href="#s3"><span class="n">3</span>The two axes</a></li>
+      <li><a href="#s4"><span class="n">4</span>One clock hand</a></li>
+      <li><a href="#s5"><span class="n">5</span>Why turning hands?</a></li>
+      <li><a href="#s6"><span class="n">6</span>One speed isn't enough</a></li>
+      <li><a href="#s7"><span class="n">7</span>Many hands (a clock)</a></li>
+      <li><a href="#s8"><span class="n">8</span>Which channels pair up</a></li>
+      <li><a href="#s9"><span class="n">9</span>The full formula</a></li>
+      <li><a href="#s10"><span class="n">10</span>The vectorized form</a></li>
+      <li><a href="#s11"><span class="n">11</span>A worked example</a></li>
+      <li><a href="#s12"><span class="n">12</span>When frequencies interfere</a></li>
+      <li><a href="#s13"><span class="n">13</span>Why meaning is preserved</a></li>
+      <li><a href="#s14"><span class="n">14</span>What could be improved</a></li>
+      <li><a href="#s15"><span class="n">15</span>Beyond vanilla RoPE</a></li>
+      <li><a href="#s16"><span class="n">16</span>Reference implementation</a></li>
+      <li><a href="#s17"><span class="n">17</span>Summary</a></li>
+    </ol>
+  </nav>
+
+  <h2 id="s1"><span class="num">1.</span>Background — where RoPE came from</h2>
+
+  <p><strong>Why we need position encodings at all.</strong> Self-attention is <em>permutation-invariant</em>: the raw <code>Q·K</code> dot product compares token <em>content</em> with no notion of order. Without an additional signal, "the cat sat" and "sat the cat" present the same set of token vectors. Something has to tell the model where each token sits — otherwise a Transformer is an orderless bag of words.</p>
+
+  <p><strong>What came before RoPE.</strong> The original Transformer (2017) <em>added</em> a fixed <strong>sinusoidal</strong> vector to each token embedding. Later models learned an <strong>absolute</strong> position embedding per slot, or added a learned <strong>relative-position bias</strong> directly to the attention scores (e.g. T5). These approaches work, but they attach position to the inputs or logits rather than to the geometry of <code>Q·K</code> itself — and absolute schemes tend to extrapolate poorly beyond the sequence lengths seen in training.</p>
+
+  <p><strong>RoPE (2021).</strong> <a href="https://arxiv.org/abs/2104.09864"><em>RoFormer</em></a> (Su et al.) took a different route: rotate Q and K by an angle proportional to position, so relative distance appears inside the dot product itself. GPT-NeoX popularized the half-split / <code>rotate_half</code> implementation, and LLaMA (2023) made RoPE the default pattern for open decoder LLMs.</p>
+
+  <h3>Why it won — and still wins in 2026</h3>
+  <ul>
+    <li><strong>Relative position, cheaply</strong> — encoded implicitly in <code>Q·K</code>, no extra bias matrix.</li>
+    <li><strong>KV-cache friendly</strong> — a per-token rotation applied once, perfect for incremental decoding.</li>
+    <li><strong>Extensible</strong> — with frequency-scaling tweaks, it stretches to context lengths far beyond training.</li>
+  </ul>
+
+  <p><strong>How it's used in 2026.</strong> RoPE is the de-facto positional encoding for decoder LLMs, almost always with a <strong>long-context extension</strong> layered on (the <code>rope_scaling</code> config): NTK-aware scaling, Position Interpolation, YaRN, and LongRoPE rescale the frequency spectrum so a model trained at 8K runs at 128K–1M+ tokens. <strong>Multimodal RoPE (M-RoPE)</strong> extends the rotation to image/video position grids in vision-language models, and it now appears in some encoders (ModernBERT) and audio/time-series stacks too.</p>
+
+  <h3>Top 2026 models using it</h3>
+  <div class="chips">
+    <span class="chip">Qwen3.5</span>
+    <span class="chip">DeepSeek-V4</span>
+    <span class="chip">GLM-5.2</span>
+    <span class="chip">Kimi K2.7</span>
+    <span class="chip">MiniMax M2</span>
+    <span class="chip">Gemma 4</span>
+    <span class="chip">Mistral 4</span>
+    <span class="chip">GPT-OSS</span>
+  </div>
+  <p>Two RoPE "dialects" show up across these:</p>
+  <ul>
+    <li><strong>Standard half-split RoPE</strong> (the <code>rotate_half</code> code in this tutorial) — Qwen3.5, Gemma 4, Mistral 4, GPT-OSS, MiniMax M2. Shared near line-for-line via <code>transformers</code>' <code>#&nbsp;Copied&nbsp;from</code> / modular mechanism.</li>
+    <li><strong>Decoupled RoPE inside MLA</strong> — DeepSeek-V4, GLM-5.2 (<code>glm_moe_dsa</code>), and Kimi K2.7 (DeepSeek-V3 text backbone) rotate only a slice of each head (<code>qk_rope_head_dim</code>), with GLM-5.2 using the <em>interleaved</em> convention. Same rotation math, applied to part of the head.</li>
+  </ul>
+  <p>A packaging note: GLM-5.2 runs on the native <code>glm_moe_dsa</code> class in <code>transformers</code> 5.13, while Kimi K2.7 loads via <code>trust_remote_code=True</code> with its own modeling file (text tower = DeepSeek-V3). In both cases, the positional signal underneath is still RoPE.</p>
+
+  <h2 id="s2"><span class="num">2.</span>Where RoPE plugs in: the attention score</h2>
+  <p>Scaled dot-product attention is:</p>
+<pre><code>Attention(Q, K, V) = softmax( (Q @ K^T) / sqrt(head_dim) ) @ V</code></pre>
+  <p>The piece we care about is <code>Q @ K^T</code>. For one head it produces a <strong>(seq, seq) matrix of scores</strong>:</p>
+<pre><code>(Q @ K^T)[i, j] = q_i . k_j     <span class="cmt"># similarity between query token i and key token j</span></code></pre>
+  <p>Every entry is a dot product between one query vector and one key vector; after softmax these scores decide who attends to whom. The problem: <code>q_i . k_j</code> is <strong>position-blind</strong> — by itself, it cannot tell whether token <code>j</code> is adjacent to <code>i</code> or 4000 tokens away. RoPE rotates <code>q</code> and <code>k</code> before the product so the score depends on the gap <code>i - j</code>.</p>
+
+  <h2 id="s3"><span class="num">3.</span>The two axes (don't merge them)</h2>
+  <p>Inside a head, Q and K have shape:</p>
+<pre><code>query / key:  (batch, n_heads, seq, head_dim)</code></pre>
+  <p>Two axes drive RoPE, and they play different roles:</p>
+<pre><code>seq axis   &rarr; chooses position p       &rarr; how FAR to rotate
+head_dim   &rarr; split into pairs i      &rarr; which clock speed theta_i to use</code></pre>
+  <p>Position is just an integer per token: <code>position_ids = [0, 1, 2, 3, ...]</code>. Head dimension is where the clocks live: a head of size <code>d</code> gives <code>d/2</code> two-dimensional pairs, and each pair gets its own speed <code>theta_i</code>. The actual rotation angle is the product:</p>
+<pre><code>angle[p, i] = position p * speed theta_i</code></pre>
+
+  <h2 id="s4"><span class="num">4.</span>One clock hand: rotating a single 2-D pair</h2>
+  <p>Smallest case: <code>head_dim = 2</code>, so there is only one pair and therefore only one clock. In this toy case, freeze the speed at <code>theta = 1</code> rad per position. Now the only thing changing is the token position <code>p</code>: bigger <code>p</code> means turn the same hand farther. A hand starting at <code>(1, 0)</code>:</p>
+<pre><code>position p=0:  turned 0 rad &rarr; ( 1.000,  0.000)
+position p=1:  turned 1 rad &rarr; ( 0.540,  0.841)
+position p=2:  turned 2 rad &rarr; (-0.416,  0.909)
+position p=3:  turned 3 rad &rarr; (-0.990,  0.141)</code></pre>
+  <div class="clock-strip" aria-label="The same vector rotated by increasing position">
+    <div class="mini-clock">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <line class="clock-axis" x1="18" y1="60" x2="102" y2="60" />
+        <line class="clock-axis" x1="60" y1="18" x2="60" y2="102" />
+        <circle class="clock-circle" cx="60" cy="60" r="42" />
+        <line class="clock-hand" x1="60" y1="60" x2="100" y2="60" />
+        <circle class="clock-dot" cx="60" cy="60" r="5" />
+      </svg>
+      <span class="label">p=0<br>angle 0</span>
+    </div>
+    <div class="mini-clock">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <line class="clock-axis" x1="18" y1="60" x2="102" y2="60" />
+        <line class="clock-axis" x1="60" y1="18" x2="60" y2="102" />
+        <circle class="clock-circle" cx="60" cy="60" r="42" />
+        <line class="clock-hand" x1="60" y1="60" x2="82" y2="26" />
+        <circle class="clock-dot" cx="60" cy="60" r="5" />
+      </svg>
+      <span class="label">p=1<br>angle 1</span>
+    </div>
+    <div class="mini-clock">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <line class="clock-axis" x1="18" y1="60" x2="102" y2="60" />
+        <line class="clock-axis" x1="60" y1="18" x2="60" y2="102" />
+        <circle class="clock-circle" cx="60" cy="60" r="42" />
+        <line class="clock-hand" x1="60" y1="60" x2="44" y2="23" />
+        <circle class="clock-dot" cx="60" cy="60" r="5" />
+      </svg>
+      <span class="label">p=2<br>angle 2</span>
+    </div>
+    <div class="mini-clock">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <line class="clock-axis" x1="18" y1="60" x2="102" y2="60" />
+        <line class="clock-axis" x1="60" y1="18" x2="60" y2="102" />
+        <circle class="clock-circle" cx="60" cy="60" r="42" />
+        <line class="clock-hand" x1="60" y1="60" x2="20" y2="54" />
+        <circle class="clock-dot" cx="60" cy="60" r="5" />
+      </svg>
+      <span class="label">p=3<br>angle 3</span>
+    </div>
+  </div>
+  <p>Rotation of a point <code>(x, y)</code> by angle <code>a</code> is the standard 2-D rotation matrix:</p>
+  \[
+  \begin{pmatrix} x' \\ y' \end{pmatrix}=
+  \begin{pmatrix} \cos a & -\sin a \\ \sin a & \cos a \end{pmatrix}
+  \begin{pmatrix} x \\ y \end{pmatrix}
+  \]
+  <p>A clock hand has fixed length — only its direction changes. In this one-pair example, position has become <strong>an angle</strong>. Later, with more head dimensions, we will have many clocks with different speeds; position still tells each clock how far to turn.</p>
+
+  <h2 id="s5"><span class="num">5.</span>Why turning hands? The relative-position property</h2>
+  <p>Query at position <code>m</code>, key at position <code>n</code>, both hands starting at <code>(1, 0)</code>:</p>
+<pre><code>q_rot = (cos m, sin m)
+k_rot = (cos n, sin n)
+
+q_rot . k_rot = cos m cos n + sin m sin n = cos(m - n)</code></pre>
+  <p>The score depends <strong>only on <code>m - n</code></strong> — the angle <em>between</em> the hands. Check:</p>
+<pre><code>m=2,  n=5:   cos(2 - 5)   = cos(-3) = -0.990
+m=10, n=13:  cos(10 - 13) = cos(-3) = -0.990   <span class="cmt"># same gap &rarr; same score</span></code></pre>
+  <p>Turning each hand by its position makes the dot product read the relative angle. Formally, rotations compose so that</p>
+  \[
+  (R_m\,q)^{\top}(R_n\,k) = q^{\top} R_m^{\top} R_n\, k = q^{\top} R_{\,n-m}\, k .
+  \]
+
+  <h2 id="s6"><span class="num">6.</span>One speed isn't enough: the hand wraps onto itself</h2>
+  <p>A single hand comes back to the same spot once per full turn, so different gaps land on the <strong>same angle</strong> and get the <strong>same score</strong>. A readout based on that one hand cannot tell them apart.</p>
+  <p>To see exact collisions, take a hand whose <strong>period is 6 positions</strong> (one full turn every 6 tokens; <code>theta = 2*pi/6 &approx; 1.047</code>). Score for a gap <code>d</code> is <code>cos(theta * d)</code>:</p>
+<pre><code>gap d:          0      1      2      3      4      5      6      7
+cos(theta*d): 1.00   0.50  -0.50  -1.00  -0.50   0.50   1.00   0.50</code></pre>
+  <p>Read off the actual collisions — this hand cannot distinguish:</p>
+<pre><code>gap 0  vs  gap 6              &rarr; both score  1.00
+gap 1  vs  gap 5  vs  gap 7   &rarr; all score  0.50
+gap 2  vs  gap 4              &rarr; both score -0.50</code></pre>
+  <p>So with this one hand, a token <strong>1 position away</strong> is indistinguishable from one <strong>5 or 7 positions away</strong> — identical score, <code>0.50</code>. That's the wrap problem in concrete form: one speed gives one ambiguous dial. We need more hands.</p>
+
+  <h2 id="s7"><span class="num">7.</span>Many hands at different speeds (a clock)</h2>
+  <p>Now add a second pair in the head dimension: a <strong>slow</strong> hand with <strong>period 60 positions</strong> (<code>theta = 2*pi/60 &approx; 0.105</code>) alongside the fast period-6 hand. This is not a second rotation applied to the same pair; it is a different pair in <code>head_dim</code>, with a different speed. Compare the two gaps that collided above — gap 1 vs gap 7:</p>
+<pre><code>gap d:            0       1       6       7
+fast hand (T=6):  1.00    0.50    1.00    0.50      <span class="cmt">&larr; 0&amp;6 collide, 1&amp;7 collide</span>
+slow hand (T=60): 1.00    0.995   0.809   0.743     <span class="cmt">&larr; all four distinct</span></code></pre>
+  <p>The fast hand confuses gap 0 with gap 6, and gap 1 with gap 7. The <strong>slow hand breaks both ties</strong>. Combine them into a fingerprint and every gap is unique:</p>
+<pre><code>gap 0 &rarr; (1.00, 1.00)
+gap 1 &rarr; (0.50, 0.995)
+gap 6 &rarr; (1.00, 0.809)
+gap 7 &rarr; (0.50, 0.743)     <span class="cmt"># no two pairs match</span></code></pre>
+  <p>This is exactly a clock: the second hand and hour hand are different hands, not two turns of the same hand. Each hand has its own speed; the same position gap turns each hand by a different amount. The fast hand pins down fine local differences, while the slow hand keeps long-range gaps from wrapping into the same reading.</p>
+<pre><code>fast hand (low i):  big move per step  &rarr; separates NEARBY gaps, wraps quickly
+slow hand (high i): tiny move per step &rarr; coarse nearby, stable over long range</code></pre>
+  <p class="codecap">Real models don't pick round periods — they use <code>theta_i = base^(-2i/d)</code>, a whole geometric spread of speeds. Periods 6 and 60 were chosen only so the collisions land on clean integers.</p>
+
+  <h2 id="s8"><span class="num">8.</span>Which two channels share a hand?</h2>
+  <p>With many pairs, we choose <em>which</em> two channels form each clock hand. Each pair is one two-dimensional plane that gets one speed <code>theta_i</code>. The convention in essentially all current models is <strong>half-split</strong>: pair channel <code>i</code> with channel <code>i + d/2</code>.</p>
+<pre><code>d = 4:   pair 0 = (channel 0, channel 2)    <span class="cmt"># share the fast hand</span>
+         pair 1 = (channel 1, channel 3)    <span class="cmt"># share the slow hand</span></code></pre>
+  <p>The original paper paired adjacent channels <code>(0,1),(2,3)</code>; half-split is equivalent up to a fixed permutation but slices contiguously — faster on GPUs.</p>
+
+  <h2 id="s9"><span class="num">9.</span>The full formula, broken down</h2>
+  <p>For a token at position <code>p</code>, RoPE performs <strong>one rotation per pair</strong>. The angle of that rotation combines the two ideas we've been separating: position chooses <em>how far</em>, and pair index chooses <em>which speed</em>.</p>
+<pre><code><span class="cmt"># 1. Speeds, one per hand/pair  (i = 0 .. d/2 - 1)</span>
+theta_i = base ** (-2*i / d)
+
+<span class="cmt"># 2. Angle = position * speed</span>
+alpha[p, i] = p * theta_i
+
+<span class="cmt"># 3. Turn each pair (x_i, x_{i+d/2}) by alpha[p, i]</span>
+x'_i       = x_i       * cos(alpha[p,i]) - x_{i+d/2} * sin(alpha[p,i])
+x'_{i+d/2} = x_{i+d/2} * cos(alpha[p,i]) + x_i       * sin(alpha[p,i])</code></pre>
+  <p><code>p</code> and <code>i</code> are <strong>different axes</strong>: <code>p</code> comes from the sequence axis; <code>i</code> comes from the head-dim pair. <code>theta_i</code> is the fixed speed of pair <code>i</code>; the angle is <code>p * theta_i</code>. In the original RoPE formulation, and in many standard implementations, the default base is <code>10000</code>. Long-context models often change this value (for example through <code>rope_theta</code> or <code>rope_scaling</code>), but <code>10000</code> is the useful default to learn first.</p>
+  <p>Table for <code>d=4</code>, <code>base=10000</code> (<code>theta_0=1.0</code>, <code>theta_1=0.01</code>):</p>
+<pre><code>                hand i=0       hand i=1
+              (theta=1.0)    (theta=0.01)
+position p=0:   0 * 1 = 0.0    0 * 0.01 = 0.00
+position p=1:   1 * 1 = 1.0    1 * 0.01 = 0.01
+position p=2:   2 * 1 = 2.0    2 * 0.01 = 0.02
+position p=3:   3 * 1 = 3.0    3 * 0.01 = 0.03</code></pre>
+  <p>Down a column: speed fixed, position grows. Across a row: same position, different speeds.</p>
+
+  <h2 id="s10"><span class="num">10.</span>The vectorized form (what real code runs)</h2>
+<pre><code>rotate_half(x) = concat( -x[d/2:],  x[:d/2] )</code></pre>
+  <p>Example:</p>
+<pre><code>x = [1, 2, 3, 4]
+   first half  = [1, 2]
+   second half = [3, 4]
+rotate_half(x) = [-3, -4, 1, 2]</code></pre>
+  <p>Then:</p>
+<pre><code>angles = [alpha_0, alpha_1]              <span class="cmt"># one per hand, length d/2</span>
+emb    = concat(angles, angles)          <span class="cmt"># length d</span>
+x_rope = x * cos(emb) + rotate_half(x) * sin(emb)</code></pre>
+  <p>Why it equals §9: <code>emb</code> stores the angle <code>p * theta_i</code> for every pair, duplicated so both channels in the pair see the same angle. The rotation matrix has a <code>cos</code> part (keeps each channel aligned with itself &rarr; <code>x * cos</code>) and a <code>sin</code> part (pulls in the paired channel, swapped and sign-flipped &rarr; exactly <code>rotate_half</code>).</p>
+
+  <h2 id="s11"><span class="num">11.</span>A full worked example (two hands active)</h2>
+  <p><code>d = 4</code>, <code>theta_0 = 1</code>, <code>theta_1 = 0.01</code>.</p>
+<pre><code>q = [1, 2, 3, 4]   at position m = 1
+k = [1, 1, 1, 1]   at position n = 2</code></pre>
+  <p><strong>Turn q at m=1</strong> (<code>cos1=0.5403, sin1=0.8415</code>; <code>cos0.01&approx;1, sin0.01=0.01</code>):</p>
+<pre><code>pair0 (q0,q2)=(1,3):  q'_0 = 1*0.5403 - 3*0.8415 = -1.9842
+                      q'_2 = 3*0.5403 + 1*0.8415 =  2.4624
+pair1 (q1,q3)=(2,4):  q'_1 = 2*1 - 4*0.01        =  1.9599
+                      q'_3 = 4*1 + 2*0.01        =  4.0198
+q_rot = [-1.9842, 1.9599, 2.4624, 4.0198]</code></pre>
+  <p><strong>Turn k at n=2:</strong></p>
+<pre><code>k_rot = [-1.3254, 0.9798, 0.4932, 1.0198]</code></pre>
+  <p><strong>Score:</strong></p>
+<pre><code>score = (-1.9842)(-1.3254) + (1.9599)(0.9798)
+      + ( 2.4624)( 0.4932) + (4.0198)(1.0198)
+      = 9.864</code></pre>
+  <p>The dot product is index-aligned: channel 0 of Q meets channel 0 of K (both the fast hand), channels 1,3 meet their twins (slow hand). Each hand only ever compares against the same hand, so the score splits into per-hand terms, each depending on <code>(m - n) * theta_i</code>.</p>
+
+  <h2 id="s12"><span class="num">12.</span>When frequencies interfere</h2>
+  <p><strong>Yes — they can.</strong> The <em>rotations</em> are geometrically independent (each hand lives on its own channel-pair). But the final attention score <strong>sums all hands into one scalar</strong>, and summed sinusoids can interfere — so two different gaps can produce the same total score.</p>
+  <p>Concrete collision. Say a head's contributions reduce to <code>score(d) = cos(d) + cos(2d)</code>. Using <code>cos(2d) = 2cos²d − 1</code>, this is <code>2c² + c − 1</code> with <code>c = cos d</code>. Solve <code>score = 0</code>:</p>
+<pre><code>2c^2 + c - 1 = 0  &rarr;  c = 0.5  or  c = -1
+
+c = 0.5  &rarr; d = pi/3 &approx; 1.047
+c = -1   &rarr; d = pi   &approx; 3.142
+
+check d=1.047:  cos(1.047) + cos(2.094) =  0.5 + (-0.5) = 0
+check d=3.142:  cos(3.142) + cos(6.283) = -1.0 + ( 1.0) = 0</code></pre>
+  <p>A gap of <code>&approx;1.047</code> and a gap of <code>&approx;3.142</code> give the <strong>identical</strong> score <code>0</code>. So the rotations are independent, but the scalar score is a sum of all hands &rarr; they <em>do</em> interfere, and one score can alias. What rescues uniqueness is dimensionality: many hands per head (<code>d/2</code>) and many heads. The full <strong>vector</strong> of components is a richer fingerprint than any single scalar — collisions in one number are resolved by the others.</p>
+
+  <h2 id="s13"><span class="num">13.</span>Why meaning is preserved</h2>
+  <p>RoPE mixes two numbers inside each pair, but it does not compress them into one number. It applies a <strong>rotation</strong>: two inputs go in, two outputs come out, and the transformation is exactly reversible if you rotate back by the negative angle.</p>
+  <p>That distinction matters. An average like <code>(x + y) / 2</code> loses information because many pairs can produce the same average. A rotation keeps the pair as a 2-D point and only changes its coordinate system.</p>
+<pre><code>pair (3,4), length 5, turned by 37 deg (cos=0.8, sin=0.6):
+  out_i       = 3*0.8 - 4*0.6 = 0.0
+  out_{i+d/2} = 4*0.8 + 3*0.6 = 5.0
+  new length = sqrt(0^2 + 5^2) = 5   <span class="cmt"># unchanged</span>
+
+recover the original by rotating back:
+  x = out_i*0.8 + out_{i+d/2}*0.6 = 0*0.8 + 5*0.6 = 3
+  y = out_{i+d/2}*0.8 - out_i*0.6 = 5*0.8 - 0*0.6 = 4</code></pre>
+  <p>The two values are mixed, but not destroyed. RoPE changes the direction of the 2-D pair so position can influence attention; it does not average, pool, or discard the original information.</p>
+
+  <h2 id="s14"><span class="num">14.</span>Limitations: what could be improved</h2>
+  <p>Vanilla RoPE is elegant but leaves real things on the table. Each item below is a concrete opening for a better position encoding.</p>
+  <ol>
+    <li><strong>No built-in distance emphasis.</strong> RoPE applies every hand at every gap, with no mechanism to say "this is a far pair, lean on the slow hands." An improved scheme could <em>learn</em> how much each frequency band should count as a function of gap or content.</li>
+    <li><strong>Fixed, hand-set frequencies.</strong> The spectrum <code>theta_i = base^(-2i/d)</code> is set by one constant (<code>base</code>), not learned, not per-head, not data-dependent. A model that <em>learns</em> its frequencies could allocate resolution where the task needs it.</li>
+    <li><strong>Poor native length extrapolation.</strong> Far beyond training length, the fast hands hit angle regimes never seen in training and quality collapses — hence the bolt-on patches (NTK/YaRN/LongRoPE). A scheme that <em>extrapolates by design</em> wouldn't need them.</li>
+    <li><strong>Scalar aliasing.</strong> As §12 showed, summing hands into one score lets distinct gaps collide. The frequency set isn't chosen to <em>minimize</em> collisions over a target window — one could design the spectrum for maximal separability up to, say, 1M tokens.</li>
+    <li><strong>Wasted capacity at long range.</strong> Many high-frequency channels contribute near-noise once tokens are far apart, so part of <code>head_dim</code> does little useful work in long-context regimes.</li>
+    <li><strong>Token-distance only, not semantic distance.</strong> RoPE measures raw index gaps; it has no notion that some tokens "shouldn't count." Content-adaptive positioning is an open direction it doesn't touch.</li>
+    <li><strong>One spectrum for all heads and layers.</strong> Letting heads specialize (some short-range, some long-range) <em>explicitly</em>, rather than faking it through learned <code>W_q, W_k</code> magnitudes, could use the budget more deliberately.</li>
+  </ol>
+  <p>The throughline: RoPE gives the model a <em>fixed, uniform, content-blind</em> bank of clock hands. Most improvement ideas amount to making those hands <strong>learned, adaptive, or better-conditioned for long context</strong> — without losing RoPE's two non-negotiables: the relative-position property and KV-cache compatibility.</p>
+
+  <h2 id="s15"><span class="num">15.</span>Beyond vanilla RoPE</h2>
+  <ul>
+    <li><strong>xPos</strong> — bakes per-frequency decay into the rotation (attenuates fast hands with distance).</li>
+    <li><strong>ALiBi</strong> — drops rotation; adds a per-head linear distance penalty.</li>
+    <li><strong>YaRN / NTK-aware / LongRoPE</strong> — rescale the frequency spectrum (often non-uniformly) to extend context length.</li>
+  </ul>
+  <p>Open challenge: <strong>learned, content-adaptive emphasis</strong> that stays KV-cache-friendly and keeps long-range retrieval intact.</p>
+
+  <h2 id="s16"><span class="num">16.</span>The reference implementation</h2>
+  <p>The models in §1 share this exact code (the half-split dialect) via <code>transformers</code>' <code>#&nbsp;Copied&nbsp;from</code> / modular mechanism — learn it once, read almost every modern open LLM's attention:</p>
+<pre><code><span class="cmt"># transformers/models/qwen3/modeling_qwen3.py  (lines 151-180)</span>
+def rotate_half(x):
+    """Rotates half the hidden dims of the input."""
+    x1 = x[..., : x.shape[-1] // 2]
+    x2 = x[..., x.shape[-1] // 2 :]
+    return torch.cat((-x2, x1), dim=-1)
+
+
+@use_kernel_func_from_hub("rotary_pos_emb")
+def apply_rotary_pos_emb(q, k, cos, sin, unsqueeze_dim=1):
+    ...
+    cos = cos.unsqueeze(unsqueeze_dim)
+    sin = sin.unsqueeze(unsqueeze_dim)
+    q_embed = (q * cos) + (rotate_half(q) * sin)</code></pre>
+
+  <h2 id="s17"><span class="num">17.</span>Summary — the one-paragraph mental model</h2>
+<pre><code>seq axis        &rarr; gives position p
+head_dim        &rarr; split into d/2 channel-pairs
+pair i          &rarr; chooses speed theta_i = base^(-2i/d)
+angle[p, i]     &rarr; p * theta_i
+RoPE            &rarr; one rotation of pair i by angle[p, i]</code></pre>
+  <p>The important relationship is: <strong>there are not two rotations; there is one rotation whose angle has two inputs.</strong> The sequence axis gives <code>p</code>, the head-dim pair gives <code>theta_i</code>, and their product gives the angle. If a head has dimension <code>d</code>, RoPE forms <code>d/2</code> two-dimensional pairs, so there are <code>d/2</code> speeds. Low-index pairs turn quickly and distinguish nearby positions; high-index pairs turn slowly and stay useful over longer ranges. When query position <code>m</code> meets key position <code>n</code> in <code>Q·K</code>, matching pairs compare against matching pairs, so each speed sees the relative gap <code>m - n</code>. One speed is ambiguous, but the whole bank of speeds forms a multi-scale clock for relative position.</p>
+
+  <div class="callout">
+    <p style="margin:0">RoPE is <strong>position turned into clock-hand angles, read back as relative distance.</strong></p>
+  </div>
+
+  <h3>How to cite this post</h3>
+  <p>If this helped you and you want to reference it in a write-up, use the canonical URL below.</p>
+<pre><code>Dong, S. (2026). Understanding RoPE (Rotary Position Embeddings).
+https://simondong1.github.io/rope.html</code></pre>
+<pre><code>@misc{dong2026understandingrope,
+  author = {Dong, Simon},
+  title = {Understanding RoPE (Rotary Position Embeddings)},
+  year = {2026},
+  month = {June},
+  url = {https://simondong1.github.io/rope.html},
+  note = {Technical blog post}
+}</code></pre>
+
+  <h3>Further reading</h3>
+  <ul>
+    <li>Su et al., <em>RoFormer: Enhanced Transformer with Rotary Position Embedding</em> (arXiv 2104.09864) — the original.</li>
+    <li>Press et al., <em>Train Short, Test Long: Attention with Linear Biases (ALiBi)</em> — the explicit-decay alternative.</li>
+    <li><em>YaRN</em> (Peng et al.) and the <em>NTK-aware scaling</em> posts — long-context extensions.</li>
+    <li>The <code>transformers</code> <code>modeling_qwen3.py</code> / <code>modeling_llama.py</code> rotary code — the canonical implementation.</li>
+  </ul>
+
+  <div class="callout warn">
+    <span class="label">Note</span>
+    <p style="margin:0">The period-6/60 hands in §6–7 are illustrative — chosen for clean arithmetic, not a specific model's exact spectrum. Standard RoPE commonly uses <code>base=10000</code>; long-context models often change that through <code>rope_theta</code> or <code>rope_scaling</code>.</p>
+  </div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Written by <a href="https://x.com/dongsixiang"><strong>Simon Dong</strong></a> · June 2026 · Built as a single static page for GitHub Pages.</p>
+    <p>RoPE — position turned into rotation, read back as relative distance.</p>
+  </div>
+</footer>
+
+<script>
+  // Highlight the current section in the contents bar while scrolling.
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var byId = {};
+    links.forEach(function(a){ byId[a.getAttribute('href').slice(1)] = a; });
+    var setActive = function(id){
+      links.forEach(function(l){ l.classList.remove('active'); });
+      if (byId[id]) byId[id].classList.add('active');
+    };
+    var heads = Array.prototype.slice.call(document.querySelectorAll('main h2[id]'));
+    if (!('IntersectionObserver' in window) || !heads.length) return;
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if (e.isIntersecting) setActive(e.target.id); });
+    }, { rootMargin: '-12% 0px -78% 0px', threshold: 0 });
+    heads.forEach(function(h){ obs.observe(h); });
+  })();
+</script>
+
+</body>
+</html>
