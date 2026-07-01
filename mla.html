@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Understanding MLA (Multi-head Latent Attention)</title>
+<meta name="description" content="A tutorial on Multi-head Latent Attention: how DeepSeek-style MLA relates to MHA and MQA, why it splits nope and rope, and how training differs from optimized decode." />
+<link rel="canonical" href="https://simondong1.github.io/mla.html" />
+<link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
+<meta property="og:title" content="Understanding MLA (Multi-head Latent Attention)" />
+<meta property="og:description" content="How DeepSeek-style MLA compresses KV cache, factors the decode math, and splits nope from rope." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/mla.html" />
+<meta property="og:site_name" content="Simon Dong" />
+<meta property="og:image" content="https://simondong1.github.io/assets/mla-og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Understanding MLA: full K,V cache becomes c_kv plus k_rope." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Understanding MLA (Multi-head Latent Attention)" />
+<meta name="twitter:description" content="How DeepSeek-style MLA compresses KV cache, factors the decode math, and splits nope from rope." />
+<meta name="twitter:image" content="https://simondong1.github.io/assets/mla-og.png" />
+<meta name="author" content="Simon Dong" />
+<meta name="citation_title" content="Understanding MLA (Multi-head Latent Attention)" />
+<meta name="citation_author" content="Dong, Simon" />
+<meta name="citation_publication_date" content="2026/07/01" />
+<meta name="citation_fulltext_html_url" content="https://simondong1.github.io/mla.html" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Understanding MLA (Multi-head Latent Attention)","description":"A tutorial on Multi-head Latent Attention: how DeepSeek-style MLA relates to MHA and MQA, why it splits nope and rope, and how training differs from optimized decode.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang"},"datePublished":"2026-07-01","dateModified":"2026-07-01","mainEntityOfPage":"https://simondong1.github.io/mla.html","image":"https://simondong1.github.io/assets/mla-og.png"}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>MathJax={tex:{inlineMath:[["\\(","\\)"],],displayMath:[["\\[","\\]"]]},svg:{fontCache:"global"}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root{--bg:#fbfbfa;--surface:#fff;--ink:#1f2328;--ink-soft:#475059;--muted:#8b949e;--line:#e8e8e6;--accent:#4f46e5;--accent-soft:#eef0fe;--code-bg:#0d1117;--code-ink:#e6edf3;--code-dim:#8b949e;--maxw:46rem}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:1.05rem;line-height:1.68;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}.wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+  header.hero{padding:6rem 0 2.8rem;border-bottom:1px solid var(--line);margin-bottom:3.4rem}.eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 1.1rem}h1.title{font-weight:800;font-size:clamp(2.4rem,5.6vw,4rem);line-height:1.08;letter-spacing:-.03em;margin:0 0 1rem}.title-expansion{display:block;margin-top:.35rem;font-size:clamp(1.15rem,2.4vw,1.65rem);line-height:1.2;color:var(--ink-soft);font-weight:650}.subtitle{font-size:1.22rem;color:var(--ink-soft);margin:0 0 1.9rem;line-height:1.55;max-width:42rem}.byline{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-size:.9rem;color:var(--muted)}.byline .who{color:var(--ink);font-weight:600}.byline .dot{color:var(--line)}
+  h2{font-weight:700;font-size:1.7rem;letter-spacing:-.02em;line-height:1.2;margin:3.4rem 0 1rem;scroll-margin-top:1.5rem}h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}h3{font-weight:600;font-size:1.18rem;margin:2rem 0 .6rem}p{margin:1.05rem 0}.lede{font-size:1.22rem;line-height:1.62;letter-spacing:-.01em;margin:0 0 1.8rem}.lede strong{font-weight:650}a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}a:hover{border-color:var(--accent)}strong{font-weight:600}ul,ol{margin:1.1rem 0;padding-left:1.3rem}li{margin:.45rem 0}
+  code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em;background:#f0f1f4;color:#cf2a6b;padding:.12em .4em;border-radius:5px;border:1px solid #e7e8ec}pre{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:1.3rem 1.4rem;margin:1.6rem 0;overflow-x:auto;font-size:.83rem;line-height:1.62;box-shadow:0 10px 30px -18px rgba(13,17,23,.55);border:1px solid #1c2230}pre code{background:none;border:none;color:inherit;padding:0;font-size:.92rem;font-family:"JetBrains Mono",ui-monospace,monospace}pre .cmt{color:var(--code-dim)}
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:1.1rem 1.3rem;margin:1.8rem 0;font-size:1rem;line-height:1.6}.callout.note{border-left-color:#0ea5e9}.callout .label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);display:block;margin-bottom:.35rem}.callout.note .label{color:#0ea5e9}.callout p{margin:.4rem 0}
+  nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.5rem;margin:0 0 2rem}nav.toc .toc-title{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.8rem}nav.toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2rem;font-size:.93rem}nav.toc li{margin:.3rem 0;break-inside:avoid}nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.16rem .5rem;border-radius:6px;line-height:1.4}nav.toc a:hover,nav.toc a.active{color:var(--accent);background:var(--accent-soft)}nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}@media(min-width:1280px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 46rem)/2 - 15.5rem);width:13.5rem;max-height:calc(100vh - 7rem);overflow-y:auto;background:none;border:none;border-radius:0;padding:0;margin:0}nav.toc ol{columns:1;font-size:.82rem}}
+  table.ptable{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.92rem}table.ptable th,table.ptable td{text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}table.ptable th{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}.wrapscroll{overflow-x:auto}.map{background:#fff;border:1px solid var(--line);border-radius:14px;padding:1rem;margin:1.4rem 0}.map pre{margin:.4rem 0;background:#f8fafc;color:var(--ink);box-shadow:none;border-color:#e8e8e6}
+  footer{border-top:1px solid var(--line);margin-top:4rem;padding:2.5rem 0 4rem;font-size:.9rem;color:var(--muted)}footer a{color:var(--ink-soft)}@media(max-width:640px){body{font-size:1.06rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.45rem}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap"><p class="eyebrow">Attention Variants · MLA</p><h1 class="title">Understanding MLA <span class="title-expansion">(Multi-head Latent Attention)</span></h1><p class="subtitle">Why DeepSeek-style models store one latent KV state, why the head splits into nope and rope, and why training code looks different from optimized decode.</p><div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>July 2026</span><span class="dot">•</span><span>~14 min read</span></div></div></header>
+<main class="wrap">
+<p class="lede"><strong>MLA is easiest to understand as a compromise between MHA and MQA.</strong> It stores one shared latent per token like MQA stores one shared KV head, but it still gives each query head its own learned view of that latent. The result is MQA-like cache size with much more MHA-like expressiveness.</p>
+<div class="callout note"><span class="label">Series context</span><p>This post follows the GQA post. GQA saves cache by reducing the number of KV heads. MLA goes further: it replaces explicit cached K/V heads with a compact latent representation, then factors the decode math so serving engines do not rebuild full per-head K/V for every cached token.</p></div>
+<nav class="toc"><div class="toc-title">Contents</div><ol><li><a href="#s1"><span class="n">1</span>Where MLA sits</a></li><li><a href="#s2"><span class="n">2</span>Two goals</a></li><li><a href="#s3"><span class="n">3</span>Nope and rope paths</a></li><li><a href="#s4"><span class="n">4</span>Training path</a></li><li><a href="#s5"><span class="n">5</span>Decode path</a></li><li><a href="#s6"><span class="n">6</span>Why rope stays out</a></li><li><a href="#s7"><span class="n">7</span>Summary</a></li></ol></nav>
+<h2 id="s1"><span class="num">1.</span>Where MLA sits: MHA, MQA, then MLA</h2>
+<p>In standard multi-head attention, every query head owns its own key and value head. That is expressive, but the KV cache is huge.</p>
+<pre><code>MHA:  many Q heads, many cached K/V heads
+GQA:  many Q heads, fewer cached K/V heads
+MQA:  many Q heads, one cached K/V head
+MLA:  many Q heads, one cached latent, plus a tiny rope key</code></pre>
+<p>The closest storage analogy is MQA: both store one shared thing per token. The difference is that MQA stores one literal K/V head, while MLA stores a richer latent <code>c_kv</code>. Each query head then has its own learned projection from that shared latent, so heads can still see different K/V subspaces.</p>
+<div class="map"><pre><code>MQA:  all heads use the same K,V
+MLA:  all heads share c_kv, but head h has its own W_K^h and W_V^h</code></pre></div>
+<h2 id="s2"><span class="num">2.</span>What MLA tries to achieve</h2>
+<p>MLA has two separate goals. The first is <strong>storage</strong>: cache a tiny per-token representation instead of full per-head K/V. The second is <strong>decode compute</strong>: avoid rebuilding full per-head K/V for every cached token at every generation step.</p>
+<div class="wrapscroll"><table class="ptable"><thead><tr><th>Goal</th><th>What happens</th><th>Why it matters</th></tr></thead><tbody><tr><td>Storage</td><td>cache <code>c_kv + k_rope</code></td><td>far fewer values per token/layer</td></tr><tr><td>Decode compute</td><td>move K/V projection work to current query/output</td><td>do not up-project the whole cache every step</td></tr></tbody></table></div>
+<p>For DeepSeek-V3 dimensions, a full reconstructed cache would be roughly:</p>
+<pre><code>K_nope: 128 heads * 128 dims = 16384
+K_rope: 128 heads *  64 dims =  8192
+V:      128 heads * 128 dims = 16384
+full:                         40960 values/token/layer</code></pre>
+<p>The optimized MLA cache stores:</p>
+<pre><code>c_kv:   512
+k_rope: 64
+latent cache: 576 values/token/layer</code></pre>
+<p>That is about <strong>71× smaller</strong> for the cached state. The training/reference implementation may reconstruct full K/V; the optimized decode implementation stores the latent.</p>
+<h2 id="s3"><span class="num">3.</span>The two paths: nope and rope</h2>
+<p>MLA splits Q and K into two parts:</p>
+<pre><code>Q = [ Q_nope | Q_rope ]
+K = [ K_nope | K_rope ]</code></pre>
+<p><strong>Nope</strong> means no positional embedding. This is the content path. It can be represented as a fixed linear projection from the latent, so it is cache-compressible and decode-factorable.</p>
+<p><strong>Rope</strong> carries position. If the notation is unfamiliar, see the earlier <a href="rope.html">RoPE post</a>; the short version is that a key at position <code>n</code> gets a rotation depending on <code>n</code>. Because that rotation changes with key position, this part cannot be treated as one fixed projection from the latent during decode.</p>
+<pre><code>NOPE path:  c_kv -> per-head K_nope and V       (fixed learned maps)
+ROPE path:  hidden -> small K_rope -> RoPE      (position-dependent)</code></pre>
+<p>Only the nope path gets both benefits: compact storage and decode factoring. The rope path still saves storage by being tiny and shared across heads, but it does not get the same decode factoring.</p>
+<h2 id="s4"><span class="num">4.</span>The training/reference setup: compress, then reconstruct</h2>
+<p>The Hugging Face DeepSeek-V3 implementation is the clean reference path. It trains the real MLA weights, but it reconstructs full per-head K/V before attention. That is correct for training and simple generation; it is not the optimized latent-cache decode path.</p>
+<pre><code>DeepSeek-V3 dimensions:
+hidden_size       = 7168
+num_heads         = 128
+q_lora_rank       = 1536
+kv_lora_rank      = 512
+qk_nope_head_dim  = 128
+qk_rope_head_dim  = 64
+qk_head_dim       = 192
+v_head_dim        = 128</code></pre>
+<p>The Q path may also use a low-rank projection:</p>
+<pre><code>hidden -> q_a_proj(1536) -> RMSNorm -> q_b_proj(128 heads * 192)
+q -> split into q_nope(128) + q_rope(64)</code></pre>
+<p>The KV path is the core MLA path:</p>
+<pre><code>hidden -> kv_a_proj_with_mqa(512 + 64)
+       -> split into c_kv(512) and k_rope(64)
+
+c_kv -> RMSNorm -> kv_b_proj -> per-head K_nope(128) and V(128)
+k_rope -> RoPE -> shared across heads</code></pre>
+<p>The latent RMSNorms are not QK-norm. They normalize the low-rank bottlenecks (<code>q_lora_rank</code> and <code>kv_lora_rank</code>) so the compress/decompress path trains stably.</p>
+<p>Important: during standard pretraining or finetuning, there is no autoregressive KV cache. The model sees the full sequence, uses a causal mask, computes full K/V for the forward pass, and backpropagates. So the huge latent-cache saving is a decode-time serving win, not a training-forward win.</p>
+<h2 id="s5"><span class="num">5.</span>The optimized decode setup: do not rebuild the cache</h2>
+<p>Serving engines such as SGLang and vLLM reorganize the same trained weights for decoding. The simplest code to read is SGLang's MiniCPM3 MLA path. It splits the trained <code>kv_b_proj</code> into two matrices:</p>
+<pre><code>w_kc: per-head K projection, moved to the query side
+w_vc: per-head V projection, moved to the output side</code></pre>
+<p>For K, the reference computation is:</p>
+<pre><code>K_nope_h[n] = W_K^h c_kv[n]
+score_h[n]  = Q_nope_h · K_nope_h[n]</code></pre>
+<p>Decode factors this as:</p>
+<pre><code>score_h[n] = (Q_nope_h W_K^h) · c_kv[n]</code></pre>
+<p>The current query is transformed once into latent space, then dotted against every cached latent. That avoids applying <code>W_K^h</code> to every cached token on every step.</p>
+<p>For V, the same idea happens after attention:</p>
+<pre><code>reference:  output_h = Σ_n A[n] (W_V^h c_kv[n])
+decode:     output_h = W_V^h (Σ_n A[n] c_kv[n])</code></pre>
+<p>So the weighted sum happens in latent space, and only the final result is projected back to <code>v_head_dim</code>. The model does not reconstruct V for every cached token during optimized decode.</p>
+<pre><code>SGLang decode sketch:
+q_nope -> w_kc -> latent query (512)
+cache stores [c_kv(512) | k_rope(64)]
+attention runs over latent cache
+latent output -> w_vc -> per-head output (128)
+o_proj -> hidden</code></pre>
+<h2 id="s6"><span class="num">6.</span>Why rope stays outside the latent</h2>
+<p>This is the part that makes MLA feel strange. The nope path uses a fixed matrix <code>W_K^h</code>. It is different for each head, but fixed across all token positions, so we can move it to the query side once for the current decode token.</p>
+<p>RoPE is different. At decode position <code>m</code>, the current query attends to cached key positions <code>n = 0, 1, ..., m-1</code>. The relative rotation is <code>R_(m-n)</code>, so every cached position gets a different rotation:</p>
+<pre><code>n=0:   R_m
+n=1:   R_(m-1)
+n=2:   R_(m-2)
+...</code></pre>
+<p>Those rotations are predictable, but they are not one shared matrix. If rope were hidden inside the latent projection, you would need a different transformed query for every cached key position. That destroys the single-query-against-whole-cache trick.</p>
+<p>DeepSeek's fix is to keep the rope part small and explicit:</p>
+<pre><code>k_rope: 64 dims, one shared head
+q_rope: 64 dims, per query head</code></pre>
+<p>The per-head content interaction lives in the nope path. The rope path only carries enough positional signal to keep relative position working, so it is tiny and shared across heads.</p>
+<h2 id="s7"><span class="num">7.</span>Summary</h2>
+<pre><code>MLA = MQA-like cache + MHA-like per-head views
+
+NOPE path:
+  content path
+  stored as c_kv
+  can move K/V projection work to query/output side
+
+ROPE path:
+  position path
+  kept outside c_kv
+  tiny and shared across heads
+  cannot use the same decode factoring</code></pre>
+<p>Transformers implements the readable training/reference form: compress, reconstruct full K/V, attend. SGLang/vLLM implement the optimized decode form: cache <code>c_kv + k_rope</code>, move the K/V projections to the query/output side, and avoid rebuilding full per-head K/V for every cached token. Same weights, different runtime factorization.</p>
+<div class="callout"><p style="margin:0">MLA in one line: <strong>store one latent KV state, let each head learn its own view of it, and keep a tiny separate rope key for position.</strong></p></div>
+<h3>References</h3>
+<ul><li>DeepSeek-V2 / V3 papers — MLA and decoupled RoPE.</li><li>Hugging Face <code>modeling_deepseek_v3.py</code> — reference/training form.</li><li>SGLang <code>minicpm3.py</code> and <code>forward_mla.py</code> — optimized decode form.</li><li>vLLM MLA attention backends — production-serving implementation.</li></ul>
+<h3>How to cite this post</h3>
+<pre><code>Dong, S. (2026). Understanding MLA (Multi-head Latent Attention).
+https://simondong1.github.io/mla.html</code></pre>
+<pre><code>@misc{dong2026understandingmla,
+  author = {Dong, Simon},
+  title  = {Understanding MLA (Multi-head Latent Attention)},
+  year   = {2026},
+  month  = {July},
+  url    = {https://simondong1.github.io/mla.html},
+  note   = {Technical blog post}
+}</code></pre>
+</main>
+<footer><div class="wrap"><p>Written by <a href="https://x.com/dongsixiang"><strong>Simon Dong</strong></a> · July 2026.</p><p><a href="/">&larr; Back to blog</a></p></div></footer>
+<script>(function(){var links=Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));var byId={};links.forEach(function(a){byId[a.getAttribute('href').slice(1)]=a});var heads=Array.prototype.slice.call(document.querySelectorAll('main h2[id]'));if(!('IntersectionObserver'in window)||!heads.length)return;var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active')});if(byId[e.target.id])byId[e.target.id].classList.add('active')}})},{rootMargin:'-12% 0px -78% 0px',threshold:0});heads.forEach(function(h){obs.observe(h)})})();</script>
+</body>
+</html>
