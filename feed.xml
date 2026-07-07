@@ -7,6 +7,13 @@
     <language>en-us</language>
     <atom:link href="https://simondong1.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Understanding MLA Decoding (Materialize vs Absorb)</title>
+      <link>https://simondong1.github.io/mla-decoding.html</link>
+      <guid isPermaLink="true">https://simondong1.github.io/mla-decoding.html</guid>
+      <pubDate>Tue, 07 Jul 2026 00:00:00 +0000</pubDate>
+      <description>The two ways to run Multi-head Latent Attention at inference, and the crossover that decides which one to use, with interactive charts.</description>
+    </item>
+    <item>
       <title>Understanding MLA (Multi-head Latent Attention)</title>
       <link>https://simondong1.github.io/mla.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/mla.html</guid>

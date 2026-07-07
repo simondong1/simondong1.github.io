@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Understanding MLA Decoding (Materialize vs Absorb)</title>
+<meta name="description" content="Part 2 on Multi-head Latent Attention: the two ways to run MLA at inference (rebuild the cache vs fold the projections into the query), and the crossover that decides which one wins." />
+<link rel="canonical" href="https://simondong1.github.io/mla-decoding.html" />
+<link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
+<meta property="og:title" content="Understanding MLA Decoding" />
+<meta property="og:description" content="Two ways to run MLA at inference — rebuild the cache or fold the projections into the query — and the crossover between them." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/mla-decoding.html" />
+<meta property="og:site_name" content="Simon Dong" />
+<meta property="og:image" content="https://simondong1.github.io/assets/mla-decoding-og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="MLA decoding: materialize vs absorb, and the crossover point." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Understanding MLA Decoding" />
+<meta name="twitter:description" content="Two ways to run MLA at inference and the crossover between them." />
+<meta name="twitter:image" content="https://simondong1.github.io/assets/mla-decoding-og.png" />
+<meta name="author" content="Simon Dong" />
+<meta name="citation_title" content="Understanding MLA Decoding (Materialize vs Absorb)" />
+<meta name="citation_author" content="Dong, Simon" />
+<meta name="citation_publication_date" content="2026/07/07" />
+<meta name="citation_fulltext_html_url" content="https://simondong1.github.io/mla-decoding.html" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Understanding MLA Decoding (Materialize vs Absorb)","description":"The two ways to run Multi-head Latent Attention at inference, and the crossover that decides which one to use.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang"},"datePublished":"2026-07-07","dateModified":"2026-07-07","mainEntityOfPage":"https://simondong1.github.io/mla-decoding.html","image":"https://simondong1.github.io/assets/mla-decoding-og.png"}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#fbfbfa;--surface:#fff;--ink:#1f2328;--ink-soft:#475059;--muted:#8b949e;--line:#e8e8e6;--accent:#4f46e5;--accent-soft:#eef0fe;--warm:#e5484d;--warm-soft:#fdecec;--cool:#0ea5e9;--cool-soft:#e7f6fe;--code-bg:#0d1117;--code-ink:#e6edf3;--code-dim:#8b949e;--maxw:46rem}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:1.05rem;line-height:1.68;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+  header.hero{padding:6rem 0 2.8rem;border-bottom:1px solid var(--line);margin-bottom:3.4rem}
+  .eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 1.1rem}
+  h1.title{font-weight:800;font-size:clamp(2.4rem,5.6vw,4rem);line-height:1.08;letter-spacing:-.03em;margin:0 0 1rem}
+  .title-expansion{display:block;margin-top:.35rem;font-size:clamp(1.15rem,2.4vw,1.65rem);line-height:1.2;color:var(--ink-soft);font-weight:650}
+  .subtitle{font-size:1.22rem;color:var(--ink-soft);margin:0 0 1.9rem;line-height:1.55;max-width:42rem}
+  .byline{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-size:.9rem;color:var(--muted)}
+  .byline .who{color:var(--ink);font-weight:600}.byline .dot{color:var(--line)}
+  h2{font-weight:700;font-size:1.7rem;letter-spacing:-.02em;line-height:1.2;margin:3.4rem 0 1rem;scroll-margin-top:1.5rem}
+  h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}
+  h3{font-weight:600;font-size:1.18rem;margin:2rem 0 .6rem}
+  p{margin:1.05rem 0}
+  .lede{font-size:1.22rem;line-height:1.62;letter-spacing:-.01em;margin:0 0 1.8rem}
+  .lede strong{font-weight:650}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}a:hover{border-color:var(--accent)}
+  strong{font-weight:600}em{font-style:italic}
+  ul,ol{margin:1.1rem 0;padding-left:1.3rem}li{margin:.45rem 0}
+  code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em;background:#f0f1f4;color:#cf2a6b;padding:.12em .4em;border-radius:5px;border:1px solid #e7e8ec}
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:1.3rem 1.4rem;margin:1.6rem 0;overflow-x:auto;font-size:.82rem;line-height:1.62;box-shadow:0 10px 30px -18px rgba(13,17,23,.55);border:1px solid #1c2230}
+  pre code{background:none;border:none;color:inherit;padding:0;font-size:.95rem;font-family:"JetBrains Mono",ui-monospace,monospace}
+  pre .cmt{color:var(--code-dim)}
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:1.1rem 1.3rem;margin:1.8rem 0;font-size:1rem;line-height:1.6}
+  .callout.note{border-left-color:var(--cool)}.callout .label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);display:block;margin-bottom:.35rem}
+  .callout.note .label{color:var(--cool)}.callout p{margin:.4rem 0}
+  nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.5rem;margin:0 0 2rem}
+  nav.toc .toc-title{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.8rem}
+  nav.toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2rem;font-size:.93rem}
+  nav.toc li{margin:.3rem 0;break-inside:avoid}nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.16rem .5rem;border-radius:6px;line-height:1.4}
+  nav.toc a:hover,nav.toc a.active{color:var(--accent);background:var(--accent-soft)}nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}
+  @media(min-width:1300px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 46rem)/2 - 16rem);width:14rem;max-height:calc(100vh - 7rem);overflow-y:auto;background:none;border:none;border-radius:0;padding:0;margin:0}nav.toc ol{columns:1;font-size:.82rem}}
+  table.ptable{width:100%;border-collapse:collapse;margin:1.3rem 0;font-size:.9rem}
+  table.ptable th,table.ptable td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+  table.ptable th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+  table.ptable td:first-child{font-weight:600}.wrapscroll{overflow-x:auto}
+  /* flow diagram */
+  .flows{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.7rem 0}
+  .flow{border:1px solid var(--line);border-radius:14px;padding:1rem .9rem;background:#fff}
+  .flow h4{margin:.1rem 0 .8rem;font-size:.95rem;text-align:center}
+  .flow .tag{display:block;text-align:center;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.7rem}
+  .node{border-radius:9px;padding:.5rem .5rem;font-family:"JetBrains Mono",monospace;font-size:.72rem;text-align:center;margin:.35rem 0;border:1px solid #e7e8ec;background:#f6f7f9;line-height:1.35}
+  .node.warm{background:var(--warm-soft);border-color:#f3c0c2;color:#a32a2e}
+  .node.cool{background:var(--cool-soft);border-color:#bfe6f7;color:#0b6a8c}
+  .node b{font-weight:700}
+  .adown{text-align:center;color:var(--muted);font-size:.9rem;margin:.1rem 0}
+  .legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:.82rem;color:var(--ink-soft);margin:.4rem 0 0}
+  .legend span{display:inline-flex;align-items:center;gap:.4rem}
+  .swatch{width:.85rem;height:.85rem;border-radius:3px;display:inline-block;border:1px solid #ccc}
+  /* interactive panel */
+  .panel{border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.2rem;margin:1.6rem 0;background:#fff;box-shadow:0 18px 42px -34px rgba(13,17,23,.35)}
+  .controls{display:flex;flex-wrap:wrap;gap:1rem 1.4rem;align-items:center;margin-bottom:1rem;font-size:.9rem}
+  .controls label{display:flex;flex-direction:column;gap:.3rem;font-weight:600;color:var(--ink-soft)}
+  .controls select,.controls input[type=range]{font:inherit}
+  .controls input[type=range]{width:180px}
+  .readout{font-size:1rem;line-height:1.55;background:var(--accent-soft);border:1px solid #dfe2fb;border-radius:10px;padding:.7rem .9rem;margin-top:.9rem}
+  .readout b{color:var(--accent)}
+  .chart-box{position:relative;height:340px}
+  .chart-box.bar{height:260px}
+  footer{border-top:1px solid var(--line);margin-top:4rem;padding:2.5rem 0 4rem;font-size:.9rem;color:var(--muted)}footer a{color:var(--ink-soft)}
+  @media(max-width:640px){body{font-size:1.06rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.45rem}.flows{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <p class="eyebrow">Attention Variants · MLA Part 2</p>
+  <h1 class="title">Understanding MLA Decoding <span class="title-expansion">Materialize vs Absorb</span></h1>
+  <p class="subtitle">There are two ways to run Multi-head Latent Attention at inference: rebuild the cache into full keys and values, or fold the projections into the query. This post shows both, and the crossover that decides which one to use.</p>
+  <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>July 2026</span><span class="dot">•</span><span>~13 min read</span></div>
+</div></header>
+
+<main class="wrap">
+<p class="lede"><strong>MLA stores one small latent per token. But how do you actually compute attention from that latent?</strong> There are two algorithms, and modern engines ship both. This post walks through each step by step, then uses interactive charts to show exactly when one beats the other.</p>
+
+<div class="callout note"><span class="label">Follow-up post</span><p>This continues the <a href="mla.html">first MLA post</a>. That one covered why MLA compresses the KV cache and why the head splits into a "nope" (content) part and a "rope" (position) part. Here we assume that, but every symbol is re-defined below so you can read this on its own.</p></div>
+
+<nav class="toc"><div class="toc-title">Contents</div><ol>
+  <li><a href="#s1"><span class="n">1</span>Notation, spelled out</a></li>
+  <li><a href="#s2"><span class="n">2</span>Prefill and decode are one thing</a></li>
+  <li><a href="#s3"><span class="n">3</span>The two algorithms</a></li>
+  <li><a href="#s4"><span class="n">4</span>Cost of each step</a></li>
+  <li><a href="#s5"><span class="n">5</span>The trade-off (interactive)</a></li>
+  <li><a href="#s6"><span class="n">6</span>The crossover point</a></li>
+  <li><a href="#s7"><span class="n">7</span>The cache-size win</a></li>
+  <li><a href="#s8"><span class="n">8</span>Which runs when</a></li>
+</ol></nav>
+
+<h2 id="s1"><span class="num">1.</span>Notation, spelled out</h2>
+<p>No single-letter shorthand in this post. Every quantity keeps its full name.</p>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Name</th><th>Meaning</th><th>DeepSeek-V3</th></tr></thead>
+<tbody>
+<tr><td>new_tokens</td><td>query tokens processed in this call</td><td>1 (decode) … thousands (prefill)</td></tr>
+<tr><td>cached_tokens</td><td>tokens already in the KV cache (context length)</td><td>up to ~128k</td></tr>
+<tr><td>heads</td><td>number of attention heads</td><td>128</td></tr>
+<tr><td>nope_dim</td><td>content part of each head (no position)</td><td>128</td></tr>
+<tr><td>rope_dim</td><td>position (rotary) part of each head</td><td>64</td></tr>
+<tr><td>value_dim</td><td>value width per head</td><td>128</td></tr>
+<tr><td>latent_dim</td><td>compressed KV width MLA stores per token</td><td>512</td></tr>
+</tbody></table></div>
+<p>The cache holds, per token: one <code>latent</code> vector of width <code>latent_dim</code>, plus one shared <code>rope key</code> of width <code>rope_dim</code>. Keys and values for every head are produced from that latent by learned projections.</p>
+
+<h2 id="s2"><span class="num">2.</span>Prefill and decode are the same computation</h2>
+<p>People treat prefill and decode as different, but for attention they are the same operation with one number changed:</p>
+<pre><code>decode   =  new_tokens is 1        (one fresh token attends to the whole cache)
+prefill  =  new_tokens is large    (the whole prompt attends to itself)</code></pre>
+<p>So instead of two stories, we analyze one cost as <code>new_tokens</code> grows from 1 upward. The crossover between the two algorithms will fall somewhere on that axis.</p>
+
+<h2 id="s3"><span class="num">3.</span>The two algorithms</h2>
+<p>Both start from the same cached latent. They differ in <em>where</em> the key/value projections are applied.</p>
+
+<div class="flows">
+  <div class="flow">
+    <span class="tag">Approach A</span>
+    <h4>Materialize</h4>
+    <div class="node cool">cached latent<br><b>(cached_tokens × latent_dim)</b></div>
+    <div class="adown">&darr;</div>
+    <div class="node warm">rebuild K and V for <b>every</b> cached token &amp; head<br><b>grows with cached_tokens</b></div>
+    <div class="adown">&darr;</div>
+    <div class="node">full per-head K, V<br>(cached_tokens × heads × …)</div>
+    <div class="adown">&darr;</div>
+    <div class="node cool">attention, narrow head<br>(nope + rope, value)</div>
+    <div class="adown">&darr;</div>
+    <div class="node">output</div>
+  </div>
+  <div class="flow">
+    <span class="tag">Approach B</span>
+    <h4>Absorb</h4>
+    <div class="node cool">new query<br><b>(new_tokens × nope_dim)</b></div>
+    <div class="adown">&darr;</div>
+    <div class="node warm">fold key projection into the query<br><b>grows with new_tokens</b></div>
+    <div class="adown">&darr;</div>
+    <div class="node">query in latent space<br>(new_tokens × latent_dim)</div>
+    <div class="adown">&darr;</div>
+    <div class="node cool">attention on the raw latent, one shared head<br>(wider: latent + rope, latent)</div>
+    <div class="adown">&darr;</div>
+    <div class="node warm">fold value projection into the output</div>
+  </div>
+</div>
+<div class="legend">
+  <span><span class="swatch" style="background:var(--warm-soft);border-color:#f3c0c2"></span>projection work (the step that flips)</span>
+  <span><span class="swatch" style="background:var(--cool-soft);border-color:#bfe6f7"></span>attention core</span>
+</div>
+<p>The single most important difference is highlighted in red:</p>
+<ul>
+<li><strong>Materialize</strong> rebuilds keys and values for <em>every cached token</em>, so its projection work grows with <code>cached_tokens</code>.</li>
+<li><strong>Absorb</strong> only transforms the <em>new queries</em>, so its projection work grows with <code>new_tokens</code>.</li>
+</ul>
+<p>At decode, <code>cached_tokens</code> is huge and <code>new_tokens</code> is 1. So Materialize does a huge rebuild while Absorb does almost nothing. That is the whole intuition — the charts below make it exact.</p>
+
+<h2 id="s4"><span class="num">4.</span>Cost of each step</h2>
+<p>The one rule: a matmul of shape <code>(rows × inner) times (inner × cols)</code> costs <code>rows × cols × inner</code> multiply-adds. Applying it to every step, per layer:</p>
+
+<h3>Approach A — Materialize</h3>
+<pre><code><span class="cmt"># rebuild keys and values from the cached latent</span>
+rebuild K:  cached_tokens × latent_dim × nope_dim   × heads
+rebuild V:  cached_tokens × latent_dim × value_dim  × heads
+<span class="cmt"># attention with the narrow head</span>
+scores:     new_tokens × cached_tokens × (nope_dim + rope_dim) × heads
+aggregate:  new_tokens × cached_tokens × value_dim × heads</code></pre>
+<pre><code>Materialize total (per layer) =
+  heads × cached_tokens × latent_dim × (nope_dim + value_dim)          <span class="cmt"># rebuild, grows with cached_tokens</span>
++ heads × new_tokens × cached_tokens × (nope_dim + rope_dim + value_dim) <span class="cmt"># attention</span></code></pre>
+
+<h3>Approach B — Absorb</h3>
+<pre><code><span class="cmt"># fold the key/value projections onto the query and the output</span>
+fold key  :  new_tokens × nope_dim  × latent_dim × heads
+fold value:  new_tokens × latent_dim × value_dim × heads
+<span class="cmt"># attention on the raw latent (wider, but one shared key/value head)</span>
+scores:      new_tokens × cached_tokens × (latent_dim + rope_dim) × heads
+aggregate:   new_tokens × cached_tokens × latent_dim × heads</code></pre>
+<pre><code>Absorb total (per layer) =
+  heads × new_tokens × latent_dim × (nope_dim + value_dim)               <span class="cmt"># fold, grows with new_tokens</span>
++ heads × new_tokens × cached_tokens × (2 × latent_dim + rope_dim)        <span class="cmt"># attention (wider)</span></code></pre>
+
+<p>Read the two totals side by side. The projection line is identical work — <code>latent_dim × (nope_dim + value_dim)</code> per token — but Materialize multiplies it by <code>cached_tokens</code> while Absorb multiplies it by <code>new_tokens</code>. Absorb pays instead in the attention line, which is wider (<code>latent_dim</code> instead of <code>nope_dim</code>).</p>
+
+<h2 id="s5"><span class="num">5.</span>The trade-off, interactively</h2>
+<p>The chart plots both totals as <code>new_tokens</code> grows from 1 (decode) to thousands (prefill). Pick a model and drag the context length. Where the lines cross is where the winner changes.</p>
+
+<div class="panel">
+  <div class="controls">
+    <label>model
+      <select id="preset">
+        <option value="dsv3">DeepSeek-V3 (heads 128, latent 512)</option>
+        <option value="small">Smaller (heads 32, latent 256)</option>
+      </select>
+    </label>
+    <label>cached_tokens (context): <span id="ctxval" style="color:var(--accent)"></span>
+      <input type="range" id="ctx" min="9" max="17" step="1" value="12" />
+    </label>
+  </div>
+  <div class="chart-box"><canvas id="costChart"></canvas></div>
+  <div class="readout" id="readout"></div>
+</div>
+<p>Notice the shape: the two lines are nearly parallel on the log scale, and they cross once. Left of the cross (few new tokens = decode) Absorb is far below. Right of the cross (many new tokens = prefill) Materialize dips under. Increasing the context slides the crossover only slightly — it is close to a fixed number of tokens, not a fixed fraction of context.</p>
+
+<h2 id="s6"><span class="num">6.</span>The crossover point</h2>
+<p>Set the two totals equal and solve for <code>new_tokens</code>. Fully expanded:</p>
+<pre><code>crossover new_tokens =
+        cached_tokens × latent_dim × (nope_dim + value_dim)
+   ───────────────────────────────────────────────────────────────────
+   latent_dim × (nope_dim + value_dim)
+   + cached_tokens × ( 2 × latent_dim − nope_dim − value_dim )</code></pre>
+<p>For long context the first term in the denominator becomes negligible, and it simplifies to a value that does not depend on context length at all:</p>
+<pre><code>crossover new_tokens  ≈   latent_dim × (nope_dim + value_dim)
+                          ───────────────────────────────────
+                          2 × latent_dim − nope_dim − value_dim</code></pre>
+<p>For DeepSeek-V3 that is about <strong>170 tokens</strong>; for the smaller config about <strong>256 tokens</strong>. The live value for your current settings is shown in the box above. The takeaway: the boundary between "rebuild the cache" and "fold into the query" sits at a couple hundred query tokens, essentially independent of how long the context is.</p>
+
+<h2 id="s7"><span class="num">7.</span>The cache-size win (why we bother)</h2>
+<p>All of this exists to keep the KV cache tiny. Storing one shared latent instead of full per-head keys and values is the reason MLA is worth the extra attention width. Per token, per layer:</p>
+<div class="panel"><div class="chart-box bar"><canvas id="cacheChart"></canvas></div></div>
+<p>For DeepSeek-V3 that is <strong>576</strong> stored values per token per layer (latent 512 + rope 64) versus <strong>40,960</strong> for a full multi-head cache — about <strong>71× smaller</strong>. Absorb is what lets you keep only that small latent at decode instead of rebuilding and storing the full keys and values.</p>
+
+<h2 id="s8"><span class="num">8.</span>Which algorithm runs when</h2>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Situation</th><th>new_tokens</th><th>vs crossover</th><th>Chosen</th></tr></thead>
+<tbody>
+<tr><td>Decode (one token at a time)</td><td>1</td><td>far below</td><td>Absorb</td></tr>
+<tr><td>Speculative / multi-token decode</td><td>~2–8</td><td>below</td><td>Absorb</td></tr>
+<tr><td>Chunked prefill</td><td>chunk size</td><td>tuned near it</td><td>either, per chunk</td></tr>
+<tr><td>Full prefill</td><td>thousands</td><td>far above</td><td>Materialize</td></tr>
+</tbody></table></div>
+<p>This is exactly why a serving engine ships both paths. Decode lives far below the crossover, so it always folds the projections into the query (Absorb) and keeps the cache tiny. Prefill lives far above it, so it rebuilds keys and values once and runs the cheaper narrow attention (Materialize). Neither wins everywhere, and the crossover formula above is the dividing line.</p>
+
+<div class="callout"><p style="margin:0">MLA decoding in one line: <strong>rebuild-the-cache (Materialize) wins when you have many new tokens; fold-into-the-query (Absorb) wins when you have few — and decode always has few.</strong></p></div>
+
+<h3>References</h3>
+<ul>
+<li>DeepSeek-V2 / V3 papers — MLA and the two attention formulations.</li>
+<li>vLLM <code>model_executor/layers/attention/mla_attention.py</code> — the "compute-friendly" (materialize) and "data-movement-friendly" (absorb) paths, documented in the file header.</li>
+<li>SGLang <code>forward_mla.py</code> and <code>minicpm3.py</code> — the absorb decode path.</li>
+<li><a href="mla.html">MLA Part 1</a> — the compression and nope/rope split.</li>
+</ul>
+<h3>How to cite this post</h3>
+<pre><code>Dong, S. (2026). Understanding MLA Decoding (Materialize vs Absorb).
+https://simondong1.github.io/mla-decoding.html</code></pre>
+</main>
+<footer><div class="wrap"><p>Written by <a href="https://x.com/dongsixiang"><strong>Simon Dong</strong></a> · July 2026 · MLA Part 2.</p><p><a href="/">&larr; Back to blog</a></p></div></footer>
+
+<script>
+(function(){
+  var PRESETS = {
+    dsv3:  {heads:128, nope:128, rope:64, value:128, latent:512, label:"DeepSeek-V3"},
+    small: {heads:32,  nope:128, rope:64, value:128, latent:256, label:"Smaller"}
+  };
+  var accent = "#4f46e5", warm = "#e5484d";
+  var costChart = null, cacheChart = null;
+
+  function fmt(n){
+    if (n >= 1e9) return (n/1e9).toFixed(2)+" G";
+    if (n >= 1e6) return (n/1e6).toFixed(2)+" M";
+    if (n >= 1e3) return (n/1e3).toFixed(2)+" K";
+    return n.toFixed(0);
+  }
+  function materialize(d, ctx, nt){
+    return d.heads * ( ctx*d.latent*(d.nope+d.value) + nt*ctx*(d.nope+d.rope+d.value) );
+  }
+  function absorb(d, ctx, nt){
+    return d.heads * ( nt*d.latent*(d.nope+d.value) + nt*ctx*(2*d.latent+d.rope) );
+  }
+  function crossover(d, ctx){
+    var proj = d.latent*(d.nope+d.value);
+    var diff = 2*d.latent - d.nope - d.value;
+    return proj*ctx / (proj + ctx*diff);
+  }
+
+  function build(){
+    var d = PRESETS[document.getElementById('preset').value];
+    var ctx = Math.pow(2, parseInt(document.getElementById('ctx').value,10));
+    document.getElementById('ctxval').textContent = ctx.toLocaleString();
+
+    var xs = [];
+    for (var e=0; e<=13; e++) xs.push(Math.pow(2,e)); // 1..8192 new tokens
+    var mat = xs.map(function(nt){ return {x:nt, y: materialize(d,ctx,nt)}; });
+    var abs = xs.map(function(nt){ return {x:nt, y: absorb(d,ctx,nt)}; });
+    var cx = crossover(d, ctx);
+
+    if (!costChart){
+      costChart = new Chart(document.getElementById('costChart'), {
+        type:'line',
+        data:{ datasets:[
+          {label:'Materialize (rebuild cache)', data:mat, borderColor:warm, backgroundColor:warm, tension:.25, pointRadius:2},
+          {label:'Absorb (fold into query)', data:abs, borderColor:accent, backgroundColor:accent, tension:.25, pointRadius:2}
+        ]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          interaction:{mode:'index', intersect:false},
+          scales:{
+            x:{type:'logarithmic', title:{display:true, text:'new query tokens  (1 = decode  →  thousands = prefill)'}},
+            y:{type:'logarithmic', title:{display:true, text:'compute per layer (multiply-adds)'},
+               ticks:{callback:function(v){return fmt(v);}}}
+          },
+          plugins:{ legend:{position:'top'},
+            tooltip:{callbacks:{
+              title:function(items){return 'new tokens: '+items[0].parsed.x;},
+              label:function(item){return item.dataset.label+': '+fmt(item.parsed.y);}
+            }}
+          }
+        }
+      });
+    } else {
+      costChart.data.datasets[0].data = mat;
+      costChart.data.datasets[1].data = abs;
+      costChart.update();
+    }
+
+    var rd = document.getElementById('readout');
+    rd.innerHTML = "For <b>"+d.label+"</b> at context <b>"+ctx.toLocaleString()+"</b>: the crossover is about <b>"+
+      Math.round(cx)+" new tokens</b>. Below it, <b>Absorb</b> is cheaper (this is decode). Above it, <b>Materialize</b> is cheaper (this is prefill). "+
+      "At decode (1 token): Materialize = "+fmt(materialize(d,ctx,1))+", Absorb = "+fmt(absorb(d,ctx,1))+" &mdash; about "+
+      Math.round(materialize(d,ctx,1)/absorb(d,ctx,1))+"× apart.";
+
+    // cache chart
+    var full = d.heads*(d.nope+d.rope+d.value);
+    var latent = d.latent + d.rope;
+    if (!cacheChart){
+      cacheChart = new Chart(document.getElementById('cacheChart'), {
+        type:'bar',
+        data:{ labels:['Full multi-head cache','MLA latent cache'],
+          datasets:[{label:'stored values per token per layer', data:[full, latent],
+            backgroundColor:[warm, accent]}]},
+        options:{ responsive:true, maintainAspectRatio:false,
+          scales:{ y:{type:'logarithmic', ticks:{callback:function(v){return fmt(v);}}} },
+          plugins:{ legend:{display:false},
+            tooltip:{callbacks:{label:function(i){return fmt(i.parsed.y)+" values";}}} }
+        }
+      });
+    } else {
+      cacheChart.data.datasets[0].data = [full, latent];
+      cacheChart.update();
+    }
+  }
+
+  document.getElementById('preset').addEventListener('change', build);
+  document.getElementById('ctx').addEventListener('input', build);
+  if (window.Chart) build(); else window.addEventListener('load', build);
+
+  // scrollspy for toc
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+  var byId = {}; links.forEach(function(a){ byId[a.getAttribute('href').slice(1)]=a; });
+  var heads = Array.prototype.slice.call(document.querySelectorAll('main h2[id]'));
+  if ('IntersectionObserver' in window && heads.length){
+    var obs = new IntersectionObserver(function(es){es.forEach(function(e){
+      if(e.isIntersecting){links.forEach(function(l){l.classList.remove('active')});
+        if(byId[e.target.id])byId[e.target.id].classList.add('active');}});},
+      {rootMargin:'-12% 0px -78% 0px', threshold:0});
+    heads.forEach(function(h){obs.observe(h)});
+  }
+})();
+</script>
+</body>
+</html>
