@@ -70,6 +70,12 @@
   table.ptable th,table.ptable td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
   table.ptable th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
   table.ptable td:first-child{font-weight:600}.wrapscroll{overflow-x:auto}
+  table.ptable td.grow{font-family:"JetBrains Mono",monospace;font-size:.82rem;color:var(--warm);font-weight:600;white-space:nowrap}
+  .totalbox{border:1px solid var(--line);border-radius:12px;background:#fff;padding:.9rem 1.1rem;margin:1rem 0 1.6rem;font-family:"JetBrains Mono",monospace;font-size:.82rem;line-height:1.9}
+  .totalbox .tl{display:block;font-family:"Inter",sans-serif;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;margin-bottom:.4rem}
+  .totalbox .term{display:inline-block;min-width:5.5rem;font-family:"Inter",sans-serif;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding:.1rem .45rem;border-radius:6px;margin-right:.6rem}
+  .totalbox .term.warm{background:var(--warm-soft);color:#a32a2e}
+  .totalbox .term.cool{background:var(--cool-soft);color:#0b6a8c}
   /* flow diagram */
   .flows{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.7rem 0}
   .flow{border:1px solid var(--line);border-radius:14px;padding:1rem .9rem;background:#fff}
@@ -187,29 +193,35 @@ prefill  =  new_tokens is large    (the whole prompt attends to itself)</code></
 <h2 id="s4"><span class="num">4.</span>Cost of each step</h2>
 <p>The one rule: a matmul of shape <code>(rows × inner) times (inner × cols)</code> costs <code>rows × cols × inner</code> multiply-adds. Applying it to every step, per layer:</p>
 
-<h3>Approach A — Materialize</h3>
-<pre><code><span class="cmt"># rebuild keys and values from the cached latent</span>
-rebuild K:  cached_tokens × latent_dim × nope_dim   × heads
-rebuild V:  cached_tokens × latent_dim × value_dim  × heads
-<span class="cmt"># attention with the narrow head</span>
-scores:     new_tokens × cached_tokens × (nope_dim + rope_dim) × heads
-aggregate:  new_tokens × cached_tokens × value_dim × heads</code></pre>
-<pre><code>Materialize total (per layer) =
-  heads × cached_tokens × latent_dim × (nope_dim + value_dim)          <span class="cmt"># rebuild, grows with cached_tokens</span>
-+ heads × new_tokens × cached_tokens × (nope_dim + rope_dim + value_dim) <span class="cmt"># attention</span></code></pre>
+<h3>Approach A — Materialize (rebuild the cache)</h3>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Step</th><th>Cost (multiply-adds, per layer)</th><th>Grows with</th></tr></thead>
+<tbody>
+<tr><td>rebuild keys</td><td>heads × cached_tokens × latent_dim × nope_dim</td><td class="grow">cached_tokens</td></tr>
+<tr><td>rebuild values</td><td>heads × cached_tokens × latent_dim × value_dim</td><td class="grow">cached_tokens</td></tr>
+<tr><td>scores</td><td>heads × new_tokens × cached_tokens × (nope_dim + rope_dim)</td><td>new × cached</td></tr>
+<tr><td>aggregate</td><td>heads × new_tokens × cached_tokens × value_dim</td><td>new × cached</td></tr>
+</tbody></table></div>
+<div class="totalbox"><span class="tl">Materialize total</span>
+  <div><span class="term warm">rebuild</span> heads × <b>cached_tokens</b> × latent_dim × (nope_dim + value_dim)</div>
+  <div><span class="term cool">attention</span> heads × new_tokens × cached_tokens × (nope_dim + rope_dim + value_dim)</div>
+</div>
 
-<h3>Approach B — Absorb</h3>
-<pre><code><span class="cmt"># fold the key/value projections onto the query and the output</span>
-fold key  :  new_tokens × nope_dim  × latent_dim × heads
-fold value:  new_tokens × latent_dim × value_dim × heads
-<span class="cmt"># attention on the raw latent (wider, but one shared key/value head)</span>
-scores:      new_tokens × cached_tokens × (latent_dim + rope_dim) × heads
-aggregate:   new_tokens × cached_tokens × latent_dim × heads</code></pre>
-<pre><code>Absorb total (per layer) =
-  heads × new_tokens × latent_dim × (nope_dim + value_dim)               <span class="cmt"># fold, grows with new_tokens</span>
-+ heads × new_tokens × cached_tokens × (2 × latent_dim + rope_dim)        <span class="cmt"># attention (wider)</span></code></pre>
+<h3>Approach B — Absorb (fold into the query)</h3>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Step</th><th>Cost (multiply-adds, per layer)</th><th>Grows with</th></tr></thead>
+<tbody>
+<tr><td>fold key into query</td><td>heads × new_tokens × nope_dim × latent_dim</td><td class="grow">new_tokens</td></tr>
+<tr><td>fold value into output</td><td>heads × new_tokens × latent_dim × value_dim</td><td class="grow">new_tokens</td></tr>
+<tr><td>scores (wider)</td><td>heads × new_tokens × cached_tokens × (latent_dim + rope_dim)</td><td>new × cached</td></tr>
+<tr><td>aggregate (wider)</td><td>heads × new_tokens × cached_tokens × latent_dim</td><td>new × cached</td></tr>
+</tbody></table></div>
+<div class="totalbox"><span class="tl">Absorb total</span>
+  <div><span class="term warm">fold</span> heads × <b>new_tokens</b> × latent_dim × (nope_dim + value_dim)</div>
+  <div><span class="term cool">attention</span> heads × new_tokens × cached_tokens × (2 × latent_dim + rope_dim)</div>
+</div>
 
-<p>Read the two totals side by side. The projection line is identical work — <code>latent_dim × (nope_dim + value_dim)</code> per token — but Materialize multiplies it by <code>cached_tokens</code> while Absorb multiplies it by <code>new_tokens</code>. Absorb pays instead in the attention line, which is wider (<code>latent_dim</code> instead of <code>nope_dim</code>).</p>
+<p>Put the two <span style="color:var(--warm);font-weight:600">projection</span> terms next to each other. They are the <em>same</em> work per token — <code>latent_dim × (nope_dim + value_dim)</code> — but Materialize multiplies it by <strong>cached_tokens</strong> (rebuild the whole cache) while Absorb multiplies it by <strong>new_tokens</strong> (only the fresh queries). That single swap is the entire trade-off. Absorb repays it with a wider <span style="color:var(--cool);font-weight:600">attention</span> term (<code>latent_dim</code> instead of <code>nope_dim</code>).</p>
 
 <h2 id="s5"><span class="num">5.</span>The trade-off, interactively</h2>
 <p>The chart plots both totals as <code>new_tokens</code> grows from 1 (decode) to thousands (prefill). Pick a model and drag the context length. Where the lines cross is where the winner changes.</p>
