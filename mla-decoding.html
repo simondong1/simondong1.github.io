@@ -28,7 +28,7 @@
 <meta name="citation_publication_date" content="2026/07/07" />
 <meta name="citation_fulltext_html_url" content="https://simondong1.github.io/mla-decoding.html" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"TechArticle","headline":"Understanding MLA Decoding (Materialize vs Absorb)","description":"The two ways to run Multi-head Latent Attention at inference, and the crossover that decides which one to use.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang"},"datePublished":"2026-07-07","dateModified":"2026-07-07","mainEntityOfPage":"https://simondong1.github.io/mla-decoding.html","image":"https://simondong1.github.io/assets/mla-decoding-og.png"}
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Understanding MLA Decoding (Materialize vs Absorb)","description":"The two ways to run Multi-head Latent Attention at inference, and the crossover that decides which one to use.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang"},"datePublished":"2026-07-07","dateModified":"2026-07-09","mainEntityOfPage":"https://simondong1.github.io/mla-decoding.html","image":"https://simondong1.github.io/assets/mla-decoding-og.png"}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -119,9 +119,9 @@
 <div class="callout note"><span class="label">Follow-up post</span><p>This continues the <a href="mla.html">first MLA post</a>. That one covered why MLA compresses the KV cache and why the head splits into a "nope" (content) part and a "rope" (position) part. Here we assume that, but every symbol is re-defined below so you can read this on its own.</p></div>
 
 <nav class="toc"><div class="toc-title">Contents</div><ol>
-  <li><a href="#s1"><span class="n">1</span>Notation, spelled out</a></li>
-  <li><a href="#s2"><span class="n">2</span>Prefill and decode are one thing</a></li>
-  <li><a href="#s3"><span class="n">3</span>The two algorithms</a></li>
+  <li><a href="#s1"><span class="n">1</span>Prefill and decode</a></li>
+  <li><a href="#s2"><span class="n">2</span>The two algorithms</a></li>
+  <li><a href="#s3"><span class="n">3</span>What “absorb” means</a></li>
   <li><a href="#s4"><span class="n">4</span>Cost of each step</a></li>
   <li><a href="#s5"><span class="n">5</span>The trade-off (interactive)</a></li>
   <li><a href="#s6"><span class="n">6</span>The crossover point</a></li>
@@ -129,28 +129,18 @@
   <li><a href="#s8"><span class="n">8</span>Which runs when</a></li>
 </ol></nav>
 
-<h2 id="s1"><span class="num">1.</span>Notation, spelled out</h2>
-<p>No single-letter shorthand in this post. Every quantity keeps its full name.</p>
-<div class="wrapscroll"><table class="ptable">
-<thead><tr><th>Name</th><th>Meaning</th><th>DeepSeek-V3</th></tr></thead>
-<tbody>
-<tr><td>new_tokens</td><td>query tokens processed in this call</td><td>1 (decode) … thousands (prefill)</td></tr>
-<tr><td>cached_tokens</td><td>tokens already in the KV cache (context length)</td><td>up to ~128k</td></tr>
-<tr><td>heads</td><td>number of attention heads</td><td>128</td></tr>
-<tr><td>nope_dim</td><td>content part of each head (no position)</td><td>128</td></tr>
-<tr><td>rope_dim</td><td>position (rotary) part of each head</td><td>64</td></tr>
-<tr><td>value_dim</td><td>value width per head</td><td>128</td></tr>
-<tr><td>latent_dim</td><td>compressed KV width MLA stores per token</td><td>512</td></tr>
-</tbody></table></div>
-<p>The cache holds, per token: one <code>latent</code> vector of width <code>latent_dim</code>, plus one shared <code>rope key</code> of width <code>rope_dim</code>. Keys and values for every head are produced from that latent by learned projections.</p>
+<div class="callout note"><span class="label">Notation</span>
+<p>No single-letter shorthand. DeepSeek-V3 numbers throughout: <code>heads = 128</code>, <code>latent_dim = 512</code>, <code>nope_dim = 128</code>, <code>rope_dim = 64</code>, <code>value_dim = 128</code>. <code>new_tokens</code> = queries in this call (1 at decode, large at prefill). <code>cached_tokens</code> = tokens already in the KV cache. The cache holds one latent (512) plus one shared rope key (64) per token.</p>
+</div>
 
-<h2 id="s2"><span class="num">2.</span>Prefill and decode are the same computation</h2>
+<h2 id="s1"><span class="num">1.</span>Prefill and decode are the same computation</h2>
 <p>People treat prefill and decode as different, but for attention they are the same operation with one number changed:</p>
 <pre><code>decode   =  new_tokens is 1        (one fresh token attends to the whole cache)
-prefill  =  new_tokens is large    (the whole prompt attends to itself)</code></pre>
+prefill  =  new_tokens is large    (many new tokens attend to the growing context)</code></pre>
 <p>So instead of two stories, we analyze one cost as <code>new_tokens</code> grows from 1 upward. The crossover between the two algorithms will fall somewhere on that axis.</p>
+<p>One modeling note: the formulas below treat <code>new_tokens</code> and <code>cached_tokens</code> as independent. That matches decode exactly (1 new token, large cache). Prefill is messier — the prompt is both the queries and the keys being written — but the same two algorithms still apply, and the crossover still lands in the same ballpark.</p>
 
-<h2 id="s3"><span class="num">3.</span>The two algorithms</h2>
+<h2 id="s2"><span class="num">2.</span>The two algorithms</h2>
 <p>Both start from the same cached latent. They differ in <em>where</em> the key/value projections are applied.</p>
 
 <div class="flows">
@@ -163,7 +153,7 @@ prefill  =  new_tokens is large    (the whole prompt attends to itself)</code></
     <div class="adown">&darr;</div>
     <div class="node">full per-head K, V<br>(cached_tokens × heads × …)</div>
     <div class="adown">&darr;</div>
-    <div class="node cool">attention, narrow head<br>(nope + rope, value)</div>
+    <div class="node cool">attention, narrow head<br>(nope + rope vs value)</div>
     <div class="adown">&darr;</div>
     <div class="node">output</div>
   </div>
@@ -176,7 +166,7 @@ prefill  =  new_tokens is large    (the whole prompt attends to itself)</code></
     <div class="adown">&darr;</div>
     <div class="node">query in latent space<br>(new_tokens × latent_dim)</div>
     <div class="adown">&darr;</div>
-    <div class="node cool">attention on the raw latent, one shared head<br>(wider: latent + rope, latent)</div>
+    <div class="node cool">attend against the raw latent<br>(wider: latent + rope vs latent)</div>
     <div class="adown">&darr;</div>
     <div class="node warm">fold value projection into the output</div>
   </div>
@@ -185,17 +175,28 @@ prefill  =  new_tokens is large    (the whole prompt attends to itself)</code></
   <span><span class="swatch" style="background:var(--warm-soft);border-color:#f3c0c2"></span>projection work (the step that flips)</span>
   <span><span class="swatch" style="background:var(--cool-soft);border-color:#bfe6f7"></span>attention core</span>
 </div>
-<p>The single most important difference is highlighted in red:</p>
+<p>The single most important difference is the warm (coral) step:</p>
 <ul>
 <li><strong>Materialize</strong> rebuilds keys and values for <em>every cached token</em>, so its projection work grows with <code>cached_tokens</code>.</li>
 <li><strong>Absorb</strong> only transforms the <em>new queries</em>, so its projection work grows with <code>new_tokens</code>.</li>
 </ul>
 <p>At decode, <code>cached_tokens</code> is huge and <code>new_tokens</code> is 1. So Materialize does a huge rebuild while Absorb does almost nothing. That is the whole intuition — the charts below make it exact.</p>
 
-<h2 id="s4"><span class="num">4.</span>Cost of each step</h2>
-<p>The one rule: a matmul of shape <code>(rows × inner) times (inner × cols)</code> costs <code>rows × cols × inner</code> multiply-adds. Applying it to every step, per layer:</p>
+<h2 id="s3"><span class="num">3.</span>What “absorb” actually means</h2>
+<p>Materialize is easy to picture: up-project the latent into full K and V, then run ordinary attention. Absorb needs one line of algebra. For the content (nope) part of one head, the score against a cached latent \(c\) is:</p>
+<pre><code>score  =  Q_nope · (c · W_K)  =  (Q_nope · W_K) · c</code></pre>
+<p>Because \(W_K\) does not depend on which cached token you are looking at, you can multiply it into the query <em>once</em>, then dot the result against the raw latents. Same trick on the value side after attention: instead of building every \(V = c · W_V\) and then weighting them, you weight the latents first and apply \(W_V\) to the short result.</p>
+<p>Two things do <em>not</em> absorb:</p>
+<ul>
+<li><strong>RoPE.</strong> The position key still has to be rotated per cached token and concatenated beside the latent for scoring. That is why the absorb attention width is <code>latent_dim + rope_dim</code>, not just <code>latent_dim</code>.</li>
+<li><strong>The query rope half.</strong> Only <code>Q_nope</code> is folded into latent space; <code>Q_rope</code> still dots with the shared rope keys.</li>
+</ul>
+<p>So “absorb” does not mean “throw away position.” It means: move the <em>fixed</em> content projections onto the few new queries, and leave the position path explicit.</p>
 
-<h3>Approach A — Materialize (rebuild the cache)</h3>
+<h2 id="s4"><span class="num">4.</span>Cost of each step</h2>
+<p>The one rule: a matmul of shape <code>(rows × inner) × (inner × cols)</code> costs <code>rows × cols × inner</code> multiply-adds. Applying it to every step, per layer. These counts cover the content path and the attention that follows; they omit the cheap shared-rope broadcast (same on both sides) and the final output projection back to hidden size (also the same on both sides).</p>
+
+<h3>Materialize — rebuild the cache</h3>
 <div class="wrapscroll"><table class="ptable">
 <thead><tr><th>Step</th><th>Cost (multiply-adds, per layer)</th><th>Grows with</th></tr></thead>
 <tbody>
@@ -209,7 +210,7 @@ prefill  =  new_tokens is large    (the whole prompt attends to itself)</code></
   <div><span class="term cool">attention</span> heads × new_tokens × cached_tokens × (nope_dim + rope_dim + value_dim)</div>
 </div>
 
-<h3>Approach B — Absorb (fold into the query)</h3>
+<h3>Absorb — fold into the query</h3>
 <div class="wrapscroll"><table class="ptable">
 <thead><tr><th>Step</th><th>Cost (multiply-adds, per layer)</th><th>Grows with</th></tr></thead>
 <tbody>
@@ -223,7 +224,11 @@ prefill  =  new_tokens is large    (the whole prompt attends to itself)</code></
   <div><span class="term cool">attention</span> heads × new_tokens × cached_tokens × (2 × latent_dim + rope_dim)</div>
 </div>
 
-<p>Put the two <span style="color:var(--warm);font-weight:600">projection</span> terms next to each other. They are the <em>same</em> work per token — <code>latent_dim × (nope_dim + value_dim)</code> — but Materialize multiplies it by <strong>cached_tokens</strong> (rebuild the whole cache) while Absorb multiplies it by <strong>new_tokens</strong> (only the fresh queries). That single swap is the entire trade-off. Absorb repays it with a wider <span style="color:var(--cool);font-weight:600">attention</span> term (<code>latent_dim</code> instead of <code>nope_dim</code>).</p>
+<p>Put the two <span style="color:var(--warm);font-weight:600">projection</span> terms next to each other. They are the <em>same</em> work per token — <code>latent_dim × (nope_dim + value_dim)</code> — but Materialize multiplies it by <strong>cached_tokens</strong> (rebuild the whole cache) while Absorb multiplies it by <strong>new_tokens</strong> (only the fresh queries). That single swap is the entire trade-off. Absorb pays for it with a wider <span style="color:var(--cool);font-weight:600">attention</span> term (<code>latent_dim</code> in place of <code>nope_dim</code> / <code>value_dim</code>).</p>
+
+<div class="callout note"><span class="label">Decode, in numbers</span>
+<p>DeepSeek-V3, context 4,096, one new token. Materialize rebuild alone is <code>128 × 4096 × 512 × 256 ≈ 69&nbsp;G</code> multiply-adds. Absorb’s fold is <code>128 × 1 × 512 × 256 ≈ 17&nbsp;M</code>. Even after Absorb’s wider attention, the totals are about <strong>69&nbsp;G vs 0.6&nbsp;G</strong> — roughly <strong>100×</strong> apart. That is why decode never materializes.</p>
+</div>
 
 <h2 id="s5"><span class="num">5.</span>The trade-off, interactively</h2>
 <p>The chart plots both totals as <code>new_tokens</code> grows from 1 (decode) to thousands (prefill). Pick a model and drag the context length. Where the lines cross is where the winner changes.</p>
@@ -256,12 +261,17 @@ prefill  =  new_tokens is large    (the whole prompt attends to itself)</code></
 <pre><code>crossover new_tokens  ≈   latent_dim × (nope_dim + value_dim)
                           ───────────────────────────────────
                           2 × latent_dim − nope_dim − value_dim</code></pre>
-<p>For DeepSeek-V3 that is about <strong>170 tokens</strong>; for the smaller config about <strong>256 tokens</strong>. The live value for your current settings is shown in the box above. The takeaway: the boundary between "rebuild the cache" and "fold into the query" sits at a couple hundred query tokens, essentially independent of how long the context is.</p>
+<p>For DeepSeek-V3 that is about <strong>171 tokens</strong>; for the smaller config exactly <strong>256 tokens</strong>. At a realistic context of 4,096 the exact formula gives ~164 — close to the long-context limit. The live value for your current settings is shown in the box above. The takeaway: the boundary between "rebuild the cache" and "fold into the query" sits at a couple hundred query tokens, essentially independent of how long the context is.</p>
+
+<div class="callout note"><span class="label">What this model leaves out</span>
+<p>These are arithmetic counts, not wall-clock. Real kernels care about memory traffic, FlashAttention tiling, and whether the rebuild can be fused. The crossover can shift, but the qualitative picture — Absorb at decode, Materialize at large prefill — is what serving engines actually ship.</p>
+</div>
 
 <h2 id="s7"><span class="num">7.</span>The cache-size win (why we bother)</h2>
 <p>All of this exists to keep the KV cache tiny. Storing one shared latent instead of full per-head keys and values is the reason MLA is worth the extra attention width. Per token, per layer:</p>
 <div class="panel"><div class="chart-box bar"><canvas id="cacheChart"></canvas></div></div>
-<p>For DeepSeek-V3 that is <strong>576</strong> stored values per token per layer (latent 512 + rope 64) versus <strong>40,960</strong> for a full multi-head cache — about <strong>71× smaller</strong>. Absorb is what lets you keep only that small latent at decode instead of rebuilding and storing the full keys and values.</p>
+<p>For DeepSeek-V3 that is <strong>576</strong> stored values per token per layer (latent 512 + rope 64) versus <strong>40,960</strong> for a full multi-head cache — about <strong>71× smaller</strong>.</p>
+<p>Absorb is what makes that small cache usable at decode: you never expand every past token into full K/V just to attend. Materialize can still expand them when there are enough new queries that rebuilding once is cheaper than attending in the wider latent space — but the <em>stored</em> cache stays the latent either way. (The Hugging Face reference path is different: it caches the expanded tensors. Serving engines keep the latent.)</p>
 
 <h2 id="s8"><span class="num">8.</span>Which algorithm runs when</h2>
 <div class="wrapscroll"><table class="ptable">
@@ -269,10 +279,10 @@ prefill  =  new_tokens is large    (the whole prompt attends to itself)</code></
 <tbody>
 <tr><td>Decode (one token at a time)</td><td>1</td><td>far below</td><td>Absorb</td></tr>
 <tr><td>Speculative / multi-token decode</td><td>~2–8</td><td>below</td><td>Absorb</td></tr>
-<tr><td>Chunked prefill</td><td>chunk size</td><td>tuned near it</td><td>either, per chunk</td></tr>
+<tr><td>Chunked prefill</td><td>chunk size</td><td>near / either side</td><td>engine-dependent</td></tr>
 <tr><td>Full prefill</td><td>thousands</td><td>far above</td><td>Materialize</td></tr>
 </tbody></table></div>
-<p>This is exactly why a serving engine ships both paths. Decode lives far below the crossover, so it always folds the projections into the query (Absorb) and keeps the cache tiny. Prefill lives far above it, so it rebuilds keys and values once and runs the cheaper narrow attention (Materialize). Neither wins everywhere, and the crossover formula above is the dividing line.</p>
+<p>This is exactly why a serving engine ships both paths. Decode lives far below the crossover, so it folds the projections into the query (Absorb) and keeps the cache tiny. Prefill lives far above it, so it rebuilds keys and values once and runs the cheaper narrow attention (Materialize). Neither wins everywhere, and the crossover formula above is the dividing line.</p>
 
 <div class="callout"><p style="margin:0">MLA decoding in one line: <strong>rebuild-the-cache (Materialize) wins when you have many new tokens; fold-into-the-query (Absorb) wins when you have few — and decode always has few.</strong></p></div>
 
