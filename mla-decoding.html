@@ -101,8 +101,21 @@
   .readout b{color:var(--accent)}
   .chart-box{position:relative;height:340px}
   .chart-box.bar{height:260px}
+  .step{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1.15rem 1.25rem;margin:1.4rem 0}
+  .step .stitle{display:flex;align-items:baseline;gap:.6rem;margin:0 0 .55rem;flex-wrap:wrap}
+  .step .sn{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:.15rem .45rem}
+  .step .st{font-weight:650;font-size:1.02rem}
+  .step p{margin:.55rem 0 0;font-size:.98rem}
+  .step .why{margin-top:.7rem;padding-top:.7rem;border-top:1px dashed var(--line);font-size:.92rem;color:var(--ink-soft)}
+  .step .why strong{color:var(--ink)}
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.4rem 0}
+  .vs .col{border:1px solid var(--line);border-radius:14px;padding:1rem .95rem;background:#fff}
+  .vs .col h4{margin:0 0 .7rem;font-size:.95rem;text-align:center}
+  .vs .col.mat h4{color:#a32a2e}.vs .col.abs h4{color:var(--accent)}
+  .vs pre{margin:.6rem 0 0;font-size:.75rem;padding:1rem 1.05rem;box-shadow:none}
+  .eqbox{border:1px solid #dfe2fb;background:var(--accent-soft);border-radius:12px;padding:1rem 1.15rem;margin:1.4rem 0;font-family:"JetBrains Mono",monospace;font-size:.88rem;line-height:1.7;text-align:center}
   footer{border-top:1px solid var(--line);margin-top:4rem;padding:2.5rem 0 4rem;font-size:.9rem;color:var(--muted)}footer a{color:var(--ink-soft)}
-  @media(max-width:640px){body{font-size:1.06rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.45rem}.flows{grid-template-columns:1fr}}
+  @media(max-width:640px){body{font-size:1.06rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.45rem}.flows{grid-template-columns:1fr}.vs{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -183,15 +196,96 @@ prefill  =  new_tokens is large    (many new tokens attend to the growing contex
 <p>At decode, <code>cached_tokens</code> is huge and <code>new_tokens</code> is 1. So Materialize does a huge rebuild while Absorb does almost nothing. That is the whole intuition — the charts below make it exact.</p>
 
 <h2 id="s3"><span class="num">3.</span>What “absorb” actually means</h2>
-<p>Materialize is easy to picture: up-project the latent into full K and V, then run ordinary attention. Absorb needs one line of algebra. For the content (nope) part of one head, the score against a cached latent \(c\) is:</p>
-<pre><code>score  =  Q_nope · (c · W_K)  =  (Q_nope · W_K) · c</code></pre>
-<p>Because \(W_K\) does not depend on which cached token you are looking at, you can multiply it into the query <em>once</em>, then dot the result against the raw latents. Same trick on the value side after attention: instead of building every \(V = c · W_V\) and then weighting them, you weight the latents first and apply \(W_V\) to the short result.</p>
-<p>Two things do <em>not</em> absorb:</p>
-<ul>
-<li><strong>RoPE.</strong> The position key still has to be rotated per cached token and concatenated beside the latent for scoring. That is why the absorb attention width is <code>latent_dim + rope_dim</code>, not just <code>latent_dim</code>.</li>
-<li><strong>The query rope half.</strong> Only <code>Q_nope</code> is folded into latent space; <code>Q_rope</code> still dots with the shared rope keys.</li>
-</ul>
-<p>So “absorb” does not mean “throw away position.” It means: move the <em>fixed</em> content projections onto the few new queries, and leave the position path explicit.</p>
+<p>Materialize is easy: turn every cached latent into a full key, then score. Absorb looks like a trick until you see that both paths compute the <em>same number</em>. Walk through a tiny example first — one head, one new query, three cached tokens — then the general rule.</p>
+
+<div class="step">
+  <div class="stitle"><span class="sn">Setup</span><span class="st">Tiny numbers, same math as DeepSeek-V3</span></div>
+  <p>Latent width 2, content (nope) width 2. One new query. Three tokens already in the cache. One head, with a fixed key-up-projection matrix <code>W_K</code>:</p>
+<pre><code>Q_nope = [1, 0]                         # the new query's content half
+
+W_K = [[1, 0],                          # latent → key  (2×2)
+       [0, 2]]
+
+cached latents:
+  c0 = [1, 0]
+  c1 = [0, 1]
+  c2 = [1, 1]</code></pre>
+  <div class="why"><strong>What we want:</strong> the three content scores of this query against the three cached tokens. Materialize and Absorb must agree.</div>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">Materialize</span><span class="st">Build every key, then score</span></div>
+  <p>Up-project each latent into a key, then dot with the query:</p>
+<pre><code>K0 = c0 · W_K = [1, 0] · W_K = [1, 0]
+K1 = c1 · W_K = [0, 1] · W_K = [0, 2]
+K2 = c2 · W_K = [1, 1] · W_K = [1, 2]
+
+score0 = Q_nope · K0 = [1, 0] · [1, 0] = 1
+score1 = Q_nope · K1 = [1, 0] · [0, 2] = 0
+score2 = Q_nope · K2 = [1, 0] · [1, 2] = 1</code></pre>
+  <div class="why"><strong>Cost shape:</strong> one matmul <em>per cached token</em>. With 128k tokens in cache, that is 128k up-projections — even though we only have one query.</div>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">Absorb</span><span class="st">Move W_K onto the query, once</span></div>
+  <p>Notice every score was <code>Q_nope · (c · W_K)</code>. Matrix multiplication associates, so that is the same as <code>(Q_nope · W_K) · c</code>. Compute the parenthesis once:</p>
+<pre><code>Q_absorbed = Q_nope · W_K = [1, 0] · W_K = [1, 0]
+
+score0 = Q_absorbed · c0 = [1, 0] · [1, 0] = 1
+score1 = Q_absorbed · c1 = [1, 0] · [0, 1] = 0
+score2 = Q_absorbed · c2 = [1, 0] · [1, 1] = 1</code></pre>
+  <div class="why"><strong>Same scores: 1, 0, 1.</strong> But we did one matmul on the query, then three cheap dots against the raw latents. No keys were ever built.</div>
+</div>
+
+<div class="vs">
+  <div class="col mat">
+    <h4>Materialize</h4>
+    <pre><code>for each cached c:
+    K = c · W_K      ← heavy
+    score = Q · K
+
+work ∝ cached_tokens</code></pre>
+  </div>
+  <div class="col abs">
+    <h4>Absorb</h4>
+    <pre><code>Q_abs = Q · W_K      ← once
+for each cached c:
+    score = Q_abs · c
+
+work ∝ new_tokens</code></pre>
+  </div>
+</div>
+
+<div class="eqbox">
+  Q_nope · (c · W_K)&nbsp;&nbsp;=&nbsp;&nbsp;(Q_nope · W_K) · c
+  <div style="font-family:Inter,sans-serif;font-size:.82rem;color:var(--ink-soft);margin-top:.45rem;font-weight:500">same score · left = Materialize · right = Absorb</div>
+</div>
+
+<p>That identity is the whole trick. It works only because <code>W_K</code> is the <em>same</em> matrix for every cached token — it is a weight, not a function of position. You are allowed to slide a shared factor from the many keys onto the few queries.</p>
+
+<div class="step">
+  <div class="stitle"><span class="sn">Values</span><span class="st">Same idea, after the softmax</span></div>
+  <p>Attention then does <code>weights · V</code>, and each <code>V = c · W_V</code>. Same regrouping:</p>
+<pre><code>output = weights · (C · W_V)  =  (weights · C) · W_V</code></pre>
+  <p>Materialize builds every <code>V</code>, then mixes them. Absorb mixes the raw latents with the attention weights first (a short vector), then applies <code>W_V</code> once to that result. Again: same output, projection work on the query/output side instead of on every cached token.</p>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">What does not absorb</span><span class="st">Why rope stays explicit</span></div>
+  <p>The regrouping needs a matrix that is identical for every cached token. RoPE breaks that. The position key at cached position <code>n</code> is rotated by an angle that depends on <code>n</code>:</p>
+<pre><code>score_rope at n  =  Q_rope · (R_n · k_rope)
+
+R_0, R_1, R_2, … are all different
+→ there is no single matrix you can move onto Q_rope</code></pre>
+  <p>So two pieces stay outside the absorb:</p>
+  <ul>
+    <li><strong>The shared rope key</strong> — still stored per token, still rotated per position, still concatenated beside the latent when scoring. That is why absorb attention width is <code>latent_dim + rope_dim</code>, not just <code>latent_dim</code>.</li>
+    <li><strong>The query rope half</strong> — only <code>Q_nope</code> is folded into latent space. <code>Q_rope</code> still dots with those shared rope keys the ordinary way.</li>
+  </ul>
+  <div class="why"><strong>Absorb does not throw away position.</strong> It moves the <em>fixed</em> content projections (<code>W_K</code>, <code>W_V</code>) onto the few new queries, and leaves the position path explicit — because position refuses to be a fixed matrix.</div>
+</div>
+
+<p>One-line version: <strong>absorb = “do the up-projection on the query instead of on every cached key.”</strong> Same scores, far less work when <code>new_tokens ≪ cached_tokens</code>.</p>
 
 <h2 id="s4"><span class="num">4.</span>Cost of each step</h2>
 <p>The one rule: a matmul of shape <code>(rows × inner) × (inner × cols)</code> costs <code>rows × cols × inner</code> multiply-adds. Applying it to every step, per layer. These counts cover the content path and the attention that follows; they omit the cheap shared-rope broadcast (same on both sides) and the final output projection back to hidden size (also the same on both sides).</p>
