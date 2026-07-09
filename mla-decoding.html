@@ -199,69 +199,72 @@ prefill  =  new_tokens is large    (many new tokens attend to the growing contex
 <p>Materialize is easy: turn every cached latent into a full key, then score. Absorb looks like a trick until you see that both paths compute the <em>same number</em>. Walk through a tiny example first — one head, one new query, three cached tokens — then the general rule.</p>
 
 <div class="step">
-  <div class="stitle"><span class="sn">Setup</span><span class="st">Tiny numbers, same math as DeepSeek-V3</span></div>
-  <p>Latent width 2, content (nope) width 2. One new query. Three tokens already in the cache. One head, with a fixed key-up-projection matrix <code>W_K</code>:</p>
-<pre><code>Q_nope = [1, 0]                         # the new query's content half
+  <div class="stitle"><span class="sn">Setup</span><span class="st">Tiny numbers, same shape pattern as DeepSeek-V3</span></div>
+  <p>Latent width <strong>3</strong>, content (nope) width <strong>2</strong> — latent is wider, just like 512 vs 128 in the real model. One new query, three cached tokens, one head. The key up-projection <code>W_K</code> maps latent → key:</p>
+<pre><code>Q_nope = [1, 0]                    # width 2  (nope)
 
-W_K = [[1, 0],                          # latent → key  (2×2)
-       [0, 2]]
+W_K = [[1, 0],                     # shape (3 × 2): latent → nope
+       [0, 2],
+       [1, 1]]
 
-cached latents:
-  c0 = [1, 0]
-  c1 = [0, 1]
-  c2 = [1, 1]</code></pre>
-  <div class="why"><strong>What we want:</strong> the three content scores of this query against the three cached tokens. Materialize and Absorb must agree.</div>
+cached latents:                    # each width 3
+  c0 = [1, 0, 0]
+  c1 = [0, 1, 0]
+  c2 = [0, 0, 1]</code></pre>
+  <div class="why"><strong>What we want:</strong> the three content scores of this query against the three cached tokens. Materialize builds keys of width 2; Absorb expands the query to width 3. Both must agree.</div>
 </div>
 
 <div class="step">
-  <div class="stitle"><span class="sn">Materialize</span><span class="st">Build every key, then score</span></div>
-  <p>Up-project each latent into a key, then dot with the query:</p>
-<pre><code>K0 = c0 · W_K = [1, 0] · W_K = [1, 0]
-K1 = c1 · W_K = [0, 1] · W_K = [0, 2]
-K2 = c2 · W_K = [1, 1] · W_K = [1, 2]
+  <div class="stitle"><span class="sn">Materialize</span><span class="st">Up-project each latent to a key (3 → 2), then score</span></div>
+  <p>Every cached latent becomes a nope-width key, then dots with <code>Q_nope</code>:</p>
+<pre><code>K0 = c0 · W_K = [1, 0, 0] · W_K = [1, 0]     # width 2
+K1 = c1 · W_K = [0, 1, 0] · W_K = [0, 2]
+K2 = c2 · W_K = [0, 0, 1] · W_K = [1, 1]
 
 score0 = Q_nope · K0 = [1, 0] · [1, 0] = 1
 score1 = Q_nope · K1 = [1, 0] · [0, 2] = 0
-score2 = Q_nope · K2 = [1, 0] · [1, 2] = 1</code></pre>
-  <div class="why"><strong>Cost shape:</strong> one matmul <em>per cached token</em>. With 128k tokens in cache, that is 128k up-projections — even though we only have one query.</div>
+score2 = Q_nope · K2 = [1, 0] · [1, 1] = 1</code></pre>
+  <div class="why"><strong>Cost shape:</strong> one <code>(3 → 2)</code> matmul <em>per cached token</em>. With 128k tokens in cache, that is 128k up-projections — even though we only have one query.</div>
 </div>
 
 <div class="step">
-  <div class="stitle"><span class="sn">Absorb</span><span class="st">Move W_K onto the query, once</span></div>
-  <p>Notice every score was <code>Q_nope · (c · W_K)</code>. Matrix multiplication associates, so that is the same as <code>(Q_nope · W_K) · c</code>. Compute the parenthesis once:</p>
-<pre><code>Q_absorbed = Q_nope · W_K = [1, 0] · W_K = [1, 0]
+  <div class="stitle"><span class="sn">Absorb</span><span class="st">Expand the query into latent space (2 → 3), once</span></div>
+  <p>Every score was <code>Q_nope · (c · W_K)</code>. That equals <code>(Q_nope · W_Kᵀ) · c</code> — same number, but now the matrix hits the query instead of the key. The absorbed query lives in latent space:</p>
+<pre><code>Q_absorbed = Q_nope · W_Kᵀ = [1, 0] · W_Kᵀ = [1, 0, 1]   # width 3
 
-score0 = Q_absorbed · c0 = [1, 0] · [1, 0] = 1
-score1 = Q_absorbed · c1 = [1, 0] · [0, 1] = 0
-score2 = Q_absorbed · c2 = [1, 0] · [1, 1] = 1</code></pre>
-  <div class="why"><strong>Same scores: 1, 0, 1.</strong> But we did one matmul on the query, then three cheap dots against the raw latents. No keys were ever built.</div>
+score0 = Q_absorbed · c0 = [1, 0, 1] · [1, 0, 0] = 1
+score1 = Q_absorbed · c1 = [1, 0, 1] · [0, 1, 0] = 0
+score2 = Q_absorbed · c2 = [1, 0, 1] · [0, 0, 1] = 1</code></pre>
+  <div class="why"><strong>Same scores: 1, 0, 1.</strong> One matmul grew the query from nope-width to latent-width; then three cheap dots against the raw latents. No keys were ever built. This is why absorb attention is <em>wider</em> — it scores in latent space (3 here, 512 in DeepSeek-V3), not nope space.</div>
 </div>
 
 <div class="vs">
   <div class="col mat">
     <h4>Materialize</h4>
-    <pre><code>for each cached c:
-    K = c · W_K      ← heavy
-    score = Q · K
+    <pre><code>for each cached c:          # width 3
+    K = c · W_K             # → width 2
+    score = Q_nope · K
 
-work ∝ cached_tokens</code></pre>
+work ∝ cached_tokens
+score space = nope_dim</code></pre>
   </div>
   <div class="col abs">
     <h4>Absorb</h4>
-    <pre><code>Q_abs = Q · W_K      ← once
+    <pre><code>Q_abs = Q_nope · W_Kᵀ       # 2 → 3, once
 for each cached c:
-    score = Q_abs · c
+    score = Q_abs · c       # both width 3
 
-work ∝ new_tokens</code></pre>
+work ∝ new_tokens
+score space = latent_dim</code></pre>
   </div>
 </div>
 
 <div class="eqbox">
-  Q_nope · (c · W_K)&nbsp;&nbsp;=&nbsp;&nbsp;(Q_nope · W_K) · c
-  <div style="font-family:Inter,sans-serif;font-size:.82rem;color:var(--ink-soft);margin-top:.45rem;font-weight:500">same score · left = Materialize · right = Absorb</div>
+  Q_nope · (c · W_K)&nbsp;&nbsp;=&nbsp;&nbsp;(Q_nope · W_Kᵀ) · c
+  <div style="font-family:Inter,sans-serif;font-size:.82rem;color:var(--ink-soft);margin-top:.45rem;font-weight:500">same score · left builds a key of width nope · right builds a query of width latent</div>
 </div>
 
-<p>That identity is the whole trick. It works only because <code>W_K</code> is the <em>same</em> matrix for every cached token — it is a weight, not a function of position. You are allowed to slide a shared factor from the many keys onto the few queries.</p>
+<p>That identity is the whole trick. It works only because <code>W_K</code> is the <em>same</em> matrix for every cached token — it is a weight, not a function of position. You slide a shared factor from the many keys onto the few queries. The price: the query grows from <code>nope_dim</code> to <code>latent_dim</code>, so each score is a wider dot product.</p>
 
 <div class="step">
   <div class="stitle"><span class="sn">Values</span><span class="st">Same idea, after the softmax</span></div>
