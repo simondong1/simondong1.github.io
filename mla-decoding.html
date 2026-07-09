@@ -101,7 +101,13 @@
   .readout{font-size:1rem;line-height:1.55;background:var(--accent-soft);border:1px solid #dfe2fb;border-radius:10px;padding:.7rem .9rem;margin-top:.9rem}
   .readout b{color:var(--accent)}
   .chart-box{position:relative;height:340px}
-  .chart-box.bar{height:260px}
+  .chart-box.bar{height:300px}
+  .cache-metrics{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:.7rem 0 1rem}
+  .metric{border:1px solid var(--line);border-radius:12px;background:#fff;padding:.85rem 1rem}
+  .metric span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700;margin-bottom:.25rem}
+  .metric b{display:block;font-size:1.45rem;line-height:1.15;letter-spacing:-.02em}
+  .metric.full b{color:#a32a2e}.metric.mla b{color:var(--accent)}
+  .metric small{display:block;color:var(--ink-soft);font-size:.83rem;line-height:1.45;margin-top:.25rem}
   .step{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1.15rem 1.25rem;margin:1.4rem 0}
   .step .stitle{display:flex;align-items:baseline;gap:.6rem;margin:0 0 .55rem;flex-wrap:wrap}
   .step .sn{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:.15rem .45rem}
@@ -116,7 +122,8 @@
   .vs pre{margin:.6rem 0 0;font-size:.75rem;padding:1rem 1.05rem;box-shadow:none}
   .eqbox{border:1px solid #dfe2fb;background:var(--accent-soft);border-radius:12px;padding:1rem 1.15rem;margin:1.4rem 0;font-family:"JetBrains Mono",monospace;font-size:.88rem;line-height:1.7;text-align:center}
   footer{border-top:1px solid var(--line);margin-top:4rem;padding:2.5rem 0 4rem;font-size:.9rem;color:var(--muted)}footer a{color:var(--ink-soft)}
-  @media(max-width:640px){body{font-size:1.06rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.45rem}.flows{grid-template-columns:1fr}.vs{grid-template-columns:1fr}}
+  @media(max-width:900px){.vs{grid-template-columns:1fr}.flows{grid-template-columns:1fr}}
+  @media(max-width:640px){body{font-size:1.06rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.45rem}.cache-metrics{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -367,7 +374,7 @@ V =   RMSNorm(c)                           # (1,     512)        shared
 <p>Put the two <span style="color:var(--warm);font-weight:600">projection</span> terms next to each other. They are the <em>same</em> work per token — <code>latent_dim × (nope_dim + value_dim)</code> — but Materialize multiplies it by <strong>cached_tokens</strong> (rebuild the whole cache) while Absorb multiplies it by <strong>new_tokens</strong> (only the fresh queries). That single swap is the entire trade-off. Absorb pays for it with a wider <span style="color:var(--cool);font-weight:600">attention</span> term (<code>latent_dim</code> in place of <code>nope_dim</code> / <code>value_dim</code>).</p>
 
 <div class="callout note"><span class="label">Decode, in numbers</span>
-<p>DeepSeek-V3, context 4,096, one new token. Materialize rebuild alone is <code>128 × 4096 × 512 × 256 ≈ 69&nbsp;G</code> multiply-adds. Absorb’s fold is <code>128 × 1 × 512 × 256 ≈ 17&nbsp;M</code>. Even after Absorb’s wider attention, the totals are about <strong>69&nbsp;G vs 0.6&nbsp;G</strong> — roughly <strong>100×</strong> apart. That is why decode never materializes.</p>
+<p>DeepSeek-V3, context 4,096, one new token. Materialize rebuild alone is <code>128 × 4096 × 512 × 256 ≈ 6.9 × 10^10</code> multiply-adds. Absorb’s fold is <code>128 × 1 × 512 × 256 ≈ 1.7 × 10^7</code>. Even after Absorb’s wider attention, the totals are about <strong>6.9 × 10^10 vs 6.0 × 10^8</strong> — roughly <strong>100×</strong> apart. That is why decode never materializes.</p>
 </div>
 
 <h2 id="s5"><span class="num">5.</span>The trade-off, interactively</h2>
@@ -409,7 +416,22 @@ V =   RMSNorm(c)                           # (1,     512)        shared
 
 <h2 id="s7"><span class="num">7.</span>The cache-size win (why we bother)</h2>
 <p>All of this exists to keep the KV cache tiny. Storing one shared latent instead of full per-head keys and values is the reason MLA is worth the extra attention width. Per token, per layer:</p>
-<div class="panel"><div class="chart-box bar"><canvas id="cacheChart"></canvas></div></div>
+<div class="panel">
+  <div class="controls">
+    <label>model
+      <select id="cachePreset">
+        <option value="dsv3">DeepSeek-V3 (heads 128, latent 512)</option>
+        <option value="small">Smaller (heads 32, latent 256)</option>
+      </select>
+    </label>
+  </div>
+  <div class="cache-metrics">
+    <div class="metric full"><span>Full multi-head cache</span><b id="fullCacheVal"></b><small id="fullCacheFormula"></small></div>
+    <div class="metric mla"><span>MLA cache</span><b id="mlaCacheVal"></b><small id="mlaCacheFormula"></small></div>
+  </div>
+  <div class="chart-box bar"><canvas id="cacheChart"></canvas></div>
+  <div class="readout" id="cacheReadout"></div>
+</div>
 <p>For DeepSeek-V3 that is <strong>576</strong> stored values per token per layer — <strong>latent 512 + K_rope 64</strong>, two objects — versus <strong>40,960</strong> for a full multi-head cache — about <strong>71× smaller</strong>.</p>
 <p>Absorb is what makes that small cache usable at decode: you never expand every past token into full K_nope / V just to attend. Materialize can still expand the <em>latent</em> when there are enough new queries — but K_rope is never expanded either way, and the <em>stored</em> cache stays <code>[latent | K_rope]</code>. (The Hugging Face reference path is different: it caches the expanded tensors. Serving engines keep the latent + rope.)</p>
 
@@ -448,11 +470,27 @@ https://simondong1.github.io/mla-decoding.html</code></pre>
   var accent = "#4f46e5", warm = "#e5484d";
   var costChart = null, cacheChart = null;
 
-  function fmt(n){
-    if (n >= 1e9) return (n/1e9).toFixed(2)+" G";
-    if (n >= 1e6) return (n/1e6).toFixed(2)+" M";
-    if (n >= 1e3) return (n/1e3).toFixed(2)+" K";
-    return n.toFixed(0);
+  function exact(n){ return Math.round(n).toLocaleString(); }
+  function sci(n){
+    if (n === 0) return "0";
+    var exp = Math.floor(Math.log10(Math.abs(n)));
+    var mant = n / Math.pow(10, exp);
+    if (Math.abs(mant - 1) < 1e-9) return "10^"+exp;
+    return mant.toFixed(2).replace(/\.?0+$/, "")+" × 10^"+exp;
+  }
+  function powerTick(v){
+    if (v <= 0) return "";
+    var exp = Math.floor(Math.log10(v));
+    var mant = v / Math.pow(10, exp);
+    if (Math.abs(mant - 1) < 1e-6) return "10^"+exp;
+    return "";
+  }
+  function xTick(v){
+    if (v <= 0) return "";
+    var exp = Math.floor(Math.log10(v));
+    var mant = v / Math.pow(10, exp);
+    if (Math.abs(mant - 1) < 1e-6 || Math.abs(mant - 2) < 1e-6 || Math.abs(mant - 5) < 1e-6) return exact(v);
+    return "";
   }
   function materialize(d, ctx, nt){
     return d.heads * ( ctx*d.latent*(d.nope+d.value) + nt*ctx*(d.nope+d.rope+d.value) );
@@ -488,14 +526,17 @@ https://simondong1.github.io/mla-decoding.html</code></pre>
           responsive:true, maintainAspectRatio:false,
           interaction:{mode:'index', intersect:false},
           scales:{
-            x:{type:'logarithmic', title:{display:true, text:'new query tokens  (1 = decode  →  thousands = prefill)'}},
+            x:{type:'logarithmic', title:{display:true, text:'new query tokens  (1 = decode  →  thousands = prefill)'},
+               ticks:{maxTicksLimit:8, callback:function(v){return xTick(v);}}},
             y:{type:'logarithmic', title:{display:true, text:'compute per layer (multiply-adds)'},
-               ticks:{callback:function(v){return fmt(v);}}}
+               ticks:{maxTicksLimit:7, callback:function(v){return powerTick(v);},
+               },
+               grid:{color:function(ctx){return powerTick(ctx.tick.value) ? '#e8e8e6' : 'rgba(232,232,230,.28)';}}}
           },
           plugins:{ legend:{position:'top'},
             tooltip:{callbacks:{
               title:function(items){return 'new tokens: '+items[0].parsed.x;},
-              label:function(item){return item.dataset.label+': '+fmt(item.parsed.y);}
+              label:function(item){return item.dataset.label+': '+sci(item.parsed.y);}
             }}
           }
         }
@@ -509,32 +550,66 @@ https://simondong1.github.io/mla-decoding.html</code></pre>
     var rd = document.getElementById('readout');
     rd.innerHTML = "For <b>"+d.label+"</b> at context <b>"+ctx.toLocaleString()+"</b>: the crossover is about <b>"+
       Math.round(cx)+" new tokens</b>. Below it, <b>Absorb</b> is cheaper (this is decode). Above it, <b>Materialize</b> is cheaper (this is prefill). "+
-      "At decode (1 token): Materialize = "+fmt(materialize(d,ctx,1))+", Absorb = "+fmt(absorb(d,ctx,1))+" &mdash; about "+
+      "At decode (1 token): Materialize = "+sci(materialize(d,ctx,1))+", Absorb = "+sci(absorb(d,ctx,1))+" &mdash; about "+
       Math.round(materialize(d,ctx,1)/absorb(d,ctx,1))+"× apart.";
 
     // cache chart
-    var full = d.heads*(d.nope+d.rope+d.value);
-    var latent = d.latent + d.rope;
+    var cd = PRESETS[document.getElementById('cachePreset').value];
+    var full = cd.heads*(cd.nope+cd.rope+cd.value);
+    var latent = cd.latent + cd.rope;
+    var ratio = full / latent;
+    var cacheMin = Math.pow(10, Math.floor(Math.log10(Math.min(full, latent))));
+    var cacheMax = Math.pow(10, Math.ceil(Math.log10(Math.max(full, latent))));
+    document.getElementById('fullCacheVal').textContent = exact(full)+" values";
+    document.getElementById('fullCacheFormula').textContent = cd.heads+" heads × ("+(cd.nope+cd.rope)+" key + "+cd.value+" value)";
+    document.getElementById('mlaCacheVal').textContent = exact(latent)+" values";
+    document.getElementById('mlaCacheFormula').textContent = "latent "+cd.latent+" + K_rope "+cd.rope;
+    document.getElementById('cacheReadout').innerHTML = "For <b>"+cd.label+"</b>, MLA stores <b>"+exact(latent)+"</b> values per token per layer instead of <b>"+exact(full)+"</b> — <b>"+ratio.toFixed(ratio >= 10 ? 1 : 2)+"× smaller</b>.";
+    var labelPlugin = {
+      id: 'cacheValueLabels',
+      afterDatasetsDraw: function(chart){
+        var ctx = chart.ctx;
+        ctx.save();
+        ctx.font = '600 12px Inter, sans-serif';
+        ctx.fillStyle = '#1f2328';
+        ctx.textAlign = 'center';
+        chart.getDatasetMeta(0).data.forEach(function(bar, i){
+          var value = chart.data.datasets[0].data[i];
+          ctx.fillText(exact(value), bar.x, Math.max(bar.y - 8, 14));
+        });
+        ctx.restore();
+      }
+    };
     if (!cacheChart){
       cacheChart = new Chart(document.getElementById('cacheChart'), {
         type:'bar',
         data:{ labels:['Full multi-head cache','MLA latent cache'],
           datasets:[{label:'stored values per token per layer', data:[full, latent],
             backgroundColor:[warm, accent]}]},
-        options:{ responsive:true, maintainAspectRatio:false,
-          scales:{ y:{type:'logarithmic', ticks:{callback:function(v){return fmt(v);}}} },
+        plugins:[labelPlugin],
+        options:{ responsive:true, maintainAspectRatio:false, layout:{padding:{top:18}},
+          scales:{
+            y:{type:'logarithmic', title:{display:true, text:'stored values per token per layer'},
+              min:cacheMin, max:cacheMax,
+              ticks:{maxTicksLimit:6, callback:function(v){return powerTick(v);}},
+              grid:{color:function(ctx){return powerTick(ctx.tick.value) ? '#e8e8e6' : 'rgba(232,232,230,.25)';}}},
+            x:{ticks:{font:{weight:'600'}}}
+          },
           plugins:{ legend:{display:false},
-            tooltip:{callbacks:{label:function(i){return fmt(i.parsed.y)+" values";}}} }
+            tooltip:{callbacks:{label:function(i){return exact(i.parsed.y)+" values";}}} }
         }
       });
     } else {
       cacheChart.data.datasets[0].data = [full, latent];
+      cacheChart.options.scales.y.min = Math.pow(10, Math.floor(Math.log10(Math.min(full, latent))));
+      cacheChart.options.scales.y.max = Math.pow(10, Math.ceil(Math.log10(Math.max(full, latent))));
       cacheChart.update();
     }
   }
 
   document.getElementById('preset').addEventListener('change', build);
   document.getElementById('ctx').addEventListener('input', build);
+  document.getElementById('cachePreset').addEventListener('change', build);
   if (window.Chart) build(); else window.addEventListener('load', build);
 
   // scrollspy for toc
