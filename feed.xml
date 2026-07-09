@@ -18,7 +18,7 @@
       <link>https://simondong1.github.io/mla.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/mla.html</guid>
       <pubDate>Wed, 01 Jul 2026 00:00:00 +0000</pubDate>
-      <description>How DeepSeek-style MLA stores one latent KV state, splits nope from rope, and why training code looks different from optimized decode.</description>
+      <description>Follow one token through DeepSeek-style MLA: compress to a latent, expand per head, keep a shared rope key, and see why position cannot compress.</description>
     </item>
     <item>
       <title>Understanding GQA (Grouped-Query Attention)</title>

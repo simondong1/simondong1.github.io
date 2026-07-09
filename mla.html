@@ -28,7 +28,7 @@
 <meta name="citation_publication_date" content="2026/07/01" />
 <meta name="citation_fulltext_html_url" content="https://simondong1.github.io/mla.html" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"TechArticle","headline":"Understanding MLA (Multi-head Latent Attention)","description":"A visual tutorial on Multi-head Latent Attention: how DeepSeek-style MLA relates to MHA and MQA, what is compressed, and why the head splits into nope and rope.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang"},"datePublished":"2026-07-01","dateModified":"2026-07-07","mainEntityOfPage":"https://simondong1.github.io/mla.html","image":"https://simondong1.github.io/assets/mla-og.png"}
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Understanding MLA (Multi-head Latent Attention)","description":"A visual tutorial on Multi-head Latent Attention: how DeepSeek-style MLA compresses the KV cache, and why the head splits into nope and rope.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang"},"datePublished":"2026-07-01","dateModified":"2026-07-09","mainEntityOfPage":"https://simondong1.github.io/mla.html","image":"https://simondong1.github.io/assets/mla-og.png"}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -49,7 +49,8 @@
   .byline .who{color:var(--ink);font-weight:600}.byline .dot{color:var(--line)}
   h2{font-weight:700;font-size:1.7rem;letter-spacing:-.02em;line-height:1.2;margin:3.4rem 0 1rem;scroll-margin-top:1.5rem}
   h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}
-  h3{font-weight:600;font-size:1.18rem;margin:2rem 0 .6rem}
+  h3{font-weight:600;font-size:1.18rem;margin:2.2rem 0 .65rem;scroll-margin-top:1.5rem}
+  h3 .phase{display:inline-block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-right:.55rem;vertical-align:middle}
   p{margin:1.05rem 0}
   .lede{font-size:1.22rem;line-height:1.62;letter-spacing:-.01em;margin:0 0 1.8rem}
   .lede strong{font-weight:650}
@@ -59,7 +60,6 @@
   code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em;background:#f0f1f4;color:#cf2a6b;padding:.12em .4em;border-radius:5px;border:1px solid #e7e8ec}
   pre{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:1.2rem 1.35rem;margin:1.5rem 0;overflow-x:auto;font-size:.82rem;line-height:1.6;box-shadow:0 10px 30px -18px rgba(13,17,23,.55);border:1px solid #1c2230}
   pre code{background:none;border:none;color:inherit;padding:0;font-size:.95rem;font-family:"JetBrains Mono",ui-monospace,monospace}
-  pre .cmt{color:var(--code-dim)}
   .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:1.1rem 1.3rem;margin:1.8rem 0;font-size:1rem;line-height:1.6}
   .callout.note{border-left-color:var(--cool)}.callout.warn{border-left-color:#f59e0b}
   .callout .label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);display:block;margin-bottom:.35rem}
@@ -74,6 +74,21 @@
   table.ptable th,table.ptable td{text-align:left;padding:.55rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
   table.ptable th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
   table.ptable td:first-child{font-weight:600;white-space:nowrap}.wrapscroll{overflow-x:auto}
+  /* roadmap strip */
+  .roadmap{display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;margin:1.6rem 0 2rem}
+  .roadmap .r{border:1px solid var(--line);border-radius:12px;padding:.75rem .7rem;background:#fff;text-align:center}
+  .roadmap .r .rn{display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.3rem}
+  .roadmap .r .rt{display:block;font-size:.88rem;font-weight:600;line-height:1.3;color:var(--ink)}
+  .roadmap .r .rs{display:block;font-size:.75rem;color:var(--muted);margin-top:.25rem;line-height:1.35}
+  /* step card */
+  .step{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1.15rem 1.25rem;margin:1.4rem 0}
+  .step .stitle{display:flex;align-items:baseline;gap:.6rem;margin:0 0 .55rem;flex-wrap:wrap}
+  .step .sn{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:.15rem .45rem}
+  .step .st{font-weight:650;font-size:1.02rem}
+  .step .shape{font-family:"JetBrains Mono",monospace;font-size:.78rem;color:var(--ink-soft);background:#f6f7f9;border:1px solid #e7e8ec;border-radius:6px;padding:.12rem .45rem;margin-left:auto}
+  .step p{margin:.55rem 0 0;font-size:.98rem}
+  .step .why{margin-top:.7rem;padding-top:.7rem;border-top:1px dashed var(--line);font-size:.92rem;color:var(--ink-soft)}
+  .step .why strong{color:var(--ink)}
   /* flow diagram */
   .flows{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.7rem 0}
   .flow{border:1px solid var(--line);border-radius:14px;padding:1rem .9rem;background:#fff}
@@ -85,9 +100,12 @@
   .node.acc{background:var(--accent-soft);border-color:#dfe2fb;color:var(--accent)}
   .node b{font-weight:700}
   .adown{text-align:center;color:var(--muted);font-size:.9rem;margin:.05rem 0}
-  .legend{display:flex;gap:1.1rem;flex-wrap:wrap;font-size:.82rem;color:var(--ink-soft);margin:.5rem 0 0}
-  .legend span{display:inline-flex;align-items:center;gap:.4rem}
-  .swatch{width:.85rem;height:.85rem;border-radius:3px;display:inline-block;border:1px solid #ccc}
+  /* single-column pipeline */
+  .pipe{border:1px solid var(--line);border-radius:14px;padding:1.1rem 1rem;background:#fff;margin:1.5rem 0}
+  .pipe .node{max-width:22rem;margin-left:auto;margin-right:auto}
+  .pipe .adown{margin:.15rem 0}
+  .pipe .split{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;max-width:28rem;margin:.35rem auto}
+  .pipe .note{text-align:center;font-size:.78rem;color:var(--muted);margin:.2rem 0 .5rem}
   /* cache bar */
   .cachebar{margin:1.4rem 0}
   .cachebar .row{display:grid;grid-template-columns:9rem 1fr;gap:.7rem;align-items:center;margin:.5rem 0}
@@ -96,17 +114,19 @@
   .cachebar .fill{height:100%;display:flex;align-items:center;padding-left:.6rem;color:#fff;font-size:.78rem;font-weight:600;white-space:nowrap}
   .cachebar .fill.full{background:var(--warm)}
   .cachebar .fill.latent{background:var(--accent)}
+  .dimchip{display:inline-flex;align-items:center;gap:.35rem;font-family:"JetBrains Mono",monospace;font-size:.78rem;background:#f6f7f9;border:1px solid #e7e8ec;border-radius:6px;padding:.15rem .5rem;margin:.15rem .2rem .15rem 0;color:var(--ink-soft)}
+  .dimchip b{color:var(--ink);font-weight:700}
   mjx-container[display="true"]{margin:1.35rem 0 !important;overflow-x:auto;overflow-y:hidden}
   footer{border-top:1px solid var(--line);margin-top:4rem;padding:2.5rem 0 4rem;font-size:.9rem;color:var(--muted)}footer a{color:var(--ink-soft)}
-  @media(max-width:640px){body{font-size:1.06rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.45rem}.flows{grid-template-columns:1fr}.cachebar .row{grid-template-columns:1fr}.cachebar .name{text-align:left}}
+  @media(max-width:640px){body{font-size:1.06rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.45rem}.flows{grid-template-columns:1fr}.roadmap{grid-template-columns:1fr 1fr}.cachebar .row{grid-template-columns:1fr}.cachebar .name{text-align:left}.step .shape{margin-left:0}.pipe .split{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header class="hero"><div class="wrap">
   <p class="eyebrow">Attention Variants · MLA Part 1</p>
   <h1 class="title">Understanding MLA <span class="title-expansion">(Multi-head Latent Attention)</span></h1>
-  <p class="subtitle">DeepSeek-style models store one small latent per token instead of full keys and values. This post shows what is compressed, why the head splits into a content part and a position part, and why position cannot be compressed.</p>
-  <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>July 2026</span><span class="dot">•</span><span>~12 min read</span></div>
+  <p class="subtitle">DeepSeek-style models store one small latent per token instead of full keys and values. This post follows one token through the forward, then explains why the head must split into a content part and a position part.</p>
+  <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>July 2026</span><span class="dot">•</span><span>~14 min read</span></div>
 </div></header>
 
 <main class="wrap">
@@ -119,14 +139,14 @@
 <nav class="toc"><div class="toc-title">Contents</div><ol>
   <li><a href="#s1"><span class="n">1</span>Where MLA sits</a></li>
   <li><a href="#s2"><span class="n">2</span>What is actually MLA</a></li>
-  <li><a href="#s3"><span class="n">3</span>The dimensions</a></li>
-  <li><a href="#s4"><span class="n">4</span>The two paths</a></li>
-  <li><a href="#s5"><span class="n">5</span>The forward, step by step</a></li>
-  <li><a href="#s6"><span class="n">6</span>Why position can't compress</a></li>
-  <li><a href="#s7"><span class="n">7</span>Training vs decode</a></li>
-  <li><a href="#s8"><span class="n">8</span>Summary</a></li>
+  <li><a href="#s3"><span class="n">3</span>One token through MLA</a></li>
+  <li><a href="#s4"><span class="n">4</span>Why position can't compress</a></li>
+  <li><a href="#s5"><span class="n">5</span>What gets cached</a></li>
+  <li><a href="#s6"><span class="n">6</span>Training vs decode</a></li>
+  <li><a href="#s7"><span class="n">7</span>Summary</a></li>
 </ol></nav>
 
+<!-- ============================================================ -->
 <h2 id="s1"><span class="num">1.</span>Where MLA sits: MHA &rarr; MQA &rarr; MLA</h2>
 <p>All four schemes keep many query heads. They differ only in what the KV cache holds per token.</p>
 <div class="wrapscroll"><table class="ptable">
@@ -137,9 +157,10 @@
 <tr><td>MQA</td><td>one key and one value, shared by all heads</td><td>no, identical</td><td>smallest</td></tr>
 <tr><td>MLA</td><td>one <em>latent</em> vector + one small shared position key</td><td>yes — reconstructed per head</td><td>near-MQA</td></tr>
 </tbody></table></div>
-<p>The key idea: MQA is cheap because it shares one key/value, but every head sees the <em>same</em> thing, which costs quality. MLA also caches one shared object, but it is a richer <strong>latent</strong> from which each head reconstructs its <em>own</em> key and value with its own learned matrix. So MLA gets MQA-like storage with MHA-like head diversity.</p>
+<p>MQA is cheap because it shares one key/value, but every head sees the <em>same</em> thing. MLA also caches one shared object, but it is a richer <strong>latent</strong> from which each head reconstructs its <em>own</em> key and value with its own learned matrix. So MLA gets MQA-like storage with MHA-like head diversity.</p>
 <div class="callout"><p style="margin:0"><strong>One-line placement:</strong> MLA = the small cache of MQA, the per-head expressiveness of MHA.</p></div>
 
+<!-- ============================================================ -->
 <h2 id="s2"><span class="num">2.</span>What is actually "MLA" (the common trap)</h2>
 <p>Reading the code, it is easy to think MLA is "LoRA on Q and K." It is not. Two independent things live in the attention block, and only one of them is MLA.</p>
 <div class="wrapscroll"><table class="ptable">
@@ -148,111 +169,170 @@
 <tr><td>Query low-rank</td><td>optional parameter compression of the query projection</td><td>No — just saves weights; the query is not cached</td></tr>
 <tr><td>KV latent</td><td>compress K and V for all heads into one latent, decompress per head</td><td><strong>Yes — this is MLA</strong></td></tr>
 </tbody></table></div>
-<p>The query low-rank path is optional (a model can skip it). The KV latent is the whole point and is always present. So when we say "MLA," we mean: <strong>keys and values for every head are generated from one shared, cached latent.</strong> Formally, for a token's hidden vector \(x\), one small matrix produces the latent</p>
+<p>The query low-rank path is optional. The KV latent is the whole point and is always present. Formally, for a token's hidden vector \(x\):</p>
 \[ c_{kv} \;=\; x\,W_{\text{down}}, \qquad c_{kv}\in\mathbb{R}^{\text{latent\_dim}} \]
-<p>and then each head \(h\) reconstructs its own key and value from that same latent:</p>
+<p>and each head \(h\) reconstructs its own key and value from that same latent:</p>
 \[ K^{(h)} \;=\; c_{kv}\,W_K^{(h)}, \qquad V^{(h)} \;=\; c_{kv}\,W_V^{(h)}. \]
-<p>Only \(c_{kv}\) is cached. The per-head matrices \(W_K^{(h)}, W_V^{(h)}\) are weights, not cache — which is exactly why each head can differ while the storage stays small.</p>
+<p>Only \(c_{kv}\) is cached. The per-head matrices are weights, not cache — which is why each head can differ while the storage stays small.</p>
+<p>That formula is the idea. The rest of this post is what the real forward actually does — including the part the formula leaves out: position.</p>
 
-<h2 id="s3"><span class="num">3.</span>The dimensions (DeepSeek-V3), and the constraints</h2>
-<p>These names look like many free knobs, but several are tied together. Here are the real values and which are independent.</p>
-<div class="wrapscroll"><table class="ptable">
-<thead><tr><th>Name</th><th>Meaning</th><th>Value</th><th>Free or derived?</th></tr></thead>
-<tbody>
-<tr><td>heads</td><td>number of attention heads</td><td>128</td><td>free</td></tr>
-<tr><td>latent_dim</td><td>width of the cached KV latent</td><td>512</td><td>free</td></tr>
-<tr><td>nope_dim</td><td>content part of the query/key head</td><td>128</td><td>free</td></tr>
-<tr><td>rope_dim</td><td>position part of the query/key head</td><td>64</td><td>free</td></tr>
-<tr><td>qk_head_dim</td><td>full query/key head = nope + rope</td><td>192</td><td><strong>derived</strong>: nope + rope</td></tr>
-<tr><td>value_dim</td><td>value width per head</td><td>128</td><td>free, independent of qk_head_dim</td></tr>
-</tbody></table></div>
-<p>Two constraints trip everyone up:</p>
+<!-- ============================================================ -->
+<h2 id="s3"><span class="num">3.</span>One token through MLA</h2>
+<p>We will follow a single token's hidden state through one attention layer, using DeepSeek-V3 numbers. Keep these widths in mind; they will show up as we go:</p>
+<p>
+  <span class="dimchip">hidden <b>7168</b></span>
+  <span class="dimchip">latent <b>512</b></span>
+  <span class="dimchip">rope <b>64</b></span>
+  <span class="dimchip">nope <b>128</b></span>
+  <span class="dimchip">value <b>128</b></span>
+  <span class="dimchip">heads <b>128</b></span>
+</p>
+<p>The forward has four phases. Each phase does one job. Dimensions and the nope/rope split appear when they are needed — not as a dump beforehand.</p>
+
+<div class="roadmap">
+  <div class="r"><span class="rn">Phase A</span><span class="rt">Compress</span><span class="rs">hidden &rarr; latent + rope key</span></div>
+  <div class="r"><span class="rn">Phase B</span><span class="rt">Expand</span><span class="rs">latent &rarr; K_nope, V per head</span></div>
+  <div class="r"><span class="rn">Phase C</span><span class="rt">Query</span><span class="rs">build Q, RoPE the rope part</span></div>
+  <div class="r"><span class="rn">Phase D</span><span class="rt">Attend</span><span class="rs">concat, score, output</span></div>
+</div>
+
+<!-- ---- Phase A ---- -->
+<h3 id="s3a"><span class="phase">Phase A</span>Compress: make the thing that will be cached</h3>
+<p>Start with the token's hidden state, width 7168. One small linear layer projects it into a 576-wide vector, then that vector is split in two:</p>
+
+<div class="pipe">
+  <div class="node">hidden state &nbsp;(7168)</div>
+  <div class="adown">&darr; one linear: &nbsp;7168 &rarr; 576</div>
+  <div class="node acc"><b>compressed</b> &nbsp;(576)</div>
+  <div class="adown">&darr; split 576 = 512 + 64</div>
+  <div class="split">
+    <div class="node cool"><b>c_kv</b> latent<br/>(512)</div>
+    <div class="node warm"><b>K_rope</b><br/>(64)</div>
+  </div>
+  <div class="note">same projection, two roles — content vs position</div>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">A1</span><span class="st">Down-project and split</span><span class="shape">(1, 576) &rarr; (1, 512) + (1, 64)</span></div>
+  <p>The 512-wide piece is the <strong>KV latent</strong> — the compressed source of every head's content key and value. The 64-wide piece is the <strong>shared rope key</strong> — a tiny position carrier that never goes through the latent.</p>
+  <div class="why"><strong>Why split already?</strong> Content can be compressed and later reconstructed with a fixed matrix. Position cannot (Section 4). So the architecture peels position off <em>before</em> the latent, not after.</div>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">A2</span><span class="st">RMSNorm the latent only</span><span class="shape">(1, 512) &rarr; (1, 512)</span></div>
+  <p>Normalize the 512-wide latent. The 64-wide rope key is left alone.</p>
+  <div class="why"><strong>This is not QK-norm.</strong> QK-norm (as in Qwen3) normalizes each head's full query and key <em>after</em> projection. Here the norm sits on the shared bottleneck <em>before</em> any head is expanded. Because RMSNorm divides by the vector's own magnitude, it is nonlinear: \(W\cdot\operatorname{RMSNorm}(c) \neq \operatorname{RMSNorm}(W\,c)\). Normalizing the latent is deliberately different from normalizing each expanded head.</div>
+</div>
+
+<p>After Phase A we hold two objects for this token: a normalized latent of width 512, and a raw rope key of width 64. <strong>These two are what the cache will store.</strong> Everything else in the forward can be rebuilt from them.</p>
+
+<!-- ---- Phase B ---- -->
+<h3 id="s3b"><span class="phase">Phase B</span>Expand: give every head its own K and V</h3>
+<p>The latent is shared. The heads are not. One up-projection turns the single latent into 128 heads' worth of content keys and values.</p>
+
+<div class="step">
+  <div class="stitle"><span class="sn">B1</span><span class="st">Up-project the latent</span><span class="shape">(1, 512) &rarr; (1, 128 heads, 256)</span></div>
+  <p>A linear layer maps the latent to <code>num_heads × (nope_dim + value_dim) = 128 × (128 + 128)</code>. Then split the last axis:</p>
+  \[ K_{\text{nope}}^{(h)} \in \mathbb{R}^{128}, \qquad V^{(h)} \in \mathbb{R}^{128} \quad\text{for each head }h. \]
+  <div class="why"><strong>One latent, two roles.</strong> The same cached vector is the source of both the content key and the value. The latent is not "the key" — it is the shared raw material for key <em>and</em> value. Each head has its own slice of the up-projection weights, so each head gets a different view.</div>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">B2</span><span class="st">RoPE the shared key, then broadcast</span><span class="shape">(1, 1, 64) &rarr; (1, 128, 64)</span></div>
+  <p>Apply rotary position embedding to the 64-wide rope key using this token's position. Then <em>copy</em> that one vector to every head — no matmul, just a broadcast.</p>
+  <div class="why"><strong>Why shared, not per-head?</strong> Position is a fact about the token, not about the head. Position \(n\) is position \(n\) for every head. Giving each head its own rope key would multiply storage by 128 for no new information. So MLA keeps one rope key and shares it.</div>
+</div>
+
+<p>After Phase B, every head has:</p>
 <ul>
-<li><strong>The query/key head is split, not free:</strong> <code>qk_head_dim = nope_dim + rope_dim</code>. For DeepSeek-V3, <code>192 = 128 + 64</code>.</li>
-<li><strong>Value width is independent</strong> and need <em>not</em> equal the query/key width. Here <code>value_dim = 128</code> but <code>qk_head_dim = 192</code>. This is fine: the score sum runs over <code>qk_head_dim</code> (Q vs K), while the output width is <code>value_dim</code> (weights vs V). They are two different matmuls, so they can have two different widths.</li>
+  <li><code>K_nope</code> (128) — content, from the latent, <em>per head</em></li>
+  <li><code>K_rope</code> (64) — position, shared, already rotated</li>
+  <li><code>V</code> (128) — content, from the latent, <em>per head</em></li>
 </ul>
+<p>The full key is not assembled yet. That happens in Phase D, after the query is ready.</p>
 
-<h2 id="s4"><span class="num">4.</span>The two paths inside a head: nope and rope</h2>
-<p>Each query and key head is concatenated from two pieces with different jobs:</p>
-\[ Q = [\,Q_{\text{nope}} \;\Vert\; Q_{\text{rope}}\,], \qquad K = [\,K_{\text{nope}} \;\Vert\; K_{\text{rope}}\,]. \]
-<ul>
-<li><strong>nope</strong> = "no positional encoding." The <em>content</em> part. It comes straight from the latent via a fixed learned matrix, so it is compressible.</li>
-<li><strong>rope</strong> = the <em>position</em> part. It gets a rotary rotation that depends on the token's position, so it cannot be a fixed function of the latent.</li>
-</ul>
-<p>The value has no such split — it is just <code>value_dim</code>, all content. Here is the actual data flow, drawn out:</p>
+<!-- ---- Phase C ---- -->
+<h3 id="s3c"><span class="phase">Phase C</span>Query: build Q the ordinary way, then split</h3>
+<p>The query path does <em>not</em> go through the KV latent. Queries are not cached, so there is nothing to compress for the cache. (DeepSeek-V3 does use an optional low-rank factorization on the query <em>weights</em> to save parameters — that is the trap from Section 2, and it is unrelated to the KV latent.)</p>
 
+<div class="step">
+  <div class="stitle"><span class="sn">C1</span><span class="st">Project to per-head queries</span><span class="shape">(1, 7168) &rarr; (1, 128 heads, 192)</span></div>
+  <p>Each head gets a query of width <code>qk_head_dim = 192</code>. That width is not free — it is the sum of the two parts we are about to split:</p>
+  \[ \underbrace{192}_{\text{qk\_head\_dim}} \;=\; \underbrace{128}_{\text{nope}} \;+\; \underbrace{64}_{\text{rope}}. \]
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">C2</span><span class="st">Split and RoPE the rope part</span><span class="shape">(1, 128, 192) &rarr; [128 | 64]</span></div>
+  <p>Split each head's query into <code>Q_nope</code> (128) and <code>Q_rope</code> (64). Apply RoPE only to <code>Q_rope</code>, using the same position as the key. Leave <code>Q_nope</code> untouched.</p>
+  <div class="why"><strong>Same split as the key, for the same reason.</strong> The content half will later dot with <code>K_nope</code>. The position half will later dot with <code>K_rope</code>. RoPE on both sides is what makes the score depend on the relative offset (see the <a href="rope.html">RoPE post</a>).</div>
+</div>
+
+<!-- ---- Phase D ---- -->
+<h3 id="s3d"><span class="phase">Phase D</span>Attend: concat, score, project out</h3>
+
+<div class="step">
+  <div class="stitle"><span class="sn">D1</span><span class="st">Concatenate nope and rope</span><span class="shape">Q, K: (1, 128, 192)</span></div>
+  <p>Per head:</p>
+  \[ Q \;=\; [\,Q_{\text{nope}} \;\Vert\; Q_{\text{rope}}\,], \qquad K \;=\; [\,K_{\text{nope}} \;\Vert\; K_{\text{rope}}\,]. \]
+  <p>Value stays width 128 — no rope split on V. Value width is independent of query/key width; the score matmul and the value matmul are two different operations, so they can have two different widths.</p>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">D2</span><span class="st">Scaled attention</span><span class="shape">(1, 128, 128)</span></div>
+  <p>Ordinary multi-head attention, with the full query/key width in the scale:</p>
+  \[ \mathrm{Attention}(Q,K,V) \;=\; \mathrm{softmax}\!\left(\frac{QK^{\top}}{\sqrt{192}}\right)V. \]
+  <p>Output per head is width 128 (the value width). Flatten the 128 heads and project back to hidden 7168.</p>
+</div>
+
+<!-- big picture after the walk -->
+<p>Putting the two paths side by side, the asymmetry is the whole design:</p>
 <div class="flows">
   <div class="flow">
     <span class="tag">Query path</span>
     <h4>Q</h4>
-    <div class="node">hidden state</div>
+    <div class="node">hidden (7168)</div>
     <div class="adown">&darr; project (optionally low-rank)</div>
-    <div class="node">per-head query, width 192</div>
+    <div class="node">per-head query (192)</div>
     <div class="adown">&darr; split 192 = 128 + 64</div>
     <div class="node acc">Q_nope (128) &nbsp;|&nbsp; Q_rope (64)</div>
     <div class="adown">&darr; RoPE on the 64 only</div>
-    <div class="node">Q ready for attention</div>
+    <div class="node">Q ready</div>
   </div>
   <div class="flow">
     <span class="tag">Key / Value path</span>
     <h4>K, V</h4>
-    <div class="node">hidden state</div>
-    <div class="adown">&darr; one small projection</div>
-    <div class="node acc">latent c_kv (512) &nbsp;|&nbsp; K_rope (64)</div>
-    <div class="adown">&darr; c_kv &rarr; per-head up-projection</div>
-    <div class="node cool">K_nope (128) &amp; V (128), <b>per head</b></div>
-    <div class="adown">&darr; K_rope shared across heads</div>
-    <div class="node">K, V ready for attention</div>
+    <div class="node">hidden (7168)</div>
+    <div class="adown">&darr; compress to 576, split</div>
+    <div class="node acc">latent (512) &nbsp;|&nbsp; K_rope (64)</div>
+    <div class="adown">&darr; RMSNorm latent; up-project</div>
+    <div class="node cool">K_nope &amp; V, <b>per head</b></div>
+    <div class="adown">&darr; RoPE K_rope; broadcast to heads</div>
+    <div class="node">K, V ready</div>
   </div>
 </div>
-<p>Notice the asymmetry, which is the heart of MLA:</p>
+
 <div class="wrapscroll"><table class="ptable">
-<thead><tr><th>Part</th><th>Comes from</th><th>Per head or shared?</th><th>Cached?</th></tr></thead>
+<thead><tr><th>Part</th><th>Comes from</th><th>Per head?</th><th>Cached?</th></tr></thead>
 <tbody>
-<tr><td>K_nope, V</td><td>the latent, via per-head up-projection</td><td>per head (own matrix)</td><td>only the latent is cached</td></tr>
-<tr><td>K_rope</td><td>a small direct projection of the hidden state</td><td><strong>shared across all heads</strong></td><td>the tiny 64-wide key is cached</td></tr>
+<tr><td>K_nope, V</td><td>latent, via per-head up-projection</td><td>yes — own matrix</td><td>only the latent</td></tr>
+<tr><td>K_rope</td><td>direct slice of the compress projection</td><td><strong>no — shared</strong></td><td>the tiny 64-wide key</td></tr>
+<tr><td>Q_nope, Q_rope</td><td>query projection of the hidden state</td><td>yes</td><td>never — queries are not cached</td></tr>
 </tbody></table></div>
 
-<h2 id="s5"><span class="num">5.</span>The MLA forward, step by step</h2>
-<p>Here is the whole forward for a batch of <code>T</code> tokens, in order, with the output shape of each step (DeepSeek-V3 numbers). This is the concrete algorithm the diagram above summarizes — and it is where the latent norm actually lives.</p>
-<div class="wrapscroll"><table class="ptable">
-<thead><tr><th>#</th><th>Operation</th><th>Output shape</th></tr></thead>
-<tbody>
-<tr><td>1</td><td>down-project the hidden state to the KV latent + shared rope key</td><td><code>(T, 512 + 64)</code></td></tr>
-<tr><td>2</td><td><strong>RMSNorm the latent</strong> (the 512 part only)</td><td><code>(T, 512)</code></td></tr>
-<tr><td>3</td><td>up-project the latent to per-head <code>K_nope</code> and <code>V</code></td><td><code>(T, 128 heads, 128 + 128)</code></td></tr>
-<tr><td>4</td><td>RoPE the 64-wide rope key, then share it across all heads</td><td><code>(T, 1&rarr;128, 64)</code></td></tr>
-<tr><td>5</td><td>project the query, split into <code>Q_nope</code>(128) + <code>Q_rope</code>(64), RoPE the rope part</td><td><code>(T, 128 heads, 192)</code></td></tr>
-<tr><td>6</td><td>concat per head: <code>K = [K_nope | rope]</code>, <code>Q = [Q_nope | rope]</code></td><td><code>(T, 128 heads, 192)</code></td></tr>
-<tr><td>7</td><td>attention: <code>softmax(Q&middot;Kᵀ / &radic;192) &middot; V</code></td><td><code>(T, 128 heads, 128)</code></td></tr>
-<tr><td>8</td><td>flatten heads and output-project back to hidden</td><td><code>(T, 7168)</code></td></tr>
-</tbody></table></div>
-<p>Only the width-<code>576</code> object from step 1 (the <code>512</code> latent plus the <code>64</code> rope key) is written to the cache. Everything in steps 3–7 is recomputed from it. Three details in this walkthrough are the ones people miss:</p>
-<div class="callout"><span class="label">Easy to miss</span>
-<p><strong>Step 3 — one latent, two roles.</strong> The same cached latent is up-projected into both <code>K_nope</code> and <code>V</code>. The latent is not "the key"; it is the shared source of key and value.</p>
-<p><strong>Step 4 — the rope key has no per-head weights.</strong> It is produced directly in step 1 and just <em>broadcast</em> to all heads (a copy, no matmul). That is why one 64-wide vector serves every head.</p>
-<p><strong>Step 2 — the norm is on the latent, not on K or V.</strong> It normalizes the compressed bottleneck <em>before</em> step 3 expands it. Because RMSNorm divides by the vector's own magnitude it is nonlinear, so \( W\cdot\operatorname{RMSNorm}(c_{kv}) \neq \operatorname{RMSNorm}(W\,c_{kv}) \) — normalizing the latent is deliberately different from normalizing each expanded head. It is a bottleneck-stability norm, not the per-head QK-norm seen in models like Qwen3.</p>
-</div>
-
-<p>The reason the cache only needs step 1's output is the whole payoff. Per token, per layer:</p>
-<div class="cachebar">
-  <div class="row"><div class="name">MHA-style full cache</div><div class="track"><div class="fill full" style="width:100%">40,960 values</div></div></div>
-  <div class="row"><div class="name">MLA latent cache</div><div class="track"><div class="fill latent" style="width:1.4%"></div><span style="position:relative;left:.5rem;top:-1.6rem;font-size:.78rem;font-weight:600;color:var(--accent)">576 values</span></div></div>
-</div>
-<p>That is <code>512</code> (latent) + <code>64</code> (shared rope key) = <strong>576</strong> stored values, versus <code>128&times;(192+128) = 40,960</code> for a full multi-head cache — about <strong>71&times; smaller</strong>.</p>
-
-<h2 id="s6"><span class="num">6.</span>Why position cannot live in the latent</h2>
-<p>This is the reason for the whole nope/rope split. The content part works because its reconstruction matrix is <em>fixed</em>: the same \(W_K^{(h)}\) applies to every cached token, so the score can be regrouped. Written out for one head, one query position \(m\), one key position \(n\):</p>
+<!-- ============================================================ -->
+<h2 id="s4"><span class="num">4.</span>Why position cannot live in the latent</h2>
+<p>Section 3 showed <em>that</em> position is peeled off before the latent. Here is <em>why</em>.</p>
+<p>The content part works because its reconstruction matrix is fixed: the same \(W_K^{(h)}\) applies to every cached token. Written out for one head, one query position \(m\), one key position \(n\):</p>
 \[ Q_{\text{nope}}\cdot K_{\text{nope}} \;=\; Q_{\text{nope}}\,\big(W_K^{(h)}\,c_{kv}\big) \;=\; \big(Q_{\text{nope}}\,W_K^{(h)}\big)\cdot c_{kv}. \]
-<p>The matrix \(W_K^{(h)}\) does not depend on \(n\), so it can be moved onto the query side once (this is what makes efficient decoding possible — Part 2). Position breaks that. RoPE inserts a rotation \(R_{\,m-n}\) that depends on <em>both</em> positions, sitting between query and key:</p>
+<p>The matrix \(W_K^{(h)}\) does not depend on \(n\), so it can be moved onto the query side once. That regrouping is what makes efficient decoding possible — the subject of <a href="mla-decoding.html">Part 2</a>.</p>
+<p>Position breaks that. RoPE inserts a rotation \(R_{\,m-n}\) that depends on <em>both</em> positions, sitting between query and key:</p>
 \[ Q_{\text{rope}}\cdot K_{\text{rope}} \;=\; Q^{\top} R_{\,m-n}\, K. \]
 <p>There is no single fixed matrix here — \(R_{\,m-n}\) is different for every cached position \(n\):</p>
 <pre><code>key at position 0  &rarr; rotate by  R(m-0)
 key at position 1  &rarr; rotate by  R(m-1)
 key at position 2  &rarr; rotate by  R(m-2)
 ...                                (a different rotation per cached token)</code></pre>
-<p>So position cannot be folded into the fixed latent reconstruction. DeepSeek's fix is to <strong>carry position separately</strong>: a small <code>rope_dim = 64</code> slice, shared across heads, that is rotated per position and concatenated back on. The content lives in the compressible latent; the position rides alongside in a tiny explicit vector.</p>
-<p>The clean 2&times;2 view of the whole scheme:</p>
+<p>So position cannot be folded into the fixed latent reconstruction. DeepSeek's fix is to <strong>carry position separately</strong>: a small <code>rope_dim = 64</code> slice, shared across heads, rotated per position, concatenated back on. Content lives in the compressible latent; position rides alongside in a tiny explicit vector.</p>
 <div class="wrapscroll"><table class="ptable">
 <thead><tr><th></th><th>Small cache?</th><th>Fixed reconstruction?</th></tr></thead>
 <tbody>
@@ -260,19 +340,41 @@ key at position 2  &rarr; rotate by  R(m-2)
 <tr><td><strong>rope</strong> (position)</td><td>yes — but tiny &amp; shared, not in the latent</td><td>no — rotation changes per position</td></tr>
 </tbody></table></div>
 
-<h2 id="s7"><span class="num">7.</span>Training vs decode (a one-paragraph preview)</h2>
-<p>The same MLA weights are run two different ways. During <strong>training</strong> (and in the readable reference code), the latent is expanded back into full per-head K and V, and ordinary attention runs — simple and easy to differentiate, no cache. During <strong>decode</strong>, serving engines keep only the latent in the cache and fold the reconstruction matrices onto the query and output, so they never rebuild full K/V for every cached token. Same math, two factorizations. The trade-off between them — and why both exist — is the subject of <a href="mla-decoding.html">Part 2</a>.</p>
+<!-- ============================================================ -->
+<h2 id="s5"><span class="num">5.</span>What gets cached</h2>
+<p>Go back to the end of Phase A. The only objects that need to be stored per token, per layer, are:</p>
+<ul>
+  <li>the 512-wide latent (after RMSNorm)</li>
+  <li>the 64-wide rope key (after RoPE, in the reference path)</li>
+</ul>
+<p>That is 576 values. Compare to a full multi-head cache that would store, per head, a 192-wide key and a 128-wide value:</p>
+<div class="cachebar">
+  <div class="row"><div class="name">MHA-style full cache</div><div class="track"><div class="fill full" style="width:100%">40,960 values</div></div></div>
+  <div class="row"><div class="name">MLA latent cache</div><div class="track"><div class="fill latent" style="width:1.4%"></div><span style="position:relative;left:.5rem;top:-1.6rem;font-size:.78rem;font-weight:600;color:var(--accent)">576 values</span></div></div>
+</div>
+<p><code>128 × (192 + 128) = 40,960</code> versus <code>512 + 64 = 576</code> — about <strong>71× smaller</strong>.</p>
+<p>Phases B–D can always be recomputed from those 576 numbers plus the weights. That is the whole storage win. How you choose to recompute them at decode time — rebuild full K/V, or fold the up-projections into the query — is a separate algorithmic choice, covered in Part 2.</p>
 
-<h2 id="s8"><span class="num">8.</span>Summary</h2>
+<div class="callout note"><span class="label">Reference vs serving</span>
+<p>The Hugging Face <code>modeling_deepseek_v3.py</code> path you just walked is the <em>training / reference</em> form: it expands the latent into full K and V, then (if caching) stores those expanded tensors. Serving engines such as SGLang and vLLM keep the latent itself in the cache and never materialize full K/V for every past token. Same weights, different factorization of the same math.</p>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="s6"><span class="num">6.</span>Training vs decode (a one-paragraph preview)</h2>
+<p>The same MLA weights are run two different ways. During <strong>training</strong> (and in the readable reference code), the latent is expanded back into full per-head K and V, and ordinary attention runs — simple and easy to differentiate, no cache needed. During <strong>decode</strong>, serving engines keep only the latent in the cache and fold the reconstruction matrices onto the query and output, so they never rebuild full K/V for every cached token. Same math, two factorizations. The trade-off between them — and why both exist — is the subject of <a href="mla-decoding.html">Part 2</a>.</p>
+
+<!-- ============================================================ -->
+<h2 id="s7"><span class="num">7.</span>Summary</h2>
 <div class="wrapscroll"><table class="ptable">
 <thead><tr><th>Question</th><th>Answer</th></tr></thead>
 <tbody>
 <tr><td>What is MLA?</td><td>compress K and V for all heads into one cached latent; reconstruct per head</td></tr>
 <tr><td>Is the query low-rank part MLA?</td><td>no — that is optional weight compression; MLA is the KV latent</td></tr>
+<tr><td>What does the forward do?</td><td>compress &rarr; norm latent &rarr; expand to K_nope/V &rarr; share K_rope &rarr; build Q &rarr; attend</td></tr>
 <tr><td>Why the nope/rope split?</td><td>content compresses into the latent; position cannot, so it rides separately</td></tr>
-<tr><td>Is rope per head?</td><td>no — the rope key is one small shared vector, broadcast to all heads</td></tr>
+<tr><td>Is rope per head?</td><td>no — one small shared vector, broadcast to all heads</td></tr>
 <tr><td>What does the norm touch?</td><td>the shared latent bottleneck, not per-head K/V</td></tr>
-<tr><td>How big is the win?</td><td>~71&times; smaller KV cache for DeepSeek-V3</td></tr>
+<tr><td>How big is the win?</td><td>~71× smaller KV cache for DeepSeek-V3</td></tr>
 </tbody></table></div>
 <div class="callout"><p style="margin:0">MLA in one line: <strong>cache one latent per token, let every head learn its own key/value from it, and keep a tiny shared rope key because position refuses to compress.</strong></p></div>
 
