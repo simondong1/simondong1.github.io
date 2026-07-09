@@ -132,15 +132,6 @@
 <main class="wrap">
 <p class="lede"><strong>MLA is a low-rank version of multi-head attention.</strong> It keeps every query head, but stores keys and values as one shared latent per token — like Multi-Query Attention's tiny cache, yet each head still gets its own learned view. This post is the architecture; a <a href="mla-decoding.html">follow-up</a> covers the two ways to run it at inference.</p>
 
-<div class="callout warn"><span class="label">The one distinction that prevents most confusion</span>
-<p><strong>Latent ≠ rope. Never mix them.</strong></p>
-<ul style="margin:.4rem 0 0;padding-left:1.2rem">
-<li><strong>Latent</strong> (<code>512</code>) = compressed <em>content</em>. Source of <code>K_nope</code> and <code>V</code>. Gets RMSNorm. Can be up-projected / absorbed.</li>
-<li><strong>K_rope</strong> (<code>64</code>) = <em>position</em>. Never inside the latent. Never up-projected. Never absorbed. Just RoPE’d and concatenated.</li>
-<li><strong>What the cache stores</strong> = latent + K_rope = <code>576</code>. Two objects side by side, not one fused vector.</li>
-</ul>
-</div>
-
 <div class="callout note"><span class="label">Where MLA is used</span><p>MLA is the attention behind <strong>DeepSeek-V2 / V3</strong> and the <strong>Kimi K2.x</strong> text backbone. Related low-rank KV ideas also show up in newer 2026 systems. Every number here uses DeepSeek-V3 as the concrete reference.</p></div>
 
 <div class="callout note"><span class="label">Assumed background</span><p>Multi-head attention (Q, K, V, one cache per head) and RoPE. If RoPE is rusty, the <a href="rope.html">RoPE post</a> covers it. Everything else is defined here.</p></div>
@@ -164,7 +155,7 @@
 <tr><td>MHA</td><td>one full key and value <em>per head</em></td><td>yes, independent</td><td>largest</td></tr>
 <tr><td>GQA</td><td>key/value for a few shared groups</td><td>shared in groups</td><td>medium</td></tr>
 <tr><td>MQA</td><td>one key and one value, shared by all heads</td><td>no, identical</td><td>smallest</td></tr>
-<tr><td>MLA</td><td>one <em>latent</em> vector + one small shared position key</td><td>yes — reconstructed per head</td><td>near-MQA</td></tr>
+<tr><td>MLA</td><td>one shared <em>latent</em> (plus a small position sidecar — Section 3)</td><td>yes — reconstructed per head</td><td>near-MQA</td></tr>
 </tbody></table></div>
 <p>MQA is cheap because it shares one key/value, but every head sees the <em>same</em> thing. MLA also caches one shared object, but it is a richer <strong>latent</strong> from which each head reconstructs its <em>own</em> key and value with its own learned matrix. So MLA gets MQA-like storage with MHA-like head diversity.</p>
 <div class="callout"><p style="margin:0"><strong>One-line placement:</strong> MLA = the small cache of MQA, the per-head expressiveness of MHA.</p></div>
@@ -179,38 +170,32 @@
 <tr><td>KV latent</td><td>compress K and V for all heads into one latent, decompress per head</td><td><strong>Yes — this is MLA</strong></td></tr>
 </tbody></table></div>
 <p>The query low-rank path is optional. The KV latent is the whole point and is always present. Formally, for a token's hidden vector \(x\):</p>
-\[ c \;=\; x\,W_{\text{down}}, \qquad c\in\mathbb{R}^{512} \quad\text{(content only — no position inside)} \]
-<p>and each head \(h\) reconstructs its own <em>content</em> key and value from that same latent:</p>
-\[ K_{\text{nope}}^{(h)} \;=\; c\,W_K^{(h)}, \qquad V^{(h)} \;=\; c\,W_V^{(h)}. \]
-<p>Important: \(W_K^{(h)}\) maps <strong>latent → nope</strong> only. It does <em>not</em> produce rope. Rope is a separate 64-wide vector that never goes through these matrices.</p>
-<p>Only \(c\) (plus the tiny rope key beside it) is cached. The per-head matrices are weights, not cache — which is why each head can differ while the storage stays small.</p>
-<div class="callout note"><span class="label">Why “latent” can be wider than a head</span>
-<p><code>latent_dim = 512</code> looks big next to <code>nope_dim = 128</code>. That is fine. The latent is <em>shared across all heads</em>, so one 512-vector replaces <code>128 × (128 + 128) = 32,768</code> content values per token. “Latent” means low-rank relative to the <em>full multi-head</em> KV, not smaller than one head. Absorb later scores in this 512-wide space — wider per head, but still one shared key.</p>
-</div>
+\[ c \;=\; x\,W_{\text{down}}, \qquad c\in\mathbb{R}^{512} \]
+<p>and each head \(h\) reconstructs its own key and value from that same latent:</p>
+\[ K^{(h)} \;=\; c\,W_K^{(h)}, \qquad V^{(h)} \;=\; c\,W_V^{(h)}. \]
+<p>The per-head matrices are weights, not cache — which is why each head can differ while the storage stays small. For now, think of \(c\) as “the thing that replaces full K and V.”</p>
+<p>That is the core idea. The real forward has one more piece — position — which forces a split we have not named yet. Section 3 walks through it; Section 5 states exactly what the cache holds.</p>
 
 <!-- ============================================================ -->
 <h2 id="s3"><span class="num">3.</span>One token through MLA</h2>
-<p>We will follow a single token's hidden state through one attention layer, using DeepSeek-V3 numbers. Keep these widths in mind; they will show up as we go:</p>
+<p>Follow a single token's hidden state through one attention layer. DeepSeek-V3 numbers; each width is introduced when it first appears.</p>
 <p>
   <span class="dimchip">hidden <b>7168</b></span>
-  <span class="dimchip">latent <b>512</b></span>
-  <span class="dimchip">rope <b>64</b></span>
-  <span class="dimchip">nope <b>128</b></span>
-  <span class="dimchip">value <b>128</b></span>
   <span class="dimchip">heads <b>128</b></span>
+  <span class="dimchip">latent <b>512</b></span>
 </p>
-<p>The forward has four phases. Each phase does one job. Dimensions and the nope/rope split appear when they are needed — not as a dump beforehand.</p>
+<p>Four phases. Each does one job.</p>
 
 <div class="roadmap">
-  <div class="r"><span class="rn">Phase A</span><span class="rt">Compress</span><span class="rs">hidden &rarr; latent + rope key</span></div>
-  <div class="r"><span class="rn">Phase B</span><span class="rt">Expand</span><span class="rs">latent &rarr; K_nope, V per head</span></div>
-  <div class="r"><span class="rn">Phase C</span><span class="rt">Query</span><span class="rs">build Q, RoPE the rope part</span></div>
+  <div class="r"><span class="rn">Phase A</span><span class="rt">Compress</span><span class="rs">hidden &rarr; what gets cached</span></div>
+  <div class="r"><span class="rn">Phase B</span><span class="rt">Expand</span><span class="rs">latent &rarr; per-head K, V</span></div>
+  <div class="r"><span class="rn">Phase C</span><span class="rt">Query</span><span class="rs">build Q the usual way</span></div>
   <div class="r"><span class="rn">Phase D</span><span class="rt">Attend</span><span class="rs">concat, score, output</span></div>
 </div>
 
 <!-- ---- Phase A ---- -->
 <h3 id="s3a"><span class="phase">Phase A</span>Compress: make the thing that will be cached</h3>
-<p>Start with the token's hidden state, width 7168. One small linear layer projects it into a 576-wide vector, then that vector is split in two:</p>
+<p>Start with the token's hidden state, width 7168. One small linear layer projects it — but not to a single latent. The output is 576-wide, and it immediately splits:</p>
 
 <div class="pipe">
   <div class="node">hidden state &nbsp;(7168)</div>
@@ -218,42 +203,48 @@
   <div class="node acc"><b>compressed</b> &nbsp;(576)</div>
   <div class="adown">&darr; split 576 = 512 + 64</div>
   <div class="split">
-    <div class="node cool"><b>c_kv</b> latent<br/>(512)</div>
+    <div class="node cool"><b>c</b> latent<br/>(512)</div>
     <div class="node warm"><b>K_rope</b><br/>(64)</div>
   </div>
-  <div class="note">same projection, two roles — content vs position</div>
+  <div class="note">same projection, two roles — we are about to see why</div>
 </div>
 
 <div class="step">
   <div class="stitle"><span class="sn">A1</span><span class="st">Down-project and split</span><span class="shape">(1, 576) &rarr; (1, 512) + (1, 64)</span></div>
-  <p>The 512-wide piece is the <strong>KV latent</strong> — compressed <em>content</em>, the source of every head's <code>K_nope</code> and <code>V</code>. The 64-wide piece is the <strong>shared rope key</strong> — position only. It is <em>not</em> part of the latent and will never be up-projected.</p>
-  <div class="why"><strong>Why split already?</strong> Content can be compressed and later reconstructed with a fixed matrix. Position cannot (Section 4). So the architecture peels position off <em>before</em> the latent, not after. From here on, treat them as two different objects.</div>
+  <p>The 512-wide piece is the <strong>KV latent</strong> from Section 2 — compressed content, the source of every head's key and value. The 64-wide piece is new: a <strong>shared rope key</strong> that carries position. It is produced here, beside the latent, not inside it.</p>
+  <div class="why"><strong>Why two pieces?</strong> The short answer: content can live in a fixed low-rank map; position cannot. Section 4 proves that. For now, just notice the architecture peels them apart at the first step.</div>
 </div>
 
 <div class="step">
-  <div class="stitle"><span class="sn">A2</span><span class="st">RMSNorm the latent only — never the rope</span><span class="shape">(1, 512) &rarr; (1, 512)</span></div>
-  <p>Normalize the 512-wide latent. The 64-wide rope key is left alone — by design, in both training and decode.</p>
-  <div class="why"><strong>This is not QK-norm.</strong> QK-norm (as in Qwen3) normalizes each head's full query and key <em>after</em> projection. Here the norm sits on the shared content bottleneck <em>before</em> any head is expanded. Rope stays out so position is not mixed into the content scale. Also, because RMSNorm is nonlinear: \(W\cdot\operatorname{RMSNorm}(c) \neq \operatorname{RMSNorm}(W\,c)\).</div>
+  <div class="stitle"><span class="sn">A2</span><span class="st">RMSNorm the latent only</span><span class="shape">(1, 512) &rarr; (1, 512)</span></div>
+  <p>Normalize the 512-wide latent. Leave the 64-wide rope key alone.</p>
+  <div class="why"><strong>This is not QK-norm.</strong> QK-norm (as in Qwen3) normalizes each head's full query and key <em>after</em> projection. Here the norm sits on the shared content bottleneck <em>before</em> any head is expanded. Rope is left out so its magnitude does not change the content scale (RMSNorm divides by one shared RMS over the whole vector). Also, because RMSNorm is nonlinear: \(W\cdot\operatorname{RMSNorm}(c) \neq \operatorname{RMSNorm}(W\,c)\).</div>
 </div>
 
-<p>After Phase A we hold <strong>two separate objects</strong>: a normalized latent (<code>512</code>) and a rope key (<code>64</code>). RoPE is applied to the rope key in Phase B. <strong>These two — not a fused 576-dim “latent” — are what an MLA cache stores.</strong></p>
+<div class="callout"><span class="label">After Phase A — two objects, not one</span>
+<p style="margin:0">We now hold a normalized latent (<code>512</code>) and a rope key (<code>64</code>). <strong>These two — side by side, not fused — are what an MLA cache stores</strong> (<code>576</code> total). Calling the whole entry “the latent” is the usual mistake; the latent is only the content half.</p>
+</div>
 
 <!-- ---- Phase B ---- -->
 <h3 id="s3b"><span class="phase">Phase B</span>Expand: give every head its own K and V</h3>
-<p>The latent is shared. The heads are not. One up-projection turns the single latent into 128 heads' worth of content keys and values.</p>
+<p>The latent is shared. The heads are not. One up-projection turns the single latent into 128 heads' worth of content keys and values. The rope key does not go through this step.</p>
 
 <div class="step">
-  <div class="stitle"><span class="sn">B1</span><span class="st">Up-project the latent → K_nope and V (not rope)</span><span class="shape">(1, 512) &rarr; (1, 128 heads, 256)</span></div>
+  <div class="stitle"><span class="sn">B1</span><span class="st">Up-project the latent → content key and value</span><span class="shape">(1, 512) &rarr; (1, 128 heads, 256)</span></div>
   <p>A linear layer (<code>kv_b_proj</code>) maps the latent to <code>num_heads × (nope_dim + value_dim) = 128 × (128 + 128)</code>. Then split:</p>
   \[ K_{\text{nope}}^{(h)} \in \mathbb{R}^{128}, \qquad V^{(h)} \in \mathbb{R}^{128} \quad\text{for each head }h. \]
-  <p>That is <em>all</em> this matrix produces. There is no rope inside it. Rope never enters this up-projection — not in training, not in materialize, not in absorb.</p>
-  <div class="why"><strong>One latent, two content roles.</strong> The same cached vector is the source of both the content key and the value. Each head has its own slice \(W_K^{(h)}\) and \(W_V^{(h)}\), so each head gets a different view. The superscript \((h)\) means head index — head 0 uses matrix 0, head 1 uses matrix 1, and so on.</div>
+  <p>“Nope” means <em>no positional encoding</em> — the content half of the key. That is all this matrix produces. Rope never enters it.</p>
+  <div class="why"><strong>One latent, two content roles.</strong> The same cached vector is the source of both the content key and the value. Each head has its own slice \(W_K^{(h)}\) and \(W_V^{(h)}\). The superscript \((h)\) means head index — head 0 uses matrix 0, head 1 uses matrix 1, and so on.</div>
+</div>
+
+<div class="callout note"><span class="label">Why “latent” can be wider than a head</span>
+<p><code>latent_dim = 512</code> looks big next to <code>nope_dim = 128</code>. That is fine. The latent is <em>shared across all heads</em>, so one 512-vector replaces <code>128 × (128 + 128) = 32,768</code> content values per token. “Latent” means low-rank relative to the <em>full multi-head</em> KV, not smaller than one head.</p>
 </div>
 
 <div class="step">
-  <div class="stitle"><span class="sn">B2</span><span class="st">RoPE the rope key, then broadcast — still no up-proj</span><span class="shape">(1, 1, 64) &rarr; (1, 128, 64)</span></div>
-  <p>Apply rotary position embedding to the 64-wide rope key. Then <em>copy</em> that one vector to every head — no matmul, just a broadcast. Width stays 64.</p>
-  <div class="why"><strong>Why shared, not per-head?</strong> Position is a fact about the token, not about the head. Giving each head its own rope key would multiply storage by 128 for no new information. And there is nothing to “up-project”: rope was never compressed into the latent.</div>
+  <div class="stitle"><span class="sn">B2</span><span class="st">RoPE the rope key, then broadcast</span><span class="shape">(1, 1, 64) &rarr; (1, 128, 64)</span></div>
+  <p>Apply rotary position embedding to the 64-wide rope key. Then <em>copy</em> that one vector to every head — no matmul, just a broadcast. Width stays 64. Still no up-projection.</p>
+  <div class="why"><strong>Why shared, not per-head?</strong> Position is a fact about the token, not about the head. Giving each head its own rope key would multiply storage by 128 for no new information. And there is nothing to up-project: rope was never compressed into the latent.</div>
 </div>
 
 <p>After Phase B, every head has:</p>

@@ -147,12 +147,8 @@
   <li><a href="#s8"><span class="n">8</span>Which runs when</a></li>
 </ol></nav>
 
-<div class="callout warn"><span class="label">Latent ≠ rope (carry this from Part 1)</span>
-<p><strong>Latent</strong> (<code>512</code>) = content only. <strong>K_rope</strong> (<code>64</code>) = position, stored beside it, never up-projected, never absorbed. Cache entry = <code>512 + 64 = 576</code>. Absorb attention width = <code>latent + rope</code> because the two are concatenated for scoring — not because rope lives inside the latent.</p>
-</div>
-
 <div class="callout note"><span class="label">Notation</span>
-<p>DeepSeek-V3 numbers: <code>heads = 128</code>, <code>latent_dim = 512</code>, <code>nope_dim = 128</code>, <code>rope_dim = 64</code>, <code>value_dim = 128</code>. <code>new_tokens</code> = queries in this call. <code>cached_tokens</code> = tokens already in the KV cache. Superscript <code>(h)</code> means head index — each head has its own matrix.</p>
+<p>DeepSeek-V3 numbers: <code>heads = 128</code>, <code>latent_dim = 512</code>, <code>nope_dim = 128</code>, <code>rope_dim = 64</code>, <code>value_dim = 128</code>. <code>new_tokens</code> = queries in this call. <code>cached_tokens</code> = tokens already in the KV cache. Superscript <code>(h)</code> means head index — each head has its own matrix. From Part 1: the cache entry is <strong>latent + K_rope</strong> (<code>512 + 64 = 576</code>), two objects side by side — not one fused “latent.”</p>
 </div>
 
 <h2 id="s1"><span class="num">1.</span>Prefill and decode are the same computation</h2>
@@ -206,10 +202,6 @@ prefill  =  new_tokens is large    (many new tokens attend to the growing contex
 
 <h2 id="s3"><span class="num">3.</span>What “absorb” actually means</h2>
 <p>Materialize is easy: turn every cached latent into a full key and value, then run ordinary attention. Absorb looks like a trick until you see that both paths compute the <em>same numbers</em>. We build it in four stages: keys, then many heads, then values, then what refuses to absorb.</p>
-
-<div class="callout note"><span class="label">Why latent can be wider than a head</span>
-<p><code>latent_dim = 512</code> looks big next to <code>nope_dim = 128</code>. That is expected. The latent is <strong>shared across all heads</strong>, so one 512-vector replaces <code>heads × (nope + value) = 128 × 256 = 32,768</code> content values per token. “Latent” means low-rank relative to the <em>full multi-head</em> KV, not “smaller than one head.” Absorb scores in this wider space on purpose — each query head grows to 512, but there is still only one shared key.</p>
-</div>
 
 <!-- ---- 3a ---- -->
 <h3 id="s3a"><span class="phase">3a</span>Keys: same score, two factorizations</h3>
@@ -274,6 +266,10 @@ score space = latent_dim</code></pre>
   <div style="font-family:Inter,sans-serif;font-size:.82rem;color:var(--ink-soft);margin-top:.45rem;font-weight:500">same score · left builds a key of width nope · right builds a query of width latent</div>
 </div>
 
+<div class="callout note"><span class="label">Why latent can be wider than a head</span>
+<p>You just saw the query grow from nope-width to latent-width. In DeepSeek-V3 that is <code>128 → 512</code>. That is expected: the latent is <strong>shared across all heads</strong>, so one 512-vector replaces <code>heads × (nope + value) = 32,768</code> content values per token. “Latent” means low-rank relative to the <em>full multi-head</em> KV, not “smaller than one head.” Absorb scores in this wider space on purpose — each query head grows to 512, but there is still only one shared key.</p>
+</div>
+
 <!-- ---- 3b ---- -->
 <h3 id="s3b"><span class="phase">3b</span>Many heads, one latent</h3>
 <p>The toy used one head. The real model has many. The packed weight looks like <code>latent → (heads × nope)</code>, but it is really <strong>one small matrix per head</strong>, each different:</p>
@@ -328,6 +324,10 @@ K = [ RMSNorm(c)     |  RoPE(K_rope) ]     # (1,     512 + 64)   shared
 V =   RMSNorm(c)                           # (1,     512)        shared
 → after attn:  (heads, 512) @ W_V → (heads, 128)</code></pre>
 <p>The attention width is <code>latent + rope</code> because the two are <em>concatenated</em> — not because rope lives inside the latent.</p>
+
+<div class="callout"><span class="label">Latent ≠ rope (now earned)</span>
+<p style="margin:0"><strong>Latent</strong> = content, can be up-projected or absorbed. <strong>K_rope</strong> = position, never inside the latent, never absorbed. Cache = both side by side. Absorb’s wider score space is that concat, not a fused vector.</p>
+</div>
 
 <div class="callout"><p style="margin:0"><strong>Absorb in one line:</strong> do the content up-projections (\(W_K^{(h)}\) and \(W_V^{(h)}\)) on the query / output side instead of on every cached token. Same scores, same values, far less work when <code>new_tokens ≪ cached_tokens</code>.</p></div>
 
