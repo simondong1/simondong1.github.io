@@ -4,31 +4,37 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Understanding MLA (Multi-head Latent Attention)</title>
-<meta name="description" content="A visual tutorial on Multi-head Latent Attention: how DeepSeek-style MLA relates to MHA and MQA, what is actually compressed, why the head splits into nope and rope, and why position cannot live in the latent." />
+<meta name="description" content="A visual tutorial on Multi-head Latent Attention: one shared latent replaces full K/V, position stays as a tiny rope key, and why that split exists. Used in DeepSeek-V3, Kimi K2.5, and GLM-5.2." />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href="https://simondong1.github.io/mla.html" />
 <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
 <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
 <meta property="og:title" content="Understanding MLA (Multi-head Latent Attention)" />
-<meta property="og:description" content="How DeepSeek-style MLA compresses the KV cache, and why the head splits into nope and rope." />
+<meta property="og:description" content="One shared latent replaces full K/V. Position rides beside it as a tiny rope key. A visual walk through DeepSeek-style MLA." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://simondong1.github.io/mla.html" />
 <meta property="og:site_name" content="Simon Dong" />
-<meta property="og:image" content="https://simondong1.github.io/assets/mla-og.png" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image" content="https://simondong1.github.io/assets/mla-og.png?v=2" />
+<meta property="og:image:secure_url" content="https://simondong1.github.io/assets/mla-og.png?v=2" />
+<meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="Understanding MLA: full K,V cache becomes one latent plus a shared rope key." />
+<meta property="og:image:alt" content="Diagram: full multi-head KV cache becomes one shared latent plus a shared rope key." />
 <meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@dongsixiang" />
+<meta name="twitter:creator" content="@dongsixiang" />
 <meta name="twitter:title" content="Understanding MLA (Multi-head Latent Attention)" />
-<meta name="twitter:description" content="How DeepSeek-style MLA compresses the KV cache, and why the head splits into nope and rope." />
-<meta name="twitter:image" content="https://simondong1.github.io/assets/mla-og.png" />
+<meta name="twitter:description" content="One shared latent replaces full K/V. Position rides beside it as a tiny rope key." />
+<meta name="twitter:image" content="https://simondong1.github.io/assets/mla-og.png?v=2" />
+<meta name="twitter:image:alt" content="Diagram: full multi-head KV cache becomes one shared latent plus a shared rope key." />
 <meta name="author" content="Simon Dong" />
 <meta name="citation_title" content="Understanding MLA (Multi-head Latent Attention)" />
 <meta name="citation_author" content="Dong, Simon" />
 <meta name="citation_publication_date" content="2026/07/01" />
 <meta name="citation_fulltext_html_url" content="https://simondong1.github.io/mla.html" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"TechArticle","headline":"Understanding MLA (Multi-head Latent Attention)","description":"A visual tutorial on Multi-head Latent Attention: how DeepSeek-style MLA compresses the KV cache, and why the head splits into nope and rope.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang"},"datePublished":"2026-07-01","dateModified":"2026-07-09","mainEntityOfPage":"https://simondong1.github.io/mla.html","image":"https://simondong1.github.io/assets/mla-og.png"}
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Understanding MLA (Multi-head Latent Attention)","description":"A visual tutorial on Multi-head Latent Attention: one shared latent replaces full K/V, position stays as a tiny rope key. Used in DeepSeek-V3, Kimi K2.5, and GLM-5.2.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-07-01","dateModified":"2026-07-09","mainEntityOfPage":"https://simondong1.github.io/mla.html","image":["https://simondong1.github.io/assets/mla-og.png?v=2"],"keywords":["MLA","Multi-head Latent Attention","KV cache","DeepSeek","Kimi K2.5","GLM-5.2","RoPE"]}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -132,7 +138,7 @@
 <main class="wrap">
 <p class="lede"><strong>MLA is a low-rank version of multi-head attention.</strong> It keeps every query head, but stores keys and values as one shared latent per token — like Multi-Query Attention's tiny cache, yet each head still gets its own learned view. This post is the architecture; a <a href="mla-decoding.html">follow-up</a> covers the two ways to run it at inference.</p>
 
-<div class="callout note"><span class="label">Where MLA is used</span><p>MLA is the attention behind <strong>DeepSeek-V2 / V3</strong>, the <strong>Kimi K2.x</strong> text backbone, and <strong>GLM-5</strong> (MLA-256). Every walkthrough number here uses DeepSeek-V3; the <a href="mla-decoding.html">decode post</a> lets you switch models in the charts.</p></div>
+<div class="callout note"><span class="label">Where MLA is used</span><p>MLA is the attention behind <strong>DeepSeek-V2 / V3</strong>, <strong>Kimi K2.5</strong>, and <strong>GLM-5.2</strong> (MLA-256). Every walkthrough number here uses DeepSeek-V3; the <a href="mla-decoding.html">decode post</a> lets you switch models in the charts.</p></div>
 
 <div class="callout note"><span class="label">Assumed background</span><p>Multi-head attention (Q, K, V, one cache per head) and RoPE. If RoPE is rusty, the <a href="rope.html">RoPE post</a> covers it. Everything else is defined here.</p></div>
 

@@ -11,14 +11,14 @@
       <link>https://simondong1.github.io/mla-decoding.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/mla-decoding.html</guid>
       <pubDate>Tue, 07 Jul 2026 00:00:00 +0000</pubDate>
-      <description>The two ways to run Multi-head Latent Attention at inference, and the crossover that decides which one to use, with interactive charts.</description>
+      <description>Materialize rebuilds every cached key/value; absorb folds the projections into the query. Interactive charts for DeepSeek-V3, Kimi K2.5, and GLM-5.2.</description>
     </item>
     <item>
       <title>Understanding MLA (Multi-head Latent Attention)</title>
       <link>https://simondong1.github.io/mla.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/mla.html</guid>
       <pubDate>Wed, 01 Jul 2026 00:00:00 +0000</pubDate>
-      <description>Follow one token through DeepSeek-style MLA: compress to a latent, expand per head, keep a shared rope key, and see why position cannot compress.</description>
+      <description>One shared latent replaces full K/V; position rides beside it as a tiny rope key. A visual walk through DeepSeek-style MLA (also Kimi K2.5, GLM-5.2).</description>
     </item>
     <item>
       <title>Understanding GQA (Grouped-Query Attention)</title>

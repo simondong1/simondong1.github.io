@@ -7,8 +7,8 @@ This file helps AI systems find the canonical posts on this site.
 
 ## Blog posts
 
-- [Understanding MLA Decoding (Materialize vs Absorb)](https://simondong1.github.io/mla-decoding.html): Two ways to run Multi-head Latent Attention at inference — rebuild the cache (materialize) or fold projections into the query (absorb) — with interactive charts for the crossover.
-- [Understanding MLA (Multi-head Latent Attention)](https://simondong1.github.io/mla.html): How DeepSeek-style MLA stores one latent KV state, splits nope from rope, and why training code looks different from optimized decode.
+- [Understanding MLA Decoding (Materialize vs Absorb)](https://simondong1.github.io/mla-decoding.html): Materialize rebuilds every cached key/value; absorb folds projections into the query. Interactive charts for DeepSeek-V3, Kimi K2.5, and GLM-5.2.
+- [Understanding MLA (Multi-head Latent Attention)](https://simondong1.github.io/mla.html): One shared latent replaces full K/V; position rides beside it as a tiny rope key. Architecture behind DeepSeek-V3, Kimi K2.5, and GLM-5.2.
 - [Understanding GQA (Grouped-Query Attention)](https://simondong1.github.io/gqa.html): The query-to-KV head mapping that shrinks the KV cache of modern LLMs, and where GQA stands among 2026 attention variants.
 - [Understanding RoPE (Rotary Position Embeddings)](https://simondong1.github.io/rope.html): A visual, step-by-step explanation of how RoPE turns token position into rotation and why modern LLMs still use it.
 
