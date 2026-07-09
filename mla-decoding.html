@@ -128,9 +128,9 @@
 </div></header>
 
 <main class="wrap">
-<p class="lede"><strong>MLA stores one small latent per token — plus a tiny rope key beside it.</strong> How do you compute attention from that? There are two algorithms, and modern engines ship both. This post walks through each (including values, not just keys), then uses interactive charts to show when one beats the other.</p>
+<p class="lede"><strong>MLA keeps a small cache per token.</strong> How do you compute attention from it? There are two algorithms, and modern engines ship both. This post walks through each (including values, not just keys), then uses interactive charts to show when one beats the other.</p>
 
-<div class="callout note"><span class="label">Follow-up post</span><p>This continues the <a href="mla.html">first MLA post</a>. That one covered why MLA compresses the KV cache and why content (nope) and position (rope) must stay separate. Here every symbol is re-defined so you can read this on its own.</p></div>
+<div class="callout note"><span class="label">Follow-up post</span><p>This continues the <a href="mla.html">first MLA post</a> (the architecture and the cache). Here we re-introduce the symbols as they appear, so you can also read this on its own.</p></div>
 
 <nav class="toc"><div class="toc-title">Contents</div><ol>
   <li><a href="#s1"><span class="n">1</span>Prefill and decode</a></li>
@@ -147,8 +147,8 @@
   <li><a href="#s8"><span class="n">8</span>Which runs when</a></li>
 </ol></nav>
 
-<div class="callout note"><span class="label">Notation</span>
-<p>DeepSeek-V3 numbers: <code>heads = 128</code>, <code>latent_dim = 512</code>, <code>nope_dim = 128</code>, <code>rope_dim = 64</code>, <code>value_dim = 128</code>. <code>new_tokens</code> = queries in this call. <code>cached_tokens</code> = tokens already in the KV cache. Superscript <code>(h)</code> means head index — each head has its own matrix. From Part 1: the cache entry is <strong>latent + K_rope</strong> (<code>512 + 64 = 576</code>), two objects side by side — not one fused “latent.”</p>
+<div class="callout note"><span class="label">Widths used below</span>
+<p>DeepSeek-V3: <code>heads = 128</code>, <code>latent_dim = 512</code>, <code>nope_dim = 128</code>, <code>rope_dim = 64</code>, <code>value_dim = 128</code>. <code>new_tokens</code> = queries in this call. <code>cached_tokens</code> = tokens already in the KV cache. Superscript <code>(h)</code> = head index. What those widths <em>mean</em> is named when the cache shows up in Section 2.</p>
 </div>
 
 <h2 id="s1"><span class="num">1.</span>Prefill and decode are the same computation</h2>
@@ -159,7 +159,13 @@ prefill  =  new_tokens is large    (many new tokens attend to the growing contex
 <p>One modeling note: the formulas below treat <code>new_tokens</code> and <code>cached_tokens</code> as independent. That matches decode exactly (1 new token, large cache). Prefill is messier — the prompt is both the queries and the keys being written — but the same two algorithms still apply, and the crossover still lands in the same ballpark.</p>
 
 <h2 id="s2"><span class="num">2.</span>The two algorithms</h2>
-<p>Both start from the same cache entry: <strong>latent + K_rope</strong>. They differ in <em>where</em> the content projections (<code>W_K</code>, <code>W_V</code>) are applied. Rope is handled the same way in both — RoPE, then concat. Only content moves.</p>
+<p>Both start from the same cache entry. Name the pieces once (same as <a href="mla.html">Part 1</a>):</p>
+<div class="callout note"><span class="label">Notation — the cache entry</span>
+<p style="margin:0"><strong>latent</strong> (<code>512</code>) = compressed content, source of K_nope and V.<br>
+<strong>K_rope</strong> (<code>64</code>) = position, stored beside the latent — never up-projected.<br>
+<strong>cache entry</strong> = latent + K_rope = <code>576</code>, two objects side by side, not one fused vector.</p>
+</div>
+<p>The two algorithms differ in <em>where</em> the content projections (<code>W_K</code>, <code>W_V</code>) are applied. Rope is handled the same way in both — RoPE, then concat. Only content moves.</p>
 
 <div class="flows">
   <div class="flow">
@@ -323,11 +329,7 @@ R_0, R_1, R_2, … are all different
 K = [ RMSNorm(c)     |  RoPE(K_rope) ]     # (1,     512 + 64)   shared
 V =   RMSNorm(c)                           # (1,     512)        shared
 → after attn:  (heads, 512) @ W_V → (heads, 128)</code></pre>
-<p>The attention width is <code>latent + rope</code> because the two are <em>concatenated</em> — not because rope lives inside the latent.</p>
-
-<div class="callout"><span class="label">Latent ≠ rope (now earned)</span>
-<p style="margin:0"><strong>Latent</strong> = content, can be up-projected or absorbed. <strong>K_rope</strong> = position, never inside the latent, never absorbed. Cache = both side by side. Absorb’s wider score space is that concat, not a fused vector.</p>
-</div>
+<p>So absorb’s attention width is <code>latent + rope</code> because the two are <em>concatenated for scoring</em> — not because rope lives inside the latent. Content can be absorbed; rope cannot.</p>
 
 <div class="callout"><p style="margin:0"><strong>Absorb in one line:</strong> do the content up-projections (\(W_K^{(h)}\) and \(W_V^{(h)}\)) on the query / output side instead of on every cached token. Same scores, same values, far less work when <code>new_tokens ≪ cached_tokens</code>.</p></div>
 

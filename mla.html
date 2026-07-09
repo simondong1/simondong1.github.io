@@ -221,8 +221,10 @@
   <div class="why"><strong>This is not QK-norm.</strong> QK-norm (as in Qwen3) normalizes each head's full query and key <em>after</em> projection. Here the norm sits on the shared content bottleneck <em>before</em> any head is expanded. Rope is left out so its magnitude does not change the content scale (RMSNorm divides by one shared RMS over the whole vector). Also, because RMSNorm is nonlinear: \(W\cdot\operatorname{RMSNorm}(c) \neq \operatorname{RMSNorm}(W\,c)\).</div>
 </div>
 
-<div class="callout"><span class="label">After Phase A — two objects, not one</span>
-<p style="margin:0">We now hold a normalized latent (<code>512</code>) and a rope key (<code>64</code>). <strong>These two — side by side, not fused — are what an MLA cache stores</strong> (<code>576</code> total). Calling the whole entry “the latent” is the usual mistake; the latent is only the content half.</p>
+<div class="callout note"><span class="label">Notation — what we just named</span>
+<p style="margin:0"><strong>latent</strong> \(c\) (<code>512</code>) = compressed content, source of every head's K and V.<br>
+<strong>K_rope</strong> (<code>64</code>) = position key, produced beside the latent, not inside it.<br>
+<strong>cache entry</strong> = latent + K_rope = <code>576</code> — two objects side by side, not one fused vector.</p>
 </div>
 
 <!-- ---- Phase B ---- -->
@@ -350,7 +352,7 @@ key at position 2  &rarr; relative rotation  R(2 &minus; m)
 <div class="wrapscroll"><table class="ptable">
 <thead><tr><th>Object</th><th>Width</th><th>What it is</th><th>Normed?</th><th>Up-projected?</th></tr></thead>
 <tbody>
-<tr><td><strong>latent</strong> \(c\)</td><td>512</td><td>compressed content (source of K_nope + V)</td><td>yes — RMSNorm</td><td>yes — per head, or absorbed</td></tr>
+<tr><td><strong>latent</strong> \(c\)</td><td>512</td><td>compressed content (source of K_nope + V)</td><td>yes — RMSNorm</td><td>yes — per head</td></tr>
 <tr><td><strong>K_rope</strong></td><td>64</td><td>position key</td><td>no</td><td><strong>never</strong></td></tr>
 <tr><td><strong>cache entry</strong></td><td>576</td><td>latent + K_rope, side by side</td><td>—</td><td>—</td></tr>
 </tbody></table></div>
