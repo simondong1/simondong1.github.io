@@ -184,6 +184,9 @@
 \[ K_{\text{nope}}^{(h)} \;=\; c\,W_K^{(h)}, \qquad V^{(h)} \;=\; c\,W_V^{(h)}. \]
 <p>Important: \(W_K^{(h)}\) maps <strong>latent → nope</strong> only. It does <em>not</em> produce rope. Rope is a separate 64-wide vector that never goes through these matrices.</p>
 <p>Only \(c\) (plus the tiny rope key beside it) is cached. The per-head matrices are weights, not cache — which is why each head can differ while the storage stays small.</p>
+<div class="callout note"><span class="label">Why “latent” can be wider than a head</span>
+<p><code>latent_dim = 512</code> looks big next to <code>nope_dim = 128</code>. That is fine. The latent is <em>shared across all heads</em>, so one 512-vector replaces <code>128 × (128 + 128) = 32,768</code> content values per token. “Latent” means low-rank relative to the <em>full multi-head</em> KV, not smaller than one head. Absorb later scores in this 512-wide space — wider per head, but still one shared key.</p>
+</div>
 
 <!-- ============================================================ -->
 <h2 id="s3"><span class="num">3.</span>One token through MLA</h2>
@@ -244,7 +247,7 @@
   <p>A linear layer (<code>kv_b_proj</code>) maps the latent to <code>num_heads × (nope_dim + value_dim) = 128 × (128 + 128)</code>. Then split:</p>
   \[ K_{\text{nope}}^{(h)} \in \mathbb{R}^{128}, \qquad V^{(h)} \in \mathbb{R}^{128} \quad\text{for each head }h. \]
   <p>That is <em>all</em> this matrix produces. There is no rope inside it. Rope never enters this up-projection — not in training, not in materialize, not in absorb.</p>
-  <div class="why"><strong>One latent, two content roles.</strong> The same cached vector is the source of both the content key and the value. Each head has its own slice \(W_K^{(h)}, W_V^{(h)}\), so each head gets a different view. The superscript \(h\) means “head index” — head 0 uses matrix 0, head 1 uses matrix 1, and so on.</div>
+  <div class="why"><strong>One latent, two content roles.</strong> The same cached vector is the source of both the content key and the value. Each head has its own slice \(W_K^{(h)}\) and \(W_V^{(h)}\), so each head gets a different view. The superscript \((h)\) means head index — head 0 uses matrix 0, head 1 uses matrix 1, and so on.</div>
 </div>
 
 <div class="step">
@@ -333,7 +336,7 @@
 <h2 id="s4"><span class="num">4.</span>Why position cannot live in the latent</h2>
 <p>Section 3 showed <em>that</em> position is peeled off before the latent. Here is <em>why</em>.</p>
 <p>The content part works because its reconstruction matrix is fixed: the same \(W_K^{(h)}\) applies to every cached token. Written out for one head, one query position \(m\), one key position \(n\):</p>
-\[ Q_{\text{nope}}\cdot K_{\text{nope}} \;=\; Q_{\text{nope}}\,\big(W_K^{(h)}\,c_{kv}\big) \;=\; \big(Q_{\text{nope}}\,W_K^{(h)}\big)\cdot c_{kv}. \]
+\[ Q_{\text{nope}}\cdot K_{\text{nope}} \;=\; Q_{\text{nope}}\,\big(W_K^{(h)}\,c\big) \;=\; \big(Q_{\text{nope}}\,W_K^{(h)}\big)\cdot c. \]
 <p>The matrix \(W_K^{(h)}\) does not depend on \(n\), so it can be moved onto the query side once. That regrouping is what makes efficient decoding possible — the subject of <a href="mla-decoding.html">Part 2</a>.</p>
 <p>Position breaks that. RoPE inserts a relative rotation \(R_{\,n-m}\) that depends on <em>both</em> positions, sitting between query and key:</p>
 \[ \big(R_m\,q_{\text{rope}}\big)\cdot\big(R_n\,k_{\text{rope}}\big) \;=\; q_{\text{rope}}^{\top}\,R_{\,n-m}\,k_{\text{rope}}. \]
