@@ -155,7 +155,7 @@
 </ol></nav>
 
 <div class="callout note"><span class="label">Widths used below</span>
-<p>DeepSeek-V3: <code>heads = 128</code>, <code>latent_dim = 512</code>, <code>nope_dim = 128</code>, <code>rope_dim = 64</code>, <code>value_dim = 128</code>. <code>new_tokens</code> = queries in this call. <code>cached_tokens</code> = tokens already in the KV cache. Superscript <code>(h)</code> = head index. What those widths <em>mean</em> is named when the cache shows up in Section 2.</p>
+<p>Default walkthrough uses DeepSeek-V3: <code>heads = 128</code>, <code>latent_dim = 512</code>, <code>nope_dim = 128</code>, <code>rope_dim = 64</code>, <code>value_dim = 128</code>. The interactive charts also include <strong>Kimi K2</strong> (same MLA widths, 64 heads) and <strong>GLM-5</strong> (MLA-256: nope 192, value 256, still latent 512 + rope 64). <code>new_tokens</code> = queries in this call. <code>cached_tokens</code> = tokens already in the KV cache. Superscript <code>(h)</code> = head index. What those widths <em>mean</em> is named when the cache shows up in Section 2.</p>
 </div>
 
 <h2 id="s1"><span class="num">1.</span>Prefill and decode are the same computation</h2>
@@ -385,7 +385,8 @@ V =   RMSNorm(c)                           # (1,     512)        shared
     <label>model
       <select id="preset">
         <option value="dsv3">DeepSeek-V3 (heads 128, latent 512)</option>
-        <option value="small">Smaller (heads 32, latent 256)</option>
+        <option value="kimi">Kimi K2 (heads 64, latent 512)</option>
+        <option value="glm5">GLM-5 (heads 64, latent 512, MLA-256)</option>
       </select>
     </label>
     <label>cached_tokens (context): <span id="ctxval" style="color:var(--accent)"></span>
@@ -408,7 +409,7 @@ V =   RMSNorm(c)                           # (1,     512)        shared
 <pre><code>crossover new_tokens  ≈   latent_dim × (nope_dim + value_dim)
                           ───────────────────────────────────
                           2 × latent_dim − nope_dim − value_dim</code></pre>
-<p>For DeepSeek-V3 that is about <strong>171 tokens</strong>; for the smaller config exactly <strong>256 tokens</strong>. At a realistic context of 4,096 the exact formula gives ~164 — close to the long-context limit. The live value for your current settings is shown in the box above. The takeaway: the boundary between "rebuild the cache" and "fold into the query" sits at a couple hundred query tokens, essentially independent of how long the context is.</p>
+<p>For DeepSeek-V3 that is about <strong>171 tokens</strong>; Kimi K2 lands in the same place (same latent / nope / value widths — only the head count changes, and it cancels in the ratio). GLM-5’s wider heads (nope 192, value 256) push the long-context limit to about <strong>228 tokens</strong>. At a realistic context of 4,096 the exact formula is a little lower — the live value for your current settings is in the box above. The takeaway: the boundary sits at a couple hundred query tokens, essentially independent of how long the context is.</p>
 
 <div class="callout note"><span class="label">What this model leaves out</span>
 <p>These are arithmetic counts, not wall-clock. Real kernels care about memory traffic, FlashAttention tiling, and whether the rebuild can be fused. The crossover can shift, but the qualitative picture — Absorb at decode, Materialize at large prefill — is what serving engines actually ship.</p>
@@ -421,7 +422,8 @@ V =   RMSNorm(c)                           # (1,     512)        shared
     <label>model
       <select id="cachePreset">
         <option value="dsv3">DeepSeek-V3 (heads 128, latent 512)</option>
-        <option value="small">Smaller (heads 32, latent 256)</option>
+        <option value="kimi">Kimi K2 (heads 64, latent 512)</option>
+        <option value="glm5">GLM-5 (heads 64, latent 512, MLA-256)</option>
       </select>
     </label>
   </div>
@@ -432,7 +434,7 @@ V =   RMSNorm(c)                           # (1,     512)        shared
   <div class="chart-box bar"><canvas id="cacheChart"></canvas></div>
   <div class="readout" id="cacheReadout"></div>
 </div>
-<p>For DeepSeek-V3 that is <strong>576</strong> stored values per token per layer — <strong>latent 512 + K_rope 64</strong>, two objects — versus <strong>40,960</strong> for a full multi-head cache — about <strong>71× smaller</strong>.</p>
+<p>DeepSeek-V3 and Kimi K2 both store <strong>576</strong> values per token per layer (<code>512 + 64</code>); the full-cache side differs because Kimi has half as many heads (<strong>20,480</strong> vs <strong>40,960</strong>). GLM-5 keeps the same 576-wide MLA entry but a wider full head (<code>256 + 256</code>), so the full cache is <strong>32,768</strong> — still about <strong>57×</strong> larger. Pick a model above to see the exact numbers.</p>
 <p>Absorb is what makes that small cache usable at decode: you never expand every past token into full K_nope / V just to attend. Materialize can still expand the <em>latent</em> when there are enough new queries — but K_rope is never expanded either way, and the <em>stored</em> cache stays <code>[latent | K_rope]</code>. (The Hugging Face reference path is different: it caches the expanded tensors. Serving engines keep the latent + rope.)</p>
 
 <h2 id="s8"><span class="num">8.</span>Which algorithm runs when</h2>
@@ -464,8 +466,9 @@ https://simondong1.github.io/mla-decoding.html</code></pre>
 <script>
 (function(){
   var PRESETS = {
-    dsv3:  {heads:128, nope:128, rope:64, value:128, latent:512, label:"DeepSeek-V3"},
-    small: {heads:32,  nope:128, rope:64, value:128, latent:256, label:"Smaller"}
+    dsv3: {heads:128, nope:128, rope:64, value:128, latent:512, label:"DeepSeek-V3"},
+    kimi: {heads:64,  nope:128, rope:64, value:128, latent:512, label:"Kimi K2"},
+    glm5: {heads:64,  nope:192, rope:64, value:256, latent:512, label:"GLM-5"}
   };
   var accent = "#4f46e5", warm = "#e5484d";
   var costChart = null, cacheChart = null;

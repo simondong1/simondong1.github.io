@@ -132,7 +132,7 @@
 <main class="wrap">
 <p class="lede"><strong>MLA is a low-rank version of multi-head attention.</strong> It keeps every query head, but stores keys and values as one shared latent per token — like Multi-Query Attention's tiny cache, yet each head still gets its own learned view. This post is the architecture; a <a href="mla-decoding.html">follow-up</a> covers the two ways to run it at inference.</p>
 
-<div class="callout note"><span class="label">Where MLA is used</span><p>MLA is the attention behind <strong>DeepSeek-V2 / V3</strong> and the <strong>Kimi K2.x</strong> text backbone. Related low-rank KV ideas also show up in newer 2026 systems. Every number here uses DeepSeek-V3 as the concrete reference.</p></div>
+<div class="callout note"><span class="label">Where MLA is used</span><p>MLA is the attention behind <strong>DeepSeek-V2 / V3</strong>, the <strong>Kimi K2.x</strong> text backbone, and <strong>GLM-5</strong> (MLA-256). Every walkthrough number here uses DeepSeek-V3; the <a href="mla-decoding.html">decode post</a> lets you switch models in the charts.</p></div>
 
 <div class="callout note"><span class="label">Assumed background</span><p>Multi-head attention (Q, K, V, one cache per head) and RoPE. If RoPE is rusty, the <a href="rope.html">RoPE post</a> covers it. Everything else is defined here.</p></div>
 
