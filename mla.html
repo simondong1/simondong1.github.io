@@ -132,7 +132,7 @@
 <main class="wrap">
 <p class="lede"><strong>MLA is a low-rank version of multi-head attention.</strong> It keeps every query head, but stores keys and values as one shared latent per token — like Multi-Query Attention's tiny cache, yet each head still gets its own learned view. This post is the architecture; a <a href="mla-decoding.html">follow-up</a> covers the two ways to run it at inference.</p>
 
-<div class="callout note"><span class="label">Where MLA is used</span><p>MLA is the attention behind <strong>DeepSeek-V2 / V3</strong> and the <strong>Kimi K2.x</strong> text backbone, and MLA-style low-rank KV also appears in newer 2026 systems such as <strong>GLM-5.2</strong> and <strong>Mistral 4</strong>. Every number here uses DeepSeek-V3 as the concrete reference.</p></div>
+<div class="callout note"><span class="label">Where MLA is used</span><p>MLA is the attention behind <strong>DeepSeek-V2 / V3</strong> and the <strong>Kimi K2.x</strong> text backbone. Related low-rank KV ideas also show up in newer 2026 systems. Every number here uses DeepSeek-V3 as the concrete reference.</p></div>
 
 <div class="callout note"><span class="label">Assumed background</span><p>Multi-head attention (Q, K, V, one cache per head) and RoPE. If RoPE is rusty, the <a href="rope.html">RoPE post</a> covers it. Everything else is defined here.</p></div>
 
@@ -147,7 +147,7 @@
 </ol></nav>
 
 <!-- ============================================================ -->
-<h2 id="s1"><span class="num">1.</span>Where MLA sits: MHA &rarr; MQA &rarr; MLA</h2>
+<h2 id="s1"><span class="num">1.</span>Where MLA sits: MHA &rarr; GQA &rarr; MQA &rarr; MLA</h2>
 <p>All four schemes keep many query heads. They differ only in what the KV cache holds per token.</p>
 <div class="wrapscroll"><table class="ptable">
 <thead><tr><th>Scheme</th><th>What is cached per token</th><th>Per-head views?</th><th>Cache size</th></tr></thead>
@@ -170,10 +170,10 @@
 <tr><td>KV latent</td><td>compress K and V for all heads into one latent, decompress per head</td><td><strong>Yes — this is MLA</strong></td></tr>
 </tbody></table></div>
 <p>The query low-rank path is optional. The KV latent is the whole point and is always present. Formally, for a token's hidden vector \(x\):</p>
-\[ c_{kv} \;=\; x\,W_{\text{down}}, \qquad c_{kv}\in\mathbb{R}^{\text{latent\_dim}} \]
+\[ c_{kv} \;=\; x\,W_{\text{down}}, \qquad c_{kv}\in\mathbb{R}^{512} \]
 <p>and each head \(h\) reconstructs its own key and value from that same latent:</p>
 \[ K^{(h)} \;=\; c_{kv}\,W_K^{(h)}, \qquad V^{(h)} \;=\; c_{kv}\,W_V^{(h)}. \]
-<p>Only \(c_{kv}\) is cached. The per-head matrices are weights, not cache — which is why each head can differ while the storage stays small.</p>
+<p>Only \(c_{kv}\) is cached (width 512 in DeepSeek-V3). The per-head matrices are weights, not cache — which is why each head can differ while the storage stays small.</p>
 <p>That formula is the idea. The rest of this post is what the real forward actually does — including the part the formula leaves out: position.</p>
 
 <!-- ============================================================ -->
@@ -224,7 +224,7 @@
   <div class="why"><strong>This is not QK-norm.</strong> QK-norm (as in Qwen3) normalizes each head's full query and key <em>after</em> projection. Here the norm sits on the shared bottleneck <em>before</em> any head is expanded. Because RMSNorm divides by the vector's own magnitude, it is nonlinear: \(W\cdot\operatorname{RMSNorm}(c) \neq \operatorname{RMSNorm}(W\,c)\). Normalizing the latent is deliberately different from normalizing each expanded head.</div>
 </div>
 
-<p>After Phase A we hold two objects for this token: a normalized latent of width 512, and a raw rope key of width 64. <strong>These two are what the cache will store.</strong> Everything else in the forward can be rebuilt from them.</p>
+<p>After Phase A we hold two objects for this token: a normalized latent of width 512, and a rope key of width 64 (RoPE is applied to it in Phase B). <strong>These two are what an MLA cache stores.</strong> Everything else in the forward can be rebuilt from them.</p>
 
 <!-- ---- Phase B ---- -->
 <h3 id="s3b"><span class="phase">Phase B</span>Expand: give every head its own K and V</h3>
@@ -258,7 +258,7 @@
 <div class="step">
   <div class="stitle"><span class="sn">C1</span><span class="st">Project to per-head queries</span><span class="shape">(1, 7168) &rarr; (1, 128 heads, 192)</span></div>
   <p>Each head gets a query of width <code>qk_head_dim = 192</code>. That width is not free — it is the sum of the two parts we are about to split:</p>
-  \[ \underbrace{192}_{\text{qk\_head\_dim}} \;=\; \underbrace{128}_{\text{nope}} \;+\; \underbrace{64}_{\text{rope}}. \]
+  \[ \underbrace{192}_{\textit{query/key width}} \;=\; \underbrace{128}_{\textit{nope}} \;+\; \underbrace{64}_{\textit{rope}}. \]
 </div>
 
 <div class="step">
@@ -325,14 +325,14 @@
 <p>The content part works because its reconstruction matrix is fixed: the same \(W_K^{(h)}\) applies to every cached token. Written out for one head, one query position \(m\), one key position \(n\):</p>
 \[ Q_{\text{nope}}\cdot K_{\text{nope}} \;=\; Q_{\text{nope}}\,\big(W_K^{(h)}\,c_{kv}\big) \;=\; \big(Q_{\text{nope}}\,W_K^{(h)}\big)\cdot c_{kv}. \]
 <p>The matrix \(W_K^{(h)}\) does not depend on \(n\), so it can be moved onto the query side once. That regrouping is what makes efficient decoding possible — the subject of <a href="mla-decoding.html">Part 2</a>.</p>
-<p>Position breaks that. RoPE inserts a rotation \(R_{\,m-n}\) that depends on <em>both</em> positions, sitting between query and key:</p>
-\[ Q_{\text{rope}}\cdot K_{\text{rope}} \;=\; Q^{\top} R_{\,m-n}\, K. \]
-<p>There is no single fixed matrix here — \(R_{\,m-n}\) is different for every cached position \(n\):</p>
-<pre><code>key at position 0  &rarr; rotate by  R(m-0)
-key at position 1  &rarr; rotate by  R(m-1)
-key at position 2  &rarr; rotate by  R(m-2)
+<p>Position breaks that. RoPE inserts a relative rotation \(R_{\,n-m}\) that depends on <em>both</em> positions, sitting between query and key:</p>
+\[ \big(R_m\,q_{\text{rope}}\big)\cdot\big(R_n\,k_{\text{rope}}\big) \;=\; q_{\text{rope}}^{\top}\,R_{\,n-m}\,k_{\text{rope}}. \]
+<p>There is no single fixed matrix here — \(R_{\,n-m}\) is different for every cached position \(n\):</p>
+<pre><code>key at position 0  &rarr; relative rotation  R(0 &minus; m)
+key at position 1  &rarr; relative rotation  R(1 &minus; m)
+key at position 2  &rarr; relative rotation  R(2 &minus; m)
 ...                                (a different rotation per cached token)</code></pre>
-<p>So position cannot be folded into the fixed latent reconstruction. DeepSeek's fix is to <strong>carry position separately</strong>: a small <code>rope_dim = 64</code> slice, shared across heads, rotated per position, concatenated back on. Content lives in the compressible latent; position rides alongside in a tiny explicit vector.</p>
+<p>So position cannot be folded into the fixed latent reconstruction. DeepSeek's fix is to <strong>carry position separately</strong>: a small 64-wide rope slice, shared across heads, rotated per position, concatenated back on. Content lives in the compressible latent; position rides alongside in a tiny explicit vector.</p>
 <div class="wrapscroll"><table class="ptable">
 <thead><tr><th></th><th>Small cache?</th><th>Fixed reconstruction?</th></tr></thead>
 <tbody>
@@ -342,10 +342,10 @@ key at position 2  &rarr; rotate by  R(m-2)
 
 <!-- ============================================================ -->
 <h2 id="s5"><span class="num">5.</span>What gets cached</h2>
-<p>Go back to the end of Phase A. The only objects that need to be stored per token, per layer, are:</p>
+<p>In the MLA design, the only objects that need to be stored per token, per layer, are:</p>
 <ul>
   <li>the 512-wide latent (after RMSNorm)</li>
-  <li>the 64-wide rope key (after RoPE, in the reference path)</li>
+  <li>the 64-wide rope key (after RoPE)</li>
 </ul>
 <p>That is 576 values. Compare to a full multi-head cache that would store, per head, a 192-wide key and a 128-wide value:</p>
 <div class="cachebar">
@@ -353,15 +353,15 @@ key at position 2  &rarr; rotate by  R(m-2)
   <div class="row"><div class="name">MLA latent cache</div><div class="track"><div class="fill latent" style="width:1.4%"></div><span style="position:relative;left:.5rem;top:-1.6rem;font-size:.78rem;font-weight:600;color:var(--accent)">576 values</span></div></div>
 </div>
 <p><code>128 × (192 + 128) = 40,960</code> versus <code>512 + 64 = 576</code> — about <strong>71× smaller</strong>.</p>
-<p>Phases B–D can always be recomputed from those 576 numbers plus the weights. That is the whole storage win. How you choose to recompute them at decode time — rebuild full K/V, or fold the up-projections into the query — is a separate algorithmic choice, covered in Part 2.</p>
+<p>Phases B–D can always be recomputed from those 576 numbers plus the weights. That is the whole storage win.</p>
 
-<div class="callout note"><span class="label">Reference vs serving</span>
-<p>The Hugging Face <code>modeling_deepseek_v3.py</code> path you just walked is the <em>training / reference</em> form: it expands the latent into full K and V, then (if caching) stores those expanded tensors. Serving engines such as SGLang and vLLM keep the latent itself in the cache and never materialize full K/V for every past token. Same weights, different factorization of the same math.</p>
+<div class="callout note"><span class="label">Reference code vs serving engines</span>
+<p>The Hugging Face path walked above is the <em>training / reference</em> form: it expands the latent into full K and V, then (if caching) stores those expanded tensors — so you will not see a 576-wide cache in that file. Serving engines such as SGLang and vLLM keep the latent itself and never materialize full K/V for every past token. Same weights, different factorization. How you recompute at decode — rebuild full K/V, or fold the up-projections into the query — is the subject of <a href="mla-decoding.html">Part 2</a>.</p>
 </div>
 
 <!-- ============================================================ -->
-<h2 id="s6"><span class="num">6.</span>Training vs decode (a one-paragraph preview)</h2>
-<p>The same MLA weights are run two different ways. During <strong>training</strong> (and in the readable reference code), the latent is expanded back into full per-head K and V, and ordinary attention runs — simple and easy to differentiate, no cache needed. During <strong>decode</strong>, serving engines keep only the latent in the cache and fold the reconstruction matrices onto the query and output, so they never rebuild full K/V for every cached token. Same math, two factorizations. The trade-off between them — and why both exist — is the subject of <a href="mla-decoding.html">Part 2</a>.</p>
+<h2 id="s6"><span class="num">6.</span>Training vs decode (preview)</h2>
+<p>Same math, two factorizations: training expands the latent and runs ordinary attention; decode keeps the latent and folds reconstruction into the query/output. The crossover between those two algorithms is <a href="mla-decoding.html">Part 2</a>.</p>
 
 <!-- ============================================================ -->
 <h2 id="s7"><span class="num">7.</span>Summary</h2>
