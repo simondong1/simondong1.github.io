@@ -121,7 +121,7 @@
   <li><a href="#s2"><span class="n">2</span>What is actually MLA</a></li>
   <li><a href="#s3"><span class="n">3</span>The dimensions</a></li>
   <li><a href="#s4"><span class="n">4</span>The two paths</a></li>
-  <li><a href="#s5"><span class="n">5</span>What gets cached</a></li>
+  <li><a href="#s5"><span class="n">5</span>The forward, step by step</a></li>
   <li><a href="#s6"><span class="n">6</span>Why position can't compress</a></li>
   <li><a href="#s7"><span class="n">7</span>Training vs decode</a></li>
   <li><a href="#s8"><span class="n">8</span>Summary</a></li>
@@ -213,15 +213,28 @@
 <tr><td>K_rope</td><td>a small direct projection of the hidden state</td><td><strong>shared across all heads</strong></td><td>the tiny 64-wide key is cached</td></tr>
 </tbody></table></div>
 
-<h2 id="s5"><span class="num">5.</span>What gets cached (and the norm nobody explains)</h2>
-<p>Three facts about the cache that the code hides:</p>
-<p><strong>1. The latent carries both K and V.</strong> The cached latent is not "the key." One up-projection turns it into per-head <code>K_nope</code>, another turns the same latent into per-head <code>V</code>. One stored vector, two roles.</p>
-<p><strong>2. The rope key has no up/down projection.</strong> It is produced directly, then simply <em>broadcast</em> to all heads (a copy, no matmul, no per-head weights). That is why it can be a single shared 64-wide vector.</p>
-<p><strong>3. The norm sits on the latent, not on K or V.</strong> The RMSNorm in MLA normalizes the compressed latent <em>before</em> it is expanded, so it is not the same as normalizing K and V after the split:</p>
-\[ W \cdot \operatorname{RMSNorm}(c_{kv}) \;\neq\; \operatorname{RMSNorm}(W\,c_{kv}). \]
-<p>Because RMSNorm divides by the vector's own magnitude, it is nonlinear; normalizing the shared bottleneck is a different (and deliberate) operation from normalizing each expanded head. This is a <em>bottleneck-stability</em> norm, not the per-head QK-norm you see in models like Qwen3.</p>
+<h2 id="s5"><span class="num">5.</span>The MLA forward, step by step</h2>
+<p>Here is the whole forward for a batch of <code>T</code> tokens, in order, with the output shape of each step (DeepSeek-V3 numbers). This is the concrete algorithm the diagram above summarizes — and it is where the latent norm actually lives.</p>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>#</th><th>Operation</th><th>Output shape</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>down-project the hidden state to the KV latent + shared rope key</td><td><code>(T, 512 + 64)</code></td></tr>
+<tr><td>2</td><td><strong>RMSNorm the latent</strong> (the 512 part only)</td><td><code>(T, 512)</code></td></tr>
+<tr><td>3</td><td>up-project the latent to per-head <code>K_nope</code> and <code>V</code></td><td><code>(T, 128 heads, 128 + 128)</code></td></tr>
+<tr><td>4</td><td>RoPE the 64-wide rope key, then share it across all heads</td><td><code>(T, 1&rarr;128, 64)</code></td></tr>
+<tr><td>5</td><td>project the query, split into <code>Q_nope</code>(128) + <code>Q_rope</code>(64), RoPE the rope part</td><td><code>(T, 128 heads, 192)</code></td></tr>
+<tr><td>6</td><td>concat per head: <code>K = [K_nope | rope]</code>, <code>Q = [Q_nope | rope]</code></td><td><code>(T, 128 heads, 192)</code></td></tr>
+<tr><td>7</td><td>attention: <code>softmax(Q&middot;Kᵀ / &radic;192) &middot; V</code></td><td><code>(T, 128 heads, 128)</code></td></tr>
+<tr><td>8</td><td>flatten heads and output-project back to hidden</td><td><code>(T, 7168)</code></td></tr>
+</tbody></table></div>
+<p>Only the width-<code>576</code> object from step 1 (the <code>512</code> latent plus the <code>64</code> rope key) is written to the cache. Everything in steps 3–7 is recomputed from it. Three details in this walkthrough are the ones people miss:</p>
+<div class="callout"><span class="label">Easy to miss</span>
+<p><strong>Step 3 — one latent, two roles.</strong> The same cached latent is up-projected into both <code>K_nope</code> and <code>V</code>. The latent is not "the key"; it is the shared source of key and value.</p>
+<p><strong>Step 4 — the rope key has no per-head weights.</strong> It is produced directly in step 1 and just <em>broadcast</em> to all heads (a copy, no matmul). That is why one 64-wide vector serves every head.</p>
+<p><strong>Step 2 — the norm is on the latent, not on K or V.</strong> It normalizes the compressed bottleneck <em>before</em> step 3 expands it. Because RMSNorm divides by the vector's own magnitude it is nonlinear, so \( W\cdot\operatorname{RMSNorm}(c_{kv}) \neq \operatorname{RMSNorm}(W\,c_{kv}) \) — normalizing the latent is deliberately different from normalizing each expanded head. It is a bottleneck-stability norm, not the per-head QK-norm seen in models like Qwen3.</p>
+</div>
 
-<p>The payoff is the cache size. Per token, per layer:</p>
+<p>The reason the cache only needs step 1's output is the whole payoff. Per token, per layer:</p>
 <div class="cachebar">
   <div class="row"><div class="name">MHA-style full cache</div><div class="track"><div class="fill full" style="width:100%">40,960 values</div></div></div>
   <div class="row"><div class="name">MLA latent cache</div><div class="track"><div class="fill latent" style="width:1.4%"></div><span style="position:relative;left:.5rem;top:-1.6rem;font-size:.78rem;font-weight:600;color:var(--accent)">576 values</span></div></div>
