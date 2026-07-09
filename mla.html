@@ -168,7 +168,7 @@
 </tbody></table></div>
 <p>Two constraints trip everyone up:</p>
 <ul>
-<li><strong>The query/key head is split, not free:</strong> \(\text{qk\_head\_dim} = \text{nope\_dim} + \text{rope\_dim}\). For DeepSeek-V3, \(192 = 128 + 64\).</li>
+<li><strong>The query/key head is split, not free:</strong> <code>qk_head_dim = nope_dim + rope_dim</code>. For DeepSeek-V3, <code>192 = 128 + 64</code>.</li>
 <li><strong>Value width is independent</strong> and need <em>not</em> equal the query/key width. Here <code>value_dim = 128</code> but <code>qk_head_dim = 192</code>. This is fine: the score sum runs over <code>qk_head_dim</code> (Q vs K), while the output width is <code>value_dim</code> (weights vs V). They are two different matmuls, so they can have two different widths.</li>
 </ul>
 
