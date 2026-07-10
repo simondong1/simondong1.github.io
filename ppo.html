@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Understanding PPO for Language Models</title>
+<meta name="description" content="A visual, from-first-principles guide to PPO for language models: rollouts, rewards, the critic, TD residuals, GAE, return targets, the probability ratio, and clipping." />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<link rel="canonical" href="https://simondong1.github.io/ppo.html" />
+<link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
+<link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
+<meta property="og:title" content="Understanding PPO for Language Models" />
+<meta property="og:description" content="How a completed rollout becomes per-token critic targets and clipped policy updates, with interactive GAE and clipping explorers." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/ppo.html" />
+<meta property="og:site_name" content="Simon Dong" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image" content="https://simondong1.github.io/assets/ppo-og.png?v=1" />
+<meta property="og:image:secure_url" content="https://simondong1.github.io/assets/ppo-og.png?v=1" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="PPO flow: rollout, rewards, GAE, critic target, and clipped policy update." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@dongsixiang" />
+<meta name="twitter:creator" content="@dongsixiang" />
+<meta name="twitter:title" content="Understanding PPO for Language Models" />
+<meta name="twitter:description" content="Rollout first. Then TD, GAE, critic targets, and a clipped policy update." />
+<meta name="twitter:image" content="https://simondong1.github.io/assets/ppo-og.png?v=1" />
+<meta name="twitter:image:alt" content="PPO flow: rollout, rewards, GAE, critic target, and clipped policy update." />
+<meta name="author" content="Simon Dong" />
+<meta name="citation_title" content="Understanding PPO for Language Models" />
+<meta name="citation_author" content="Dong, Simon" />
+<meta name="citation_publication_date" content="2026/07/10" />
+<meta name="citation_fulltext_html_url" content="https://simondong1.github.io/ppo.html" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Understanding PPO for Language Models",
+  "description": "A visual, from-first-principles guide to PPO for language models: rollouts, rewards, the critic, TD residuals, GAE, return targets, the probability ratio, and clipping.",
+  "author": {
+    "@type": "Person",
+    "name": "Simon Dong",
+    "url": "https://x.com/dongsixiang",
+    "sameAs": ["https://x.com/dongsixiang"]
+  },
+  "datePublished": "2026-07-10",
+  "dateModified": "2026-07-10",
+  "mainEntityOfPage": "https://simondong1.github.io/ppo.html",
+  "image": ["https://simondong1.github.io/assets/ppo-og.png?v=1"],
+  "keywords": ["PPO", "Proximal Policy Optimization", "RLHF", "GAE", "actor critic", "language models", "reinforcement learning"]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+  MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root{
+    --bg:#fbfbfa;--surface:#fff;--ink:#1f2328;--ink-soft:#475059;--muted:#8b949e;
+    --line:#e8e8e6;--accent:#4f46e5;--accent-soft:#eef0fe;--warm:#e5484d;
+    --warm-soft:#fdecec;--cool:#0ea5e9;--cool-soft:#e7f6fe;--good:#16865c;
+    --good-soft:#e9f7f1;--amber:#d97706;--amber-soft:#fff7e8;
+    --code-bg:#0d1117;--code-ink:#e6edf3;--code-dim:#8b949e;--maxw:46rem
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:1.05rem;line-height:1.68;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:var(--accent-soft)}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+  header.hero{padding:6rem 0 2.8rem;border-bottom:1px solid var(--line);margin-bottom:3.4rem}
+  .eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 1.1rem}
+  h1.title{font-weight:800;font-size:clamp(2.4rem,5.6vw,4rem);line-height:1.08;letter-spacing:-.03em;margin:0 0 1rem}
+  .title-expansion{display:block;margin-top:.35rem;font-size:clamp(1.15rem,2.4vw,1.65rem);line-height:1.2;color:var(--ink-soft);font-weight:650}
+  .subtitle{font-size:1.22rem;color:var(--ink-soft);margin:0 0 1.9rem;line-height:1.55;max-width:42rem}
+  .byline{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-size:.9rem;color:var(--muted)}
+  .byline .who{color:var(--ink);font-weight:600}.byline .dot{color:var(--line)}
+  h2{font-weight:700;font-size:1.7rem;letter-spacing:-.02em;line-height:1.2;margin:3.4rem 0 1rem;scroll-margin-top:1.5rem}
+  h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}
+  h3{font-weight:600;font-size:1.18rem;margin:2.15rem 0 .65rem;scroll-margin-top:1.5rem}
+  h3 .phase{display:inline-block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-right:.55rem;vertical-align:middle}
+  p{margin:1.05rem 0}.lede{font-size:1.22rem;line-height:1.62;letter-spacing:-.01em;margin:0 0 1.8rem}.lede strong{font-weight:650}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}a:hover{border-color:var(--accent)}
+  strong{font-weight:600}em{font-style:italic}ul,ol{margin:1.1rem 0;padding-left:1.3rem}li{margin:.45rem 0}
+  code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em;background:#f0f1f4;color:#cf2a6b;padding:.12em .4em;border-radius:5px;border:1px solid #e7e8ec}
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:1.3rem 1.4rem;margin:1.6rem 0;overflow-x:auto;font-size:.82rem;line-height:1.62;box-shadow:0 10px 30px -18px rgba(13,17,23,.55);border:1px solid #1c2230}
+  pre code{background:none;border:none;color:inherit;padding:0;font-size:.95rem}.cmt{color:var(--code-dim)}
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:1.1rem 1.3rem;margin:1.8rem 0;font-size:1rem;line-height:1.6}
+  .callout.note{border-left-color:var(--cool)}.callout.warn{border-left-color:var(--amber)}
+  .callout .label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);display:block;margin-bottom:.35rem}
+  .callout.note .label{color:var(--cool)}.callout.warn .label{color:var(--amber)}.callout p{margin:.4rem 0}
+  .reading-list{display:grid;gap:.55rem;margin:.8rem 0 0}.reading-list a{display:block;border:1px solid var(--line);background:#fff;border-radius:10px;padding:.62rem .75rem;color:var(--ink-soft)}
+  .reading-list a:hover{color:var(--accent);border-color:#dfe2fb;background:var(--accent-soft)}
+  nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.5rem;margin:0 0 2rem}
+  nav.toc .toc-title{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.8rem}
+  nav.toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2rem;font-size:.93rem}
+  nav.toc li{margin:.3rem 0;break-inside:avoid}nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.16rem .5rem;border-radius:6px;line-height:1.4}
+  nav.toc a:hover,nav.toc a.active{color:var(--accent);background:var(--accent-soft)}nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}
+  @media(min-width:1300px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 46rem)/2 - 16rem);width:14rem;max-height:calc(100vh - 7rem);overflow-y:auto;background:none;border:none;border-radius:0;padding:0;margin:0}nav.toc ol{columns:1;font-size:.82rem}}
+  .chips{display:flex;gap:.45rem;flex-wrap:wrap;margin:.8rem 0}.chip{font-size:.82rem;border:1px solid #dfe2fb;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:.28rem .65rem;font-weight:600}
+  .roadmap{display:grid;grid-template-columns:repeat(5,1fr);gap:.55rem;margin:1.6rem 0}
+  .roadmap .r{border:1px solid var(--line);border-radius:12px;background:#fff;padding:.75rem .7rem;min-width:0}
+  .roadmap .rn{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700}
+  .roadmap .rt{display:block;font-size:.9rem;font-weight:650;margin:.2rem 0}.roadmap .rs{display:block;color:var(--muted);font-size:.74rem;line-height:1.35}
+  .flows{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.7rem 0}.flow{border:1px solid var(--line);border-radius:14px;padding:1rem .9rem;background:#fff}
+  .flow h4{margin:.1rem 0 .8rem;font-size:.95rem;text-align:center}.flow .tag{display:block;text-align:center;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.7rem}
+  .node{border-radius:9px;padding:.55rem .5rem;font-family:"JetBrains Mono",monospace;font-size:.72rem;text-align:center;margin:.35rem 0;border:1px solid #e7e8ec;background:#f6f7f9;line-height:1.4}
+  .node.acc{background:var(--accent-soft);border-color:#dfe2fb;color:#3730a3}.node.cool{background:var(--cool-soft);border-color:#bfe6f7;color:#0b6a8c}.node.good{background:var(--good-soft);border-color:#bfe8d7;color:#106544}.node.warm{background:var(--warm-soft);border-color:#f3c0c2;color:#a32a2e}
+  .adown{text-align:center;color:var(--muted);font-size:.9rem;margin:.1rem 0}
+  table.ptable{width:100%;border-collapse:collapse;margin:1.3rem 0;font-size:.9rem}
+  table.ptable th,table.ptable td{text-align:left;padding:.55rem .65rem;border-bottom:1px solid var(--line);vertical-align:top}
+  table.ptable th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;white-space:nowrap}
+  table.ptable td:first-child{font-weight:600}.wrapscroll{overflow-x:auto}
+  .eqbox{border:1px solid #dfe2fb;background:var(--accent-soft);border-radius:12px;padding:1rem 1.15rem;margin:1.4rem 0;line-height:1.7;text-align:center;overflow-x:auto}
+  .step{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1.15rem 1.25rem;margin:1.4rem 0}
+  .step .stitle{display:flex;align-items:baseline;gap:.6rem;margin:0 0 .55rem;flex-wrap:wrap}.step .sn{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:.15rem .45rem}
+  .step .st{font-weight:650;font-size:1.02rem}.step p{margin:.55rem 0 0;font-size:.98rem}.step .why{margin-top:.7rem;padding-top:.7rem;border-top:1px dashed var(--line);font-size:.92rem;color:var(--ink-soft)}
+  .credit{display:grid;grid-template-columns:4.2rem repeat(4,1fr);gap:.35rem;margin:1.4rem 0;font-size:.78rem}
+  .credit>div{border:1px solid var(--line);border-radius:7px;padding:.42rem .25rem;text-align:center;background:#fff}
+  .credit .head{color:var(--muted);font-weight:700;background:#f6f7f9}.credit .row{font-weight:700;background:#f6f7f9;color:var(--ink-soft)}
+  .credit .used{background:var(--accent-soft);border-color:#dfe2fb;color:#3730a3;font-family:"JetBrains Mono",monospace}.credit .empty{border-color:transparent;background:transparent}
+  .panel{border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.2rem;margin:1.6rem 0;background:#fff;box-shadow:0 18px 42px -34px rgba(13,17,23,.35)}
+  .panel-title{font-size:1rem;font-weight:700;margin:0 0 .2rem}.panel-sub{font-size:.87rem;color:var(--muted);margin:0 0 1rem}
+  .controls{display:flex;flex-wrap:wrap;gap:1rem 1.35rem;align-items:end;margin-bottom:1rem;font-size:.88rem}
+  .controls label{display:flex;flex-direction:column;gap:.3rem;font-weight:600;color:var(--ink-soft)}.controls select,.controls input{font:inherit}.controls select{padding:.38rem .5rem;border:1px solid #d8dee4;border-radius:7px;background:#fff;color:var(--ink)}.controls input[type=range]{width:155px;accent-color:var(--accent)}
+  .readout{font-size:.94rem;line-height:1.55;background:var(--accent-soft);border:1px solid #dfe2fb;border-radius:10px;padding:.7rem .9rem;margin-top:.9rem}.readout b{color:var(--accent)}
+  .decay-bars{display:grid;gap:.5rem;margin:1rem 0}.decay-row{display:grid;grid-template-columns:3.2rem 1fr 3.8rem;gap:.65rem;align-items:center;font-size:.78rem}
+  .decay-label{font-family:"JetBrains Mono",monospace;color:var(--ink-soft)}.decay-track{height:18px;background:#f0f1f4;border-radius:999px;overflow:hidden}.decay-fill{height:100%;background:linear-gradient(90deg,var(--accent),#818cf8);border-radius:999px;min-width:1px;transition:width .16s ease}.decay-val{font-family:"JetBrains Mono",monospace;text-align:right;color:var(--muted)}
+  .mini-note{font-size:.82rem;color:var(--muted);line-height:1.5;margin:.65rem 0 0}
+  .clip-layout{display:grid;grid-template-columns:1.05fr .95fr;gap:1rem;align-items:start}.clip-plot{border:1px solid var(--line);border-radius:12px;background:#fff;padding:.4rem}
+  .clip-plot svg{display:block;width:100%;height:auto}.axis{stroke:#c9cdd2;stroke-width:1}.gridline{stroke:#ececea;stroke-width:1}.clip-band{fill:#eef0fe}.raw-line{fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:5 4}.selected-line{fill:none;stroke:var(--accent);stroke-width:3}.clip-dot{fill:var(--warm);stroke:#fff;stroke-width:2}.clip-bound{stroke:#a5b4fc;stroke-width:1.5;stroke-dasharray:3 3}.svg-label{font:11px "Inter",sans-serif;fill:#6b7280}.svg-small{font:9px "Inter",sans-serif;fill:#8b949e}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}.metric{border:1px solid var(--line);border-radius:10px;padding:.65rem .7rem}.metric span{display:block;font-size:.67rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}.metric b{display:block;font-family:"JetBrains Mono",monospace;font-size:1rem;margin-top:.16rem}.metric.active{background:var(--accent-soft);border-color:#dfe2fb}
+  .legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:.79rem;color:var(--ink-soft);margin:.65rem 0}.legend span{display:inline-flex;align-items:center;gap:.38rem}.swatch{width:.85rem;height:.18rem;display:inline-block;background:var(--accent)}.swatch.raw{background:var(--muted);height:0;border-top:2px dashed var(--muted)}
+  .model-roles{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin:1.2rem 0}.role{border:1px solid var(--line);background:#fff;border-radius:11px;padding:.75rem .8rem}.role b{display:block;font-size:.92rem}.role small{display:block;color:var(--muted);line-height:1.45;margin-top:.2rem}
+  .formula-label{display:inline-block;font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:700;margin-bottom:.25rem}
+  mjx-container[display="true"]{margin:1.35rem 0!important;overflow-x:auto;overflow-y:hidden}
+  footer{border-top:1px solid var(--line);margin-top:4rem;padding:2.5rem 0 4rem;font-size:.9rem;color:var(--muted)}footer a{color:var(--ink-soft)}
+  @media(max-width:900px){.flows,.clip-layout{grid-template-columns:1fr}.roadmap{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:640px){body{font-size:1.06rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.45rem}.roadmap{grid-template-columns:1fr 1fr}.model-roles,.metrics{grid-template-columns:1fr}.credit{grid-template-columns:3.5rem repeat(4,minmax(3.3rem,1fr));font-size:.68rem}.credit>div{padding:.35rem .1rem}.panel{padding:1rem .8rem}.controls{align-items:stretch}.controls input[type=range]{width:100%}.decay-row{grid-template-columns:2.8rem 1fr 3.2rem}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <p class="eyebrow">RL for LLMs · Part 1</p>
+  <h1 class="title">Understanding PPO <span class="title-expansion">for Language Models</span></h1>
+  <p class="subtitle">How one completed rollout becomes per-token critic targets and clipped updates to the language model.</p>
+  <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>July 2026</span><span class="dot">•</span><span>~22 min read</span></div>
+</div></header>
+
+<main class="wrap">
+<p class="lede"><strong>A rollout is one prompt plus a completion sampled from the language model.</strong> Proximal Policy Optimization (PPO) scores that completed response, assigns each sampled token a training signal, and optimizes a policy and a critic: the policy changes token probabilities, while the critic predicts expected future reward.</p>
+
+<div class="callout note"><span class="label">Where PPO is used</span>
+  <p>PPO powered the reinforcement learning (RL) stage of <a href="https://arxiv.org/abs/2203.02155">InstructGPT</a> and remains available in open-source large language model (LLM) training systems and libraries such as <a href="https://docs.nvidia.com/nemo/rl/nightly/guides/ppo.html">NeMo RL</a>, <a href="https://openrlhf.readthedocs.io/en/latest/agent_training.html">OpenRLHF</a>, and <a href="https://huggingface.co/docs/trl/index">Transformers Reinforcement Learning (TRL)</a>. It is also used in long-horizon agent training, including <a href="https://arxiv.org/abs/2607.05378">CompactionRL</a>.</p>
+</div>
+
+<div class="callout"><span class="label">What you need</span>
+  <p>You need only two ideas: a language model assigns a probability to the next token, and gradient descent changes model parameters.</p>
+</div>
+
+<nav class="toc"><div class="toc-title">Contents</div><ol>
+  <li><a href="#s1"><span class="n">1</span>The whole loop</a></li>
+  <li><a href="#s2"><span class="n">2</span>Tokens as a trajectory</a></li>
+  <li><a href="#s3"><span class="n">3</span>Rollout first</a></li>
+  <li><a href="#s4"><span class="n">4</span>A math rollout</a></li>
+  <li><a href="#s5"><span class="n">5</span>TD residual</a></li>
+  <li><a href="#s6"><span class="n">6</span>GAE and future credit</a></li>
+  <li><a href="#s7"><span class="n">7</span>The critic target</a></li>
+  <li><a href="#s8"><span class="n">8</span>The policy update</a></li>
+  <li><a href="#s9"><span class="n">9</span>PPO clipping</a></li>
+  <li><a href="#s10"><span class="n">10</span>Update ratio vs reference penalty</a></li>
+  <li><a href="#s11"><span class="n">11</span>A real training loop</a></li>
+  <li><a href="#s12"><span class="n">12</span>Practical settings</a></li>
+  <li><a href="#s13"><span class="n">13</span>Limits and summary</a></li>
+</ol></nav>
+
+<h2 id="s1"><span class="num">1.</span>The whole loop, before the equations</h2>
+<p>PPO alternates between <strong>collecting experience</strong> and <strong>learning from that fixed experience</strong>. For a language model, one experience is a prompt plus a sampled completion.</p>
+<div class="roadmap" aria-label="PPO training phases">
+  <div class="r"><span class="rn">Phase 1</span><span class="rt">Roll out</span><span class="rs">sample a full response</span></div>
+  <div class="r"><span class="rn">Phase 2</span><span class="rt">Score</span><span class="rs">record rewards and values</span></div>
+  <div class="r"><span class="rn">Phase 3</span><span class="rt">Estimate</span><span class="rs">compute per-token credit</span></div>
+  <div class="r"><span class="rn">Phase 4</span><span class="rt">Fit critic</span><span class="rs">regress values to targets</span></div>
+  <div class="r"><span class="rn">Phase 5</span><span class="rt">Fit policy</span><span class="rs">apply clipped updates</span></div>
+</div>
+<p>The critic and policy solve different problems:</p>
+<div class="flows">
+  <div class="flow"><span class="tag">Critic</span><h4>Predict the return</h4>
+    <div class="node">context before token</div><div class="adown">↓ value model</div>
+    <div class="node cool">one scalar prediction V(x)</div><div class="adown">↓ compare with target</div>
+    <div class="node good">minimize value error</div>
+  </div>
+  <div class="flow"><span class="tag">Policy / language model</span><h4>Change token probabilities</h4>
+    <div class="node">sampled token + context</div><div class="adown">↓ advantage says direction</div>
+    <div class="node acc">increase good; decrease bad</div><div class="adown">↓ PPO ratio clip</div>
+    <div class="node good">optimize a conservative surrogate</div>
+  </div>
+</div>
+<p>The policy does <em>not</em> directly maximize the critic's output. It increases the probability of sampled tokens with positive estimated advantage and decreases the probability of tokens with negative estimated advantage. Observed rewards ground that estimate, while intermediate critic predictions may also shape it.</p>
+
+<h2 id="s2"><span class="num">2.</span>Language generation is a trajectory</h2>
+<p>Start with a prompt. Before generating token \(t\), the model has a context \(x_t\): the prompt plus all response tokens already generated. The next token \(y_t\) is sampled from the policy:</p>
+\[
+y_t \sim \pi_{\theta_{\mathrm{old}}}(\,\cdot\mid x_t), \qquad
+x_{t+1} = (x_t, y_t).
+\]
+<p>\(\pi\) means policy; for a language model it is the next-token sampling distribution. \(\theta_{\mathrm{old}}\) denotes the frozen policy parameters used to collect this rollout; later, \(\theta\) will denote the current policy parameters being optimized. The critic has its own parameters \(\phi\). After the token is chosen, the environment produces a reward \(r_t\). The response ends after \(T\) optimized tokens.</p>
+<div class="wrapscroll"><table class="ptable">
+  <thead><tr><th>Symbol</th><th>Meaning in a language model</th><th>Shape per position</th></tr></thead>
+  <tbody>
+    <tr><td>\(x_t\)</td><td>prompt plus generated tokens before position \(t\)</td><td>token sequence</td></tr>
+    <tr><td>\(y_t\)</td><td>the sampled next token—the action</td><td>one token id</td></tr>
+    <tr><td>\(r_t\)</td><td>reward observed after sampling \(y_t\)</td><td>one scalar</td></tr>
+    <tr><td>\(\pi_\theta(y_t\mid x_t)\)</td><td>current model probability of that sampled token</td><td>one scalar</td></tr>
+    <tr><td>\(V_\phi(x_t)\)</td><td>critic estimate of expected remaining return</td><td>one scalar</td></tr>
+  </tbody>
+</table></div>
+<p>The <strong>return</strong> \(G_t\) is the sum of rewards from position \(t\) onward. The discount factor \(\gamma\in[0,1]\) controls how much less a later reward counts:</p>
+\[
+G_t = r_t + \gamma r_{t+1} + \gamma^2 r_{t+2}+\cdots+\gamma^{T-t}r_T.
+\]
+<p>The true state value is an expectation over all possible future tokens and environment outcomes under the rollout policy:</p>
+\[
+V^{\pi}(x_t)=\mathbb{E}_{y_t,y_{t+1},\ldots\sim\pi}\!\left[G_t\mid x_t\right].
+\]
+<p>The critic \(V_\phi(x_t)\) is a learned approximation to that expectation. A forward pass gives a definite scalar, but the quantity remains an estimate—not an observed fact.</p>
+
+<h2 id="s3"><span class="num">3.</span>The rollout happens first</h2>
+<p>The credit calculation will use the critic's value at the next token position and evidence from later positions. It does not predict an unknown future during generation. PPO first samples the complete response and stores it. Only then does optimization begin.</p>
+<div class="flows">
+  <div class="flow"><span class="tag">Data collection</span><h4>Forward in time</h4>
+    <div class="node">x₁ → sample y₁</div><div class="adown">↓ append token</div>
+    <div class="node">x₂ → sample y₂</div><div class="adown">↓ continue to terminal</div>
+    <div class="node good">buffer: x, y, rewards, old log-probs, values</div>
+  </div>
+  <div class="flow"><span class="tag">Optimization</span><h4>After the rollout</h4>
+    <div class="node">all x₁ … x_T are known</div><div class="adown">↓ reverse scan</div>
+    <div class="node acc">compute δ, advantage, return target</div><div class="adown">↓ minibatch updates</div>
+    <div class="node good">train critic and policy</div>
+  </div>
+</div>
+<div class="callout"><p style="margin:0"><strong>Timing rule:</strong> “future” means later relative to token \(t\), not unknown to the trainer. The future continuation is already in the rollout buffer when advantages are computed.</p></div>
+
+<h2 id="s4"><span class="num">4.</span>One terminal-reward math rollout</h2>
+<p>Take the prompt <strong>“Solve \(2x+3=11\)”</strong>. To keep the arithmetic visible, use four toy token positions whose labels summarize the generated fragments. A real tokenizer may split the same text into more positions; PPO applies the identical calculation to every actual token.</p>
+<p>The answer is correct, so the verifier emits \(+1\) at the final position and zero task reward before it. Let \(\gamma=0.9\). During the rollout, the critic made these predictions:</p>
+<div class="wrapscroll"><table class="ptable">
+  <thead><tr><th>Position</th><th>Generated fragment \(y_t\)</th><th>Observed \(r_t\)</th><th>Stored \(V(x_t)\), before \(y_t\)</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><code>Subtract 3</code></td><td>0</td><td>0.20</td></tr>
+    <tr><td>2</td><td><code>2x = 8</code></td><td>0</td><td>0.35</td></tr>
+    <tr><td>3</td><td><code>Divide by 2</code></td><td>0</td><td>0.55</td></tr>
+    <tr><td>4</td><td><code>x = 4</code></td><td>1</td><td>0.80</td></tr>
+  </tbody>
+</table></div>
+<p>Each row pairs the sampled fragment \(y_t\) with the value of its <em>pre-token</em> context \(x_t\). Thus \(V(x_2)=0.35\) sees the first fragment, but not the second. The values rise as the sampled solution becomes more promising, but a rise is not itself the learning target. We need a consistent way to compare each stored prediction with what was learned one step later.</p>
+
+<h2 id="s5"><span class="num">5.</span>The TD residual: one-step new evidence</h2>
+<p>After token \(y_t\) creates the next context \(x_{t+1}\), compare the old prediction with the immediate reward plus the discounted next prediction. Let \(d_t=1\) when this transition truly terminates the episode and \(d_t=0\) otherwise. Using the next critic prediction in a target is called <strong>bootstrapping</strong>:</p>
+<div class="eqbox">
+  \[
+  \delta_t =
+  \underbrace{r_t+\gamma(1-d_t)V_{\mathrm{old}}(x_{t+1})}_{\text{one-step TD target}}
+  -\underbrace{V_{\mathrm{old}}(x_t)}_{\text{stored prediction}}.
+  \]
+</div>
+<p>\(\delta_t\) is the <strong>temporal-difference (TD) residual</strong>. Positive means this realized transition supplied better evidence than the critic expected; negative means worse. It is computed for the sampled transition in this rollout, not for every token the model could have chosen. The notation \(V_{\mathrm{old}}\) emphasizes that these are frozen rollout-time predictions.</p>
+<p>At a true terminal boundary the multiplier \(1-d_t\) removes the bootstrap—equivalently, set \(V_{\mathrm{old}}(x_{T+1})=0\), because no return remains. A response cut off only by a length or rollout boundary is a <em>truncation</em>, not necessarily a terminal state; then \(d_t=0\) and the trainer bootstraps from \(V_{\mathrm{old}}(x_{T+1})\). For the truly terminal four-position example:</p>
+<div class="step"><div class="stitle"><span class="sn">δ₁</span><span class="st">No immediate reward; next value rises</span></div>
+  <p>\(\delta_1=0+0.9(0.35)-0.20=0.115\)</p>
+</div>
+<div class="step"><div class="stitle"><span class="sn">δ₂, δ₃</span><span class="st">The continuation keeps beating the baseline</span></div>
+  <p>\(\delta_2=0+0.9(0.55)-0.35=0.145\), and \(\delta_3=0+0.9(0.80)-0.55=0.170\).</p>
+</div>
+<div class="step"><div class="stitle"><span class="sn">δ₄</span><span class="st">The terminal verifier replaces the bootstrap</span></div>
+  <p>\(\delta_4=1+0.9(0)-0.80=0.200\).</p>
+  <div class="why"><strong>Important:</strong> \(r_t+\gamma V(x_{t+1})\) is a one-step bootstrap target for \(V(x_t)\). It is not a newly observed “true value,” and one optimizer step does not literally set the critic equal to it.</div>
+</div>
+
+<h2 id="s6"><span class="num">6.</span>GAE: let later evidence reach earlier tokens</h2>
+<p>A one-step residual is local. Generalized Advantage Estimation (GAE) combines it with later residuals. The result \(\widehat A_t\) estimates how much better or worse the sampled continuation was than the stored baseline. A parameter \(\lambda\in[0,1]\) controls how much later evidence enters. The implementation is a reverse recursion:</p>
+\[
+\widehat A_t^{\mathrm{GAE}}
+=\delta_t+\gamma\lambda(1-d_t)\,\widehat A_{t+1}^{\mathrm{GAE}},
+\qquad \widehat A_{T+1}^{\mathrm{GAE}}=0.
+\]
+<p>For the math rollout, choose \(\lambda=0.8\), so \(\gamma\lambda=0.72\). Start at the end: \(\widehat A_4=\delta_4=0.200\). Then \(\widehat A_3=0.170+0.72(0.200)=0.314\). Continuing backward gives \(\widehat A_2=0.145+0.72(0.314)=0.371\) and \(\widehat A_1=0.115+0.72(0.371)=0.382\). The early positions are positive because later transitions exceeded the critic's stored predictions—not because the final reward was copied evenly to every token.</p>
+<p>Within one uninterrupted episode, expanding the recursion shows exactly where a residual five positions later enters the current advantage:</p>
+\[
+\widehat A_t^{\mathrm{GAE}}
+=\delta_t+(\gamma\lambda)\delta_{t+1}
++(\gamma\lambda)^2\delta_{t+2}
++\cdots+\mathbf{(\gamma\lambda)^5\delta_{t+5}}+\cdots .
+\]
+<p>The sum looks <strong>forward</strong> from \(t\) to the end. GAE is computed backward only as an efficient implementation. The current residual has weight 1; a residual \(\ell\) positions later has weight \((\gamma\lambda)^\ell\), which shrinks with distance when \(\gamma\lambda&lt;1\).</p>
+<div class="credit" aria-label="Future TD residuals included in each advantage">
+  <div class="head">advantage</div><div class="head">δ₁</div><div class="head">δ₂</div><div class="head">δ₃</div><div class="head">δ₄</div>
+  <div class="row">A₁</div><div class="used">1</div><div class="used">γλ</div><div class="used">(γλ)²</div><div class="used">(γλ)³</div>
+  <div class="row">A₂</div><div class="empty"></div><div class="used">1</div><div class="used">γλ</div><div class="used">(γλ)²</div>
+  <div class="row">A₃</div><div class="empty"></div><div class="empty"></div><div class="used">1</div><div class="used">γλ</div>
+  <div class="row">A₄</div><div class="empty"></div><div class="empty"></div><div class="empty"></div><div class="used">1</div>
+</div>
+<p>Within an episode, \(\delta_k\) enters \(\widehat A_t\) for \(t\le k\) with coefficient \((\gamma\lambda)^{k-t}\); when \(\gamma\lambda=0\), it enters only at \(t=k\). That is the backward credit path. There is no gradient through the sampled token sequence: during the policy update, the computed advantages are fixed numbers.</p>
+
+<h3><span class="phase">Roles</span>What \(\gamma\) and \(\lambda\) each do</h3>
+<div class="wrapscroll"><table class="ptable">
+  <thead><tr><th>Knob</th><th>Role</th><th>Boundary</th></tr></thead>
+  <tbody>
+    <tr><td>\(\gamma\)</td><td>defines how the objective values delayed environment reward</td><td>\(\gamma=1\): no time discount inside the episode</td></tr>
+    <tr><td>\(\lambda\)</td><td>chooses how much GAE trusts long sampled continuations versus critic bootstraps</td><td>\(\lambda=0\): one-step TD; \(\lambda=1\): sampled discounted return minus baseline for a terminal rollout</td></tr>
+  </tbody>
+</table></div>
+<p>Both appear in the propagation weight \((\gamma\lambda)^\ell\), but they are not interchangeable: \(\gamma\) belongs to the task's return definition. Lower \(\lambda\) leans more on nearby critic predictions; higher \(\lambda\) leans more on the sampled continuation.</p>
+
+<h2 id="s7"><span class="num">7.</span>The return target trains the critic</h2>
+<p>GAE produces an advantage relative to the stored baseline. Add that baseline back to form the critic's regression target:</p>
+\[
+\widehat R_t=\widehat A_t^{\mathrm{GAE}}+V_{\mathrm{old}}(x_t).
+\]
+<p>The subscript “old” matters in implementation. Values are computed during the rollout, stored, and detached. \(\widehat R_t\) is then a fixed label while the current critic \(V_\phi\) is optimized. Let \(N\) be the number of valid response-token positions in the minibatch; \(\operatorname{stopgrad}\) means treat its argument as a constant during backpropagation; the superscript \(\mathrm{VF}\) labels the value-function loss:</p>
+\[
+L^{\mathrm{VF}}(\phi)
+=\frac{1}{N}\sum_{t=1}^{N}
+\left(V_\phi(x_t)-\operatorname{stopgrad}(\widehat R_t)\right)^2.
+\]
+<p>The expectation symbol often used in papers is implemented as a mean over valid response-token positions in the minibatch. We <strong>minimize</strong> this mean-squared error.</p>
+<div class="wrapscroll"><table class="ptable">
+  <thead><tr><th>Quantity</th><th>What it is</th><th>Observed?</th></tr></thead>
+  <tbody>
+    <tr><td>\(r_t\)</td><td>reward emitted for the sampled transition</td><td><strong>yes</strong></td></tr>
+    <tr><td>\(V_{\mathrm{old}}(x_t)\)</td><td>rollout-time critic estimate</td><td>no—stored prediction</td></tr>
+    <tr><td>\(\widehat A_t\)</td><td>GAE estimate built from rewards and stored values</td><td>no—computed estimator</td></tr>
+    <tr><td>\(\widehat R_t\)</td><td>bootstrap target used as the critic's label</td><td>no—constructed target</td></tr>
+  </tbody>
+</table></div>
+<p>The target has an especially useful recursive form:</p>
+\[
+\widehat R_t^{(\lambda)}
+=r_t+\gamma(1-d_t)\left[(1-\lambda)V_{\mathrm{old}}(x_{t+1})
++\lambda\widehat R_{t+1}^{(\lambda)}\right].
+\]
+<p>Use the boundary \(\widehat R_{T+1}=V_{\mathrm{old}}(x_{T+1})\). At true termination that value is zero; at truncation it supplies the continuation bootstrap. At \(\lambda=0\), the target is the one-step TD target. At \(\lambda=1\), it is the sampled discounted return for a terminal rollout, or that return plus the discounted boundary bootstrap for a truncation. Values between 0 and 1 mix shorter critic bootstraps with longer sampled evidence.</p>
+
+<div class="panel" id="gaePanel">
+  <p class="panel-title">GAE calculator: one rollout, every token</p>
+  <p class="panel-sub">Change the outcome, \(\gamma\), or \(\lambda\). Rewards, stored values, residuals, advantages, and critic targets update together.</p>
+  <div class="controls">
+    <label for="rolloutCase">rollout
+      <select id="rolloutCase"><option value="correct">correct answer · final reward 1</option><option value="wrong">wrong answer · final reward 0</option></select>
+    </label>
+    <label for="gammaInput">discount γ: <span id="gammaValue">0.90</span>
+      <input id="gammaInput" type="range" min="0" max="1" step="0.01" value="0.90" />
+    </label>
+    <label for="lambdaInput">GAE λ: <span id="lambdaValue">0.80</span>
+      <input id="lambdaInput" type="range" min="0" max="1" step="0.01" value="0.80" />
+    </label>
+  </div>
+  <div class="wrapscroll"><table class="ptable" aria-live="polite">
+    <thead><tr><th>t</th><th>fragment</th><th>reward</th><th>stored value</th><th>next value</th><th>TD residual</th><th>advantage</th><th>critic target</th></tr></thead>
+    <tbody id="gaeRows">
+      <tr><td>1</td><td>Subtract 3</td><td>0.000</td><td>0.200</td><td>0.350</td><td>0.115</td><td>0.382</td><td>0.582</td></tr>
+      <tr><td>2</td><td>2x = 8</td><td>0.000</td><td>0.350</td><td>0.550</td><td>0.145</td><td>0.371</td><td>0.721</td></tr>
+      <tr><td>3</td><td>Divide by 2</td><td>0.000</td><td>0.550</td><td>0.800</td><td>0.170</td><td>0.314</td><td>0.864</td></tr>
+      <tr><td>4</td><td>x = 4</td><td>1.000</td><td>0.800</td><td>0.000</td><td>0.200</td><td>0.200</td><td>1.000</td></tr>
+    </tbody>
+  </table></div>
+  <div class="decay-bars" id="decayBars" aria-label="GAE weights by future offset">
+    <div class="decay-row"><span class="decay-label">ℓ=0</span><span class="decay-track"><span class="decay-fill" style="display:block;width:100%"></span></span><span class="decay-val">1.000</span></div>
+    <div class="decay-row"><span class="decay-label">ℓ=1</span><span class="decay-track"><span class="decay-fill" style="display:block;width:72%"></span></span><span class="decay-val">0.720</span></div>
+    <div class="decay-row"><span class="decay-label">ℓ=2</span><span class="decay-track"><span class="decay-fill" style="display:block;width:51.84%"></span></span><span class="decay-val">0.518</span></div>
+    <div class="decay-row"><span class="decay-label">ℓ=3</span><span class="decay-track"><span class="decay-fill" style="display:block;width:37.32%"></span></span><span class="decay-val">0.373</span></div>
+  </div>
+  <div class="readout" id="gaeReadout">Here <b>γλ = 0.720</b>. A residual three positions later enters the current advantage with weight <b>0.373</b>.</div>
+</div>
+
+<div class="callout warn"><span class="label">Terminal-reward shortcut—special case only</span>
+  <p>If every intermediate reward is zero, the final reward is \(R_{\mathrm{final}}\), \(\lambda=1\), and the terminal value is zero, the critic terms telescope:</p>
+  \[
+  \widehat A_t=\gamma^{T-t}R_{\mathrm{final}}-V_{\mathrm{old}}(x_t).
+  \]
+  <p>This is not the general GAE formula. When \(\lambda&lt;1\), intermediate critic estimates remain in the estimator. With per-token reference penalties or process rewards, the \(\lambda=1\) target contains the full discounted reward sequence; with truncation, it also contains the discounted boundary bootstrap.</p>
+</div>
+
+<h2 id="s8"><span class="num">8.</span>The advantage trains the language model</h2>
+<p>Now freeze the advantages. For each recorded pair \((x_t,y_t)\), the basic policy-gradient term is:</p>
+\[
+\nabla_\theta\log\pi_\theta(y_t\mid x_t)\;\widehat A_t.
+\]
+<ul>
+  <li>If \(\widehat A_t&gt;0\), gradient ascent increases the probability of the sampled token in that context.</li>
+  <li>If \(\widehat A_t&lt;0\), it decreases that probability.</li>
+  <li>The magnitude controls the strength of that sample's contribution, often after batchwise advantage normalization.</li>
+</ul>
+<p>A downstream residual affects an earlier token because it is already included in that token's scalar \(\widehat A_t\). Standard PPO does <strong>not</strong> backpropagate through \(y_t\rightarrow x_{t+1}\), through the reward, or through the critic while updating the policy:</p>
+<pre><code>advantages = advantages.detach()
+policy_loss = -(logprob_of_sampled_token * advantages).mean()</code></pre>
+<p>This separation is essential. The sampled actions and future contexts are data. The current token log-probability is the differentiable path into the policy parameters.</p>
+
+<h2 id="s9"><span class="num">9.</span>PPO: limit the incentive when reusing a rollout</h2>
+<p>At the start of a synchronous PPO update, \(\pi_\theta\) matches the rollout policy. PPO may then take one or more minibatch updates—sometimes across several epochs—on the same rollout. After the first optimizer step, the current policy has changed, so it forms the probability ratio:</p>
+<div class="eqbox">
+  \[
+  \rho_t(\theta)
+  =\frac{\pi_\theta(y_t\mid x_t)}
+  {\pi_{\theta_{\mathrm{old}}}(y_t\mid x_t)}
+  =\exp\!\left(\log\pi_\theta(y_t\mid x_t)-\log\pi_{\mathrm{old}}(y_t\mid x_t)\right).
+  \]
+</div>
+<p>The denominator is a frozen log-probability stored with the rollout. The numerator comes from the model being optimized. Therefore the actor gradient enters through the current log-probability—and thus through \(\rho_t\)—while \(\widehat A_t\), \(x_t\), \(y_t\), and the denominator stay fixed.</p>
+<p>For one concrete update, suppose a sampled token had probability \(0.20\) under the rollout policy and \(0.26\) now. Then \(\rho=0.26/0.20=1.30\). If its advantage is \(+1\) and the clip threshold is \(\epsilon=0.20\), PPO compares the raw term \(1.30\) with the clipped term \(1.20\), then selects the smaller \(1.20\). This sample gains nothing from pushing the ratio higher.</p>
+<p>In general, \(\epsilon\in(0,1)\) sets the clip band \([1-\epsilon,1+\epsilon]\). Without clipping, repeatedly maximizing \(\rho_t\widehat A_t\) can move the policy too far from the rollout policy, so PPO uses:</p>
+\[
+J^{\mathrm{CLIP}}(\theta)
+=\mathbb{E}_t\!\left[
+\min\!\left(
+\rho_t(\theta)\widehat A_t,\;
+\operatorname{clip}(\rho_t(\theta),1-\epsilon,1+\epsilon)\widehat A_t
+\right)\right].
+\]
+<p><strong>Theoretical notation maximizes \(J^{\mathrm{CLIP}}\).</strong> PyTorch optimizers minimize, so code uses \(L^{\mathrm{policy}}=-J^{\mathrm{CLIP}}\). The inner <code>min</code> is part of the pessimistic objective; it does not mean the outer training goal is minimization.</p>
+
+<h3><span class="phase">Piecewise</span>What clipping does for each sign</h3>
+\[
+j_t(\rho)=
+\begin{cases}
+\widehat A_t\min(\rho,1+\epsilon), & \widehat A_t\ge 0,\\[3pt]
+\widehat A_t\max(\rho,1-\epsilon), & \widehat A_t&lt;0.
+\end{cases}
+\]
+<p>For a positive advantage, the sample stops benefiting once its probability ratio exceeds \(1+\epsilon\). For a negative advantage, it stops benefiting once the ratio falls below \(1-\epsilon\). The objective still follows harmful movement in the opposite direction; clipping removes incentive only where the sample would otherwise improve too much.</p>
+
+<div class="panel" id="clipPanel">
+  <p class="panel-title">Clipping explorer: one token's objective</p>
+  <p class="panel-sub">Move the ratio and switch the advantage sign. The solid line is the term PPO maximizes; the dashed line is the unclipped surrogate.</p>
+  <div class="controls">
+    <label for="advantageCase">advantage
+      <select id="advantageCase"><option value="positive">positive A = +1</option><option value="negative">negative A = −1</option></select>
+    </label>
+    <label for="ratioInput">probability ratio ρ: <span id="ratioValue">1.00</span>
+      <input id="ratioInput" type="range" min="0.4" max="1.6" step="0.01" value="1.00" />
+    </label>
+    <label for="epsilonInput">clip ε: <span id="epsilonValue">0.20</span>
+      <input id="epsilonInput" type="range" min="0.05" max="0.40" step="0.01" value="0.20" />
+    </label>
+  </div>
+  <div class="clip-layout">
+    <div>
+      <div class="clip-plot">
+        <svg id="clipSvg" viewBox="0 0 420 250" role="img" aria-label="PPO clipped and unclipped objectives across probability ratios">
+          <rect id="clipBand" class="clip-band" x="160" y="20" width="120" height="190"></rect>
+          <line class="gridline" x1="40" y1="67.5" x2="400" y2="67.5"></line><line class="gridline" x1="40" y1="115" x2="400" y2="115"></line><line class="gridline" x1="40" y1="162.5" x2="400" y2="162.5"></line>
+          <line class="axis" x1="40" y1="210" x2="400" y2="210"></line><line class="axis" x1="40" y1="20" x2="40" y2="210"></line>
+          <line id="lowBound" class="clip-bound" x1="160" y1="20" x2="160" y2="210"></line><line id="highBound" class="clip-bound" x1="280" y1="20" x2="280" y2="210"></line>
+          <path id="rawPath" class="raw-line" d="M40,91.25 L400,20"></path><path id="selectedPath" class="selected-line" d="M40,91.25 L280,43.75 L400,43.75"></path>
+          <circle id="clipDot" class="clip-dot" cx="220" cy="55.625" r="6"></circle>
+          <text class="svg-label" x="215" y="239">probability ratio ρ</text>
+          <text class="svg-small" x="34" y="225">0.4</text><text class="svg-small" x="214" y="225">1.0</text><text class="svg-small" x="392" y="225">1.6</text>
+          <text id="lowLabel" class="svg-small" x="148" y="15">1−ε</text><text id="highLabel" class="svg-small" x="268" y="15">1+ε</text>
+        </svg>
+      </div>
+      <div class="legend"><span><i class="swatch"></i>PPO selected objective</span><span><i class="swatch raw"></i>unclipped ρA</span></div>
+    </div>
+    <div>
+      <div class="metrics">
+        <div class="metric"><span>unclipped ρA</span><b id="rawMetric">1.000</b></div>
+        <div class="metric"><span>clipped ratio</span><b id="clippedRatioMetric">1.000</b></div>
+        <div class="metric active"><span>selected min</span><b id="selectedMetric">1.000</b></div>
+        <div class="metric"><span>sample gradient</span><b id="gradientMetric">active</b></div>
+      </div>
+      <div class="readout" id="clipReadout">The sampled token has positive advantage and ρ is inside the clip band, so increasing its probability still improves this term.</div>
+    </div>
+  </div>
+</div>
+
+<div class="callout warn"><span class="label">What the clip does not guarantee</span>
+  <p>PPO does not force every ratio to stay inside \([1-\epsilon,1+\epsilon]\). It makes one sample's objective flat only in the beneficial clipped direction. Shared parameters, other tokens, and auxiliary losses can still move that probability, so real runs also monitor approximate KL divergence, clip fraction, and sometimes stop an epoch early.</p>
+</div>
+
+<h2 id="s10"><span class="num">10.</span>PPO update ratio versus reference-model penalty</h2>
+<p>Reinforcement learning from human feedback (RLHF) implementations commonly keep a frozen reference policy initialized from the supervised fine-tuning (SFT) policy. This introduces a second comparison, which must not be confused with PPO clipping. The reference term estimates Kullback–Leibler (KL) divergence, a measure of distribution shift.</p>
+<div class="model-roles">
+  <div class="role"><b>Rollout policy \(\pi_{\mathrm{old}}\)</b><small>samples the completion; supplies stored denominator log-probabilities</small></div>
+  <div class="role"><b>Current policy \(\pi_\theta\)</b><small>the language model being updated by the clipped objective</small></div>
+  <div class="role"><b>Reference policy \(\pi_{\mathrm{ref}}\)</b><small>frozen SFT anchor used for a KL-style reward penalty</small></div>
+  <div class="role"><b>Critic \(V_\phi\)</b><small>predicts one expected-return scalar at each response position</small></div>
+</div>
+<div class="wrapscroll"><table class="ptable">
+  <thead><tr><th>Comparison</th><th>Formula</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>PPO update ratio</td><td>\(\pi_\theta(y_t|x_t)/\pi_{\mathrm{old}}(y_t|x_t)\)</td><td>limit change while reusing this rollout batch</td></tr>
+    <tr><td>Reference penalty</td><td>\(\log\pi_{\mathrm{old}}(y_t|x_t)-\log\pi_{\mathrm{ref}}(y_t|x_t)\)</td><td>discourage long-term drift from the SFT anchor</td></tr>
+  </tbody>
+</table></div>
+<p>Let \(\beta\ge0\) control the strength of the reference penalty, and let \(R_{\mathrm{score}}\) be the scalar reward-model or verifier score for the completed response. A common token reward is:</p>
+\[
+r_t^{\mathrm{KL}}
+=-\beta\left[
+\log\pi_{\mathrm{old}}(y_t\mid x_t)
+-\log\pi_{\mathrm{ref}}(y_t\mid x_t)
+\right],
+\qquad
+r_T\mathrel{+}=R_{\mathrm{score}}.
+\]
+<p>The scalar reward-model or verifier score is added at the final token; the sampled log-ratio penalty is dense across the response. Individual sampled log-ratios can have either sign—their expectation under the rollout policy is the nonnegative KL divergence. Process reward models or environment feedback may add other intermediate rewards.</p>
+
+<h2 id="s11"><span class="num">11.</span>The training loop in implementation order</h2>
+<p>This compact skeleton puts the core quantities in execution order. Production code typically handles response masks and may also use advantage normalization, value clipping, entropy terms, and separate actor/critic optimizers. In the combined-loss skeleton below, <code>value_coef</code> weights the value loss relative to the policy loss:</p>
+<pre><code><span class="cmt"># 1. Freeze a behavior snapshot and collect complete responses.</span>
+old_policy = snapshot(policy)
+x, y, old_logprob, old_value, reward, terminated = rollout(old_policy, critic)
+
+<span class="cmt"># 2. Post-rollout: reverse scan through valid response tokens.</span>
+delta[t] = reward[t] + gamma * (1-terminated[t]) * old_value[t + 1] - old_value[t]
+adv[t]   = delta[t] + gamma * gae_lambda * (1-terminated[t]) * adv[t + 1]
+target[t] = adv[t] + old_value[t]
+
+<span class="cmt"># 3. Reuse this fixed batch for the configured minibatch updates.</span>
+ratio = exp(policy.logprob(x, y) - old_logprob)
+policy_objective = min(ratio * stopgrad(adv),
+                       clip(ratio, 1-eps, 1+eps) * stopgrad(adv))
+value_loss = (critic.value(x) - stopgrad(target)) ** 2
+
+minimize(-mean(policy_objective) + value_coef * mean(value_loss))</code></pre>
+<p>The policy and critic may be separate language models, or they may share a transformer trunk with a token-logit head and a scalar value head. Detaching targets prevents gradients through target construction. If the heads share a trunk, however, both losses still update those shared parameters unless the implementation explicitly routes or blocks one gradient.</p>
+<div class="callout note"><span class="label">The denominator must match the sampler</span>
+  <p>\(\pi_{\mathrm{old}}\) must be the behavior distribution that actually sampled \(y_t\). Temperature, top-\(p\), top-\(k\), or rejection rules can change that distribution. A trainer must either store probabilities under the transformed sampler or apply the corresponding masking/correction; unmodified model log-probabilities are not automatically the exact importance ratio after sampling filters.</p>
+</div>
+<p>After the configured minibatch updates, discard the rollout buffer, refresh \(\pi_{\mathrm{old}}\) from the updated policy, and collect new on-policy data. In asynchronous systems, policy staleness makes this synchronization boundary especially important.</p>
+
+<h2 id="s12"><span class="num">12.</span>What modern run settings look like</h2>
+<p>There is no single “modern PPO configuration.” Sequence length, reward density, model size, rollout parallelism, and critic quality change the useful settings. These are named examples, not defaults to copy blindly:</p>
+<div class="wrapscroll"><table class="ptable">
+  <thead><tr><th>Setting</th><th>NeMo RL guide</th><th>OpenRLHF example</th><th>CompactionRL</th></tr></thead>
+  <tbody>
+    <tr><td>discount \(\gamma\)</td><td>1.0</td><td>1.0 default</td><td>not specified in the cited training details</td></tr>
+    <tr><td>GAE \(\lambda\)</td><td>0.95</td><td>1.0 default</td><td>\(1-1/(1.5\,l)\), \(l\) = response length</td></tr>
+    <tr><td>PPO epochs / updates</td><td>4 epochs</td><td>1 epoch default; configurable</td><td>2 value updates per policy update</td></tr>
+    <tr><td>actor learning rate</td><td>separate policy config</td><td>\(5\times10^{-7}\)</td><td>\(2\times10^{-6}\)</td></tr>
+    <tr><td>critic learning rate</td><td>\(2\times10^{-6}\) example</td><td>\(9\times10^{-6}\)</td><td>\(3\times10^{-6}\)</td></tr>
+    <tr><td>batching</td><td>32 prompts × 16 generations example</td><td>1024 rollout / 128 train</td><td>global batch 128, group size 1</td></tr>
+    <tr><td>critic warmup</td><td>supported; 0 steps in full example</td><td>supported; disabled by default</td><td>50 value-pretraining steps</td></tr>
+  </tbody>
+</table></div>
+<p>The OpenRLHF learning rates and batch sizes above are overrides from its published Llama-3 PPO example script, not library defaults. CompactionRL's value-to-policy entry is an update ratio, not a number of PPO epochs.</p>
+<p>Three patterns are more transferable than the numbers:</p>
+<ol>
+  <li><strong>The critic often needs extra care.</strong> It may use a higher learning rate, warmup, extra updates, value clipping, or a separate \(\lambda\) for return targets.</li>
+  <li><strong>Outcome-based LLM tasks often set \(\gamma=1\).</strong> When correctness is the only terminal reward, \(\gamma=1\) avoids implicitly discounting correct outcomes that arrive after more tokens; length costs can be added explicitly.</li>
+  <li><strong>Normalize and monitor.</strong> Advantage whitening stabilizes gradient scale. Useful diagnostics include reward, reference KL, approximate old/new KL, clip fraction, value loss, value explained variance, response length, and entropy.</li>
+</ol>
+<div class="callout note"><span class="label">Why critic quality matters in long-reasoning PPO</span>
+  <p>With long sparse-reward trajectories, most token targets are built far from the final observation. Smaller \(\lambda\) relies more heavily on intermediate value predictions; larger \(\lambda\) propagates sampled outcome noise farther. Critic pretraining and decoupled policy/value GAE are practical responses to this tension—not changes to PPO's basic logic.</p>
+</div>
+
+<h2 id="s13"><span class="num">13.</span>Limits, alternatives, and the compact mental model</h2>
+<ol>
+  <li><strong>The critic is expensive.</strong> A separate value model can approach the policy's memory and compute footprint. Group Relative Policy Optimization (GRPO), REINFORCE Leave-One-Out (RLOO), and REINFORCE++ avoid a learned critic, using group or leave-one-out baselines, or globally normalized sampled returns, instead.</li>
+  <li><strong>GAE assigns statistical credit, not causal proof.</strong> An earlier sampled token can receive signal from downstream residuals, even though the rollout does not reveal the counterfactual outcome of choosing another token.</li>
+  <li><strong>Clipping is a heuristic trust-region proxy.</strong> It improves stability but does not impose a hard KL constraint or prevent every destructive update.</li>
+  <li><strong>The objective is only as good as the reward.</strong> Reward-model errors, verifier loopholes, and overly strong KL or length shaping can produce the wrong behavior efficiently.</li>
+  <li><strong>Stale rollouts increase off-policy mismatch.</strong> Too many epochs or asynchronous lag can produce extreme ratios and push training away from the near-on-policy regime PPO expects.</li>
+</ol>
+<div class="callout"><p style="margin:0"><strong>PPO in three steps:</strong> (1) sample and score a complete response; (2) compute detached per-token advantages and critic targets from rewards and stored values; (3) fit the critic and update token probabilities with a clipped old/new policy ratio.</p></div>
+
+<h3>References</h3>
+<ul>
+  <li>Schulman et al., <a href="https://arxiv.org/abs/1707.06347"><em>Proximal Policy Optimization Algorithms</em></a> (2017) — clipped surrogate objective.</li>
+  <li>Schulman et al., <a href="https://arxiv.org/abs/1506.02438"><em>High-Dimensional Continuous Control Using Generalized Advantage Estimation</em></a> (2015) — TD residuals and GAE.</li>
+  <li>Ouyang et al., <a href="https://arxiv.org/abs/2203.02155"><em>Training Language Models to Follow Instructions with Human Feedback</em></a> (2022) — InstructGPT's PPO + reference-KL setup.</li>
+  <li>NVIDIA, <a href="https://docs.nvidia.com/nemo/rl/nightly/guides/ppo.html"><em>An In-Depth Walkthrough of PPO in NeMo RL</em></a> — current LLM PPO implementation and configuration.</li>
+  <li>OpenRLHF, <a href="https://github.com/OpenRLHF/OpenRLHF/blob/main/openrlhf/cli/train_ppo_ray.py"><code>train_ppo_ray.py</code></a> — current open-source PPO arguments and defaults.</li>
+  <li>Li et al., <a href="https://arxiv.org/abs/2607.05378"><em>CompactionRL</em></a> (2026) — long-horizon PPO with value pretraining and length-adaptive GAE.</li>
+  <li>Huang et al., <a href="https://iclr-blogposts.github.io/2024/blog/the-n-implementation-details-of-rlhf-with-ppo/"><em>The N Implementation Details of RLHF with PPO</em></a> — value clipping, whitening, and reproducibility details.</li>
+  <li>OpenAI, <a href="https://spinningup.openai.com/en/latest/algorithms/ppo.html"><em>Spinning Up: PPO</em></a> — concise treatment of the piecewise clipping behavior.</li>
+</ul>
+
+<h3>How to cite this post</h3>
+<pre><code>Dong, S. (2026). Understanding PPO for Language Models.
+https://simondong1.github.io/ppo.html</code></pre>
+<pre><code>@misc{dong2026understandingppo,
+  author = {Dong, Simon},
+  title  = {Understanding PPO for Language Models},
+  year   = {2026},
+  month  = {July},
+  url    = {https://simondong1.github.io/ppo.html},
+  note   = {Technical blog post, RL for LLMs series, Part 1}
+}</code></pre>
+</main>
+
+<footer><div class="wrap"><p>Written by <a href="https://x.com/dongsixiang"><strong>Simon Dong</strong></a> · July 2026 · RL for LLMs, Part 1.</p><p><a href="/">&larr; Back to blog</a></p></div></footer>
+
+<script>
+(function(){
+  var rolloutCases = {
+    correct: {
+      labels:["Subtract 3","2x = 8","Divide by 2","x = 4"],
+      rewards:[0,0,0,1],
+      values:[0.20,0.35,0.55,0.80]
+    },
+    wrong: {
+      labels:["Subtract 3","2x = 7","Divide by 2","x = 3.5"],
+      rewards:[0,0,0,0],
+      values:[0.60,0.48,0.28,0.10]
+    }
+  };
+  function fixed(n){ return (Math.abs(n)<0.0005?0:n).toFixed(3); }
+  function buildGae(){
+    var data=rolloutCases[document.getElementById("rolloutCase").value];
+    var gamma=parseFloat(document.getElementById("gammaInput").value);
+    var lambda=parseFloat(document.getElementById("lambdaInput").value);
+    document.getElementById("gammaValue").textContent=gamma.toFixed(2);
+    document.getElementById("lambdaValue").textContent=lambda.toFixed(2);
+    var n=data.values.length, deltas=new Array(n), advantages=new Array(n), nextAdv=0;
+    for(var t=n-1;t>=0;t--){
+      var nextValue=t===n-1?0:data.values[t+1];
+      deltas[t]=data.rewards[t]+gamma*nextValue-data.values[t];
+      advantages[t]=deltas[t]+gamma*lambda*nextAdv;
+      nextAdv=advantages[t];
+    }
+    var html="";
+    for(var i=0;i<n;i++){
+      var nv=i===n-1?0:data.values[i+1];
+      html+="<tr><td>"+(i+1)+"</td><td>"+data.labels[i]+"</td><td>"+fixed(data.rewards[i])+"</td><td>"+fixed(data.values[i])+"</td><td>"+fixed(nv)+"</td><td>"+fixed(deltas[i])+"</td><td>"+fixed(advantages[i])+"</td><td>"+fixed(advantages[i]+data.values[i])+"</td></tr>";
+    }
+    document.getElementById("gaeRows").innerHTML=html;
+    var factor=gamma*lambda, bars="";
+    for(var ell=0;ell<4;ell++){
+      var weight=Math.pow(factor,ell);
+      bars+='<div class="decay-row"><span class="decay-label">ℓ='+ell+'</span><span class="decay-track"><span class="decay-fill" style="display:block;width:'+(100*weight).toFixed(2)+'%"></span></span><span class="decay-val">'+fixed(weight)+'</span></div>';
+    }
+    document.getElementById("decayBars").innerHTML=bars;
+    document.getElementById("gaeReadout").innerHTML="Here <b>γλ = "+factor.toFixed(3)+"</b>. A residual three positions later enters the current advantage with weight <b>"+Math.pow(factor,3).toFixed(3)+"</b>. The first token's advantage is <b>"+fixed(advantages[0])+"</b> for this sampled rollout.";
+  }
+  ["rolloutCase","gammaInput","lambdaInput"].forEach(function(id){
+    document.getElementById(id).addEventListener(id==="rolloutCase"?"change":"input",buildGae);
+  });
+
+  function sx(r){ return 40+(r-0.4)/1.2*360; }
+  function sy(v){ return 210-(v+1.6)/3.2*190; }
+  function pathFor(fn){
+    var out="";
+    for(var i=0;i<=120;i++){var r=0.4+i/100;out+=(i?"L":"M")+sx(r).toFixed(2)+","+sy(fn(r)).toFixed(2);}
+    return out;
+  }
+  function buildClip(){
+    var positive=document.getElementById("advantageCase").value==="positive";
+    var advantage=positive?1:-1;
+    var ratio=parseFloat(document.getElementById("ratioInput").value);
+    var eps=parseFloat(document.getElementById("epsilonInput").value);
+    var low=1-eps, high=1+eps;
+    function clamp(r){return Math.max(low,Math.min(high,r));}
+    function raw(r){return r*advantage;}
+    function selected(r){return Math.min(raw(r),clamp(r)*advantage);}
+    document.getElementById("ratioValue").textContent=ratio.toFixed(2);
+    document.getElementById("epsilonValue").textContent=eps.toFixed(2);
+    document.getElementById("rawPath").setAttribute("d",pathFor(raw));
+    document.getElementById("selectedPath").setAttribute("d",pathFor(selected));
+    document.getElementById("clipDot").setAttribute("cx",sx(ratio));
+    document.getElementById("clipDot").setAttribute("cy",sy(selected(ratio)));
+    document.getElementById("lowBound").setAttribute("x1",sx(low));document.getElementById("lowBound").setAttribute("x2",sx(low));
+    document.getElementById("highBound").setAttribute("x1",sx(high));document.getElementById("highBound").setAttribute("x2",sx(high));
+    document.getElementById("clipBand").setAttribute("x",sx(low));document.getElementById("clipBand").setAttribute("width",sx(high)-sx(low));
+    document.getElementById("lowLabel").setAttribute("x",sx(low)-12);document.getElementById("highLabel").setAttribute("x",sx(high)-12);
+    document.getElementById("rawMetric").textContent=fixed(raw(ratio));
+    document.getElementById("clippedRatioMetric").textContent=fixed(clamp(ratio));
+    document.getElementById("selectedMetric").textContent=fixed(selected(ratio));
+    var boundary=(positive&&Math.abs(ratio-high)<1e-9)||(!positive&&Math.abs(ratio-low)<1e-9);
+    var flat=(positive&&ratio>high)||(!positive&&ratio<low);
+    document.getElementById("gradientMetric").textContent=boundary?"boundary":(flat?"flat":"active");
+    var text;
+    if(boundary){
+      text="The ratio is exactly on the clip kink. Moving farther in the beneficial direction enters the flat branch; moving inward returns to the active branch.";
+    }else if(positive){
+      text=flat?"The sampled token has positive advantage, but ρ is above 1+ε. This objective term gains nothing further from increasing that token's probability.":"The sampled token has positive advantage and has not crossed 1+ε, so increasing its probability still improves this term.";
+    }else{
+      text=flat?"The sampled token has negative advantage, but ρ is below 1−ε. This objective term gains nothing further from decreasing that token's probability.":"The sampled token has negative advantage and has not crossed below 1−ε, so decreasing its probability still improves this term.";
+    }
+    document.getElementById("clipReadout").textContent=text;
+  }
+  ["advantageCase","ratioInput","epsilonInput"].forEach(function(id){
+    document.getElementById(id).addEventListener(id==="advantageCase"?"change":"input",buildClip);
+  });
+  buildGae();buildClip();
+
+  var links=Array.prototype.slice.call(document.querySelectorAll("nav.toc a")),byId={};
+  links.forEach(function(a){byId[a.getAttribute("href").slice(1)]=a;});
+  var heads=Array.prototype.slice.call(document.querySelectorAll("main h2[id]"));
+  if("IntersectionObserver" in window&&heads.length){
+    var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove("active");});if(byId[e.target.id])byId[e.target.id].classList.add("active");}});},{rootMargin:"-12% 0px -78% 0px",threshold:0});
+    heads.forEach(function(h){obs.observe(h);});
+  }
+})();
+</script>
+</body>
+</html>

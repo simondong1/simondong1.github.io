@@ -4,25 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simon Dong — Blog</title>
-  <meta name="description" content="Technical notes on LLM internals: Multi-head Latent Attention (MLA), Grouped-Query Attention (GQA), and Rotary Position Embeddings (RoPE). By Simon Dong, MLE @ Roblox.">
+  <meta name="description" content="Visual technical notes on reinforcement learning for language models and LLM internals, including PPO, MLA, GQA, and RoPE. By Simon Dong, MLE @ Roblox.">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="author" content="Simon Dong">
   <link rel="canonical" href="https://simondong1.github.io/">
   <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml">
   <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt">
   <meta property="og:title" content="Simon Dong — Blog">
-  <meta property="og:description" content="Technical notes on LLM internals: MLA, GQA, and RoPE.">
+  <meta property="og:description" content="Visual technical notes on PPO, MLA, GQA, RoPE, and modern language-model systems.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://simondong1.github.io/">
   <meta property="og:site_name" content="Simon Dong">
-  <meta property="og:image" content="https://simondong1.github.io/assets/mla-og.png">
+  <meta property="og:image" content="https://simondong1.github.io/assets/ppo-og.png?v=1">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Simon Dong — Blog">
-  <meta name="twitter:description" content="Technical notes on LLM internals: MLA, GQA, and RoPE.">
-  <meta name="twitter:image" content="https://simondong1.github.io/assets/mla-og.png">
+  <meta name="twitter:description" content="Visual technical notes on PPO, MLA, GQA, RoPE, and modern language-model systems.">
+  <meta name="twitter:image" content="https://simondong1.github.io/assets/ppo-og.png?v=1">
   <meta name="twitter:creator" content="@dongsixiang">
   <script type="application/ld+json">
   {
@@ -53,6 +53,12 @@
         "name": "Simon Dong Blog",
         "author": { "@id": "https://simondong1.github.io/#person" },
         "blogPost": [
+          {
+            "@type": "BlogPosting",
+            "headline": "Understanding PPO for Language Models",
+            "url": "https://simondong1.github.io/ppo.html",
+            "datePublished": "2026-07-10"
+          },
           {
             "@type": "BlogPosting",
             "headline": "Understanding MLA Decoding (Materialize vs Absorb)",
@@ -116,6 +122,11 @@
     </nav>
 
     <h2 class="section-title">Blog</h2>
+    <a class="post" href="https://simondong1.github.io/ppo.html">
+      <p class="meta">July 2026 · RL for LLMs · Part 1</p>
+      <h2>Understanding PPO for Language Models</h2>
+      <p>How a completed rollout becomes per-token critic targets and clipped policy updates, with interactive GAE and clipping explorers.</p>
+    </a>
     <a class="post" href="https://simondong1.github.io/mla-decoding.html">
       <p class="meta">July 2026 · Attention Variants · MLA Part 2</p>
       <h2>Understanding MLA Decoding (Materialize vs Absorb)</h2>

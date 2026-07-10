@@ -7,6 +7,7 @@ This file helps AI systems find the canonical posts on this site.
 
 ## Blog posts
 
+- [Understanding PPO for Language Models](https://simondong1.github.io/ppo.html): How a completed rollout becomes per-token critic targets and clipped policy updates, with interactive GAE and clipping explorers.
 - [Understanding MLA Decoding (Materialize vs Absorb)](https://simondong1.github.io/mla-decoding.html): Materialize rebuilds every cached key/value; absorb folds projections into the query. Interactive charts for DeepSeek-V3, Kimi K2.5, and GLM-5.2.
 - [Understanding MLA (Multi-head Latent Attention)](https://simondong1.github.io/mla.html): One shared latent replaces full K/V; position rides beside it as a tiny rope key. Architecture behind DeepSeek-V3, Kimi K2.5, and GLM-5.2.
 - [Understanding GQA (Grouped-Query Attention)](https://simondong1.github.io/gqa.html): The query-to-KV head mapping that shrinks the KV cache of modern LLMs, and where GQA stands among 2026 attention variants.

@@ -7,6 +7,13 @@
     <language>en-us</language>
     <atom:link href="https://simondong1.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Understanding PPO for Language Models</title>
+      <link>https://simondong1.github.io/ppo.html</link>
+      <guid isPermaLink="true">https://simondong1.github.io/ppo.html</guid>
+      <pubDate>Fri, 10 Jul 2026 00:00:00 +0000</pubDate>
+      <description>How a completed language-model rollout becomes per-token critic targets and clipped policy updates, with interactive GAE and clipping explorers.</description>
+    </item>
+    <item>
       <title>Understanding MLA Decoding (Materialize vs Absorb)</title>
       <link>https://simondong1.github.io/mla-decoding.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/mla-decoding.html</guid>
