@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)</title>
+<meta name="description" content="An intuition-first, source-level guide from linear attention and DeltaNet to Gated DeltaNet, Kimi Delta Attention, Kimi K3's Triton decode kernel, and its hybrid MLA cache." />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<link rel="canonical" href="https://simondong1.github.io/linear-attention.html" />
+<link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
+<link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
+<meta property="og:title" content="Linear Attention, From Scratch to Kimi 3" />
+<meta property="og:description" content="Build linear attention from a 2x2 memory, fix it with the delta rule, add KDA's channel-wise forgetting, then read the Kimi K3 implementation." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/linear-attention.html" />
+<meta property="og:site_name" content="Simon Dong" />
+<meta property="og:locale" content="en_US" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:site" content="@dongsixiang" />
+<meta name="twitter:creator" content="@dongsixiang" />
+<meta name="twitter:title" content="Linear Attention, From Scratch to Kimi 3" />
+<meta name="twitter:description" content="Linear attention, DeltaNet, Gated DeltaNet, KDA, the Triton kernel, and Kimi K3's MLA hybrid — one continuous walkthrough." />
+<meta name="author" content="Simon Dong" />
+<meta name="citation_title" content="Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)" />
+<meta name="citation_author" content="Dong, Simon" />
+<meta name="citation_publication_date" content="2026/08/10" />
+<meta name="citation_fulltext_html_url" content="https://simondong1.github.io/linear-attention.html" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)","description":"An intuition-first and source-level guide from linear attention and DeltaNet to Kimi Delta Attention and Kimi K3's hybrid attention architecture.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-08-10","dateModified":"2026-08-10","mainEntityOfPage":"https://simondong1.github.io/linear-attention.html","keywords":["linear attention","Kimi K3","Kimi Delta Attention","KDA","DeltaNet","Gated DeltaNet","MLA","KV cache","Triton"]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"]]},svg:{fontCache:"global"}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root{
+    --bg:#fbfbfa;--surface:#fff;--ink:#1f2328;--ink-soft:#475059;--muted:#8b949e;
+    --line:#e8e8e6;--accent:#4f46e5;--accent-soft:#eef0fe;--warm:#e5484d;
+    --warm-soft:#fdecec;--cool:#0ea5e9;--cool-soft:#e7f6fe;--green:#15803d;
+    --green-soft:#edf8ef;--amber:#b45309;--amber-soft:#fff7e6;
+    --code-bg:#0d1117;--code-ink:#e6edf3;--code-dim:#8b949e;--maxw:48rem
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:1.05rem;line-height:1.7;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+  header.hero{padding:6rem 0 2.9rem;border-bottom:1px solid var(--line);margin-bottom:3.4rem}
+  .eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:650;margin:0 0 1.1rem}
+  h1.title{font-weight:800;font-size:clamp(2.45rem,5.8vw,4.15rem);line-height:1.06;letter-spacing:-.035em;margin:0 0 1rem}
+  .title-expansion{display:block;margin-top:.42rem;font-size:clamp(1.2rem,2.5vw,1.7rem);line-height:1.2;color:var(--ink-soft);font-weight:650}
+  .subtitle{font-size:1.22rem;color:var(--ink-soft);margin:0 0 1.9rem;line-height:1.55;max-width:44rem}
+  .byline{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-size:.9rem;color:var(--muted)}
+  .byline .who{color:var(--ink);font-weight:600}.byline .dot{color:var(--line)}
+  h2{font-weight:700;font-size:1.72rem;letter-spacing:-.02em;line-height:1.2;margin:3.6rem 0 1rem;scroll-margin-top:1.5rem}
+  h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}
+  h3{font-weight:650;font-size:1.18rem;margin:2.25rem 0 .65rem;scroll-margin-top:1.5rem}
+  h4{font-size:1rem;margin:1.3rem 0 .45rem}
+  p{margin:1.05rem 0}.lede{font-size:1.22rem;line-height:1.62;letter-spacing:-.01em;margin:0 0 1.8rem}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}a:hover{border-color:var(--accent)}
+  strong{font-weight:650}em{font-style:italic}
+  ul,ol{margin:1.1rem 0;padding-left:1.3rem}li{margin:.45rem 0}
+  code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em;background:#f0f1f4;color:#c72568;padding:.12em .4em;border-radius:5px;border:1px solid #e7e8ec}
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:1.2rem 1.35rem;margin:1.45rem 0;overflow-x:auto;font-size:.82rem;line-height:1.62;box-shadow:0 10px 30px -18px rgba(13,17,23,.55);border:1px solid #1c2230}
+  pre code{background:none;border:none;color:inherit;padding:0;font-size:.95rem;font-family:"JetBrains Mono",ui-monospace,monospace}
+  pre .dim{color:var(--code-dim)}pre .hi{color:#a5d6ff}pre .gate{color:#ffa657}pre .state{color:#7ee787}
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:1.08rem 1.28rem;margin:1.8rem 0;font-size:1rem;line-height:1.62}
+  .callout.note{border-left-color:var(--cool)}.callout.warn{border-left-color:#f59e0b}.callout.green{border-left-color:var(--green)}
+  .callout .label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);display:block;margin-bottom:.35rem}
+  .callout.note .label{color:var(--cool)}.callout.warn .label{color:#d97706}.callout.green .label{color:var(--green)}.callout p{margin:.4rem 0}
+  nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.5rem;margin:0 0 2rem}
+  nav.toc .toc-title{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.8rem}
+  nav.toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2rem;font-size:.93rem}
+  nav.toc li{margin:.3rem 0;break-inside:avoid}nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.16rem .5rem;border-radius:6px;line-height:1.4}
+  nav.toc a:hover,nav.toc a.active{color:var(--accent);background:var(--accent-soft)}nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}
+  @media(min-width:1320px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 48rem)/2 - 16.2rem);width:14.2rem;max-height:calc(100vh - 7rem);overflow-y:auto;background:none;border:none;border-radius:0;padding:0;margin:0}nav.toc ol{columns:1;font-size:.81rem}}
+  .wrapscroll{overflow-x:auto}
+  table.ptable{width:100%;border-collapse:collapse;margin:1.35rem 0;font-size:.9rem}
+  table.ptable th,table.ptable td{text-align:left;padding:.62rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+  table.ptable th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+  table.ptable td:first-child{font-weight:600}
+  .pipe{border:1px solid var(--line);border-radius:14px;padding:1.1rem 1rem;background:#fff;margin:1.55rem 0}
+  .node{border-radius:9px;padding:.55rem .62rem;font-family:"JetBrains Mono",monospace;font-size:.75rem;text-align:center;margin:.38rem auto;border:1px solid #e7e8ec;background:#f6f7f9;line-height:1.42;max-width:31rem}
+  .node.warm{background:var(--warm-soft);border-color:#f3c0c2;color:#a32a2e}.node.cool{background:var(--cool-soft);border-color:#bfe6f7;color:#0b6a8c}
+  .node.acc{background:var(--accent-soft);border-color:#dfe2fb;color:var(--accent)}.node.green{background:var(--green-soft);border-color:#cce8d2;color:#12652f}
+  .node b{font-weight:700}.adown{text-align:center;color:var(--muted);font-size:.9rem;margin:.08rem 0}
+  .split{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;max-width:42rem;margin:.45rem auto}
+  .split.two{grid-template-columns:repeat(2,1fr)}.split .node{width:100%;margin:0}
+  .mini-note{text-align:center;font-size:.8rem;color:var(--muted);margin:.45rem 0 0}
+  .eqcard{border:1px solid #dfe2fb;background:var(--accent-soft);border-radius:14px;padding:1rem 1.2rem;margin:1.55rem 0;text-align:center}
+  .eqcard .caption{font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700;margin-bottom:.45rem}
+  .eqcard p{margin:.45rem 0;color:var(--ink-soft);font-size:.94rem;text-align:left}
+  .example{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1.12rem 1.25rem;margin:1.5rem 0}
+  .example .ex-title{font-size:.74rem;text-transform:uppercase;letter-spacing:.1em;color:var(--green);font-weight:700;margin-bottom:.65rem}
+  .example p{margin:.62rem 0}.example .result{background:var(--green-soft);border:1px solid #cce8d2;border-radius:9px;padding:.65rem .8rem;margin-top:.8rem}
+  .lineage{display:grid;grid-template-columns:repeat(4,1fr);gap:.55rem;margin:1.5rem 0}
+  .lineage .item{border:1px solid var(--line);border-radius:12px;background:#fff;padding:.82rem .65rem;text-align:center;position:relative}
+  .lineage .item:not(:last-child):after{content:"→";position:absolute;right:-.47rem;top:38%;color:var(--muted);z-index:2;font-weight:700}
+  .lineage .name{display:block;font-weight:700;font-size:.88rem}.lineage .change{display:block;color:var(--muted);font-size:.74rem;line-height:1.35;margin-top:.35rem}
+  .dims{display:flex;flex-wrap:wrap;gap:.42rem;margin:1rem 0}
+  .dimchip{display:inline-flex;align-items:center;gap:.35rem;font-family:"JetBrains Mono",monospace;font-size:.78rem;background:#f6f7f9;border:1px solid #e7e8ec;border-radius:6px;padding:.18rem .5rem;color:var(--ink-soft)}
+  .dimchip b{color:var(--ink);font-weight:700}
+  .step{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1.12rem 1.24rem;margin:1.35rem 0}
+  .step .stitle{display:flex;align-items:baseline;gap:.6rem;margin:0 0 .55rem;flex-wrap:wrap}
+  .step .sn{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:.15rem .45rem}
+  .step .st{font-weight:650;font-size:1.02rem}.step .shape{font-family:"JetBrains Mono",monospace;font-size:.78rem;color:var(--ink-soft);background:#f6f7f9;border:1px solid #e7e8ec;border-radius:6px;padding:.12rem .45rem;margin-left:auto}
+  .step p{margin:.55rem 0 0;font-size:.98rem}.step .why{margin-top:.7rem;padding-top:.7rem;border-top:1px dashed var(--line);font-size:.92rem;color:var(--ink-soft)}
+  .cachebar{margin:1.4rem 0}.cachebar .row{display:grid;grid-template-columns:10rem 1fr;gap:.7rem;align-items:center;margin:.55rem 0}
+  .cachebar .name{font-size:.85rem;font-weight:600;color:var(--ink-soft);text-align:right}
+  .cachebar .track{background:#f0f1f4;border-radius:8px;overflow:hidden;height:2.15rem;border:1px solid var(--line);position:relative}
+  .cachebar .fill{height:100%;display:flex;align-items:center;padding-left:.65rem;color:#fff;font-size:.78rem;font-weight:650;white-space:nowrap;min-width:3px}
+  .cachebar .fill.full{background:var(--warm)}.cachebar .fill.hybrid{background:var(--accent)}.cachebar .fill.fixed{background:var(--green)}
+  .panel{border:1px solid var(--line);border-radius:14px;padding:1.15rem 1.25rem;margin:1.65rem 0;background:#fff;box-shadow:0 18px 42px -34px rgba(13,17,23,.35)}
+  .controls{display:flex;flex-wrap:wrap;gap:.8rem 1.2rem;align-items:center;margin-bottom:1rem;font-size:.9rem}
+  .controls label{font-weight:650;color:var(--ink-soft)}.controls select{font:inherit;margin-left:.45rem;padding:.35rem .5rem;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:.8rem 0 1rem}
+  .metric{border:1px solid var(--line);border-radius:11px;padding:.8rem .9rem}.metric span{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+  .metric b{display:block;font-size:1.45rem;line-height:1.2;margin-top:.25rem}.metric.full b{color:#a32a2e}.metric.hybrid b{color:var(--accent)}
+  .readout{font-size:.92rem;line-height:1.55;background:var(--accent-soft);border:1px solid #dfe2fb;border-radius:10px;padding:.7rem .9rem;margin-top:1rem}
+  mjx-container[display="true"]{margin:1.35rem 0 !important;overflow-x:auto;overflow-y:hidden}
+  footer{border-top:1px solid var(--line);margin-top:4rem;padding:2.5rem 0 4rem;font-size:.9rem;color:var(--muted)}footer a{color:var(--ink-soft)}
+  @media(max-width:760px){.lineage{grid-template-columns:1fr 1fr}.lineage .item:after{display:none}.split{grid-template-columns:1fr}.metrics{grid-template-columns:1fr}}
+  @media(max-width:640px){body{font-size:1.05rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.46rem}.cachebar .row{grid-template-columns:1fr}.cachebar .name{text-align:left}.step .shape{margin-left:0}.lineage{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <p class="eyebrow">Attention Variants · Source Walkthrough</p>
+  <h1 class="title">Linear Attention, From Scratch to Kimi 3 <span class="title-expansion">(Kimi Delta Attention)</span></h1>
+  <p class="subtitle">Start with a two-dimensional associative memory. Add error-correcting writes, adaptive forgetting, and KDA's channel-wise gate. Then follow the exact Kimi K3 dimensions through the attention module and Triton decode kernel.</p>
+  <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>August 2026</span><span class="dot">•</span><span>~28 min read</span></div>
+</div></header>
+
+<main class="wrap">
+<p class="lede"><strong>Kimi K3 does not replace every attention layer with one new trick.</strong> Its text backbone alternates a fixed-state recurrent memory, Kimi Delta Attention (KDA), with periodic full Multi-head Latent Attention (MLA). Understanding it means answering three separate questions: what the state stores, how one token edits it, and why a few layers still keep a token-growing cache.</p>
+
+<div class="callout note"><span class="label">Where this mechanism is used</span>
+<p><strong>KDA</strong> is the central linear-attention mechanism in <a href="https://github.com/MoonshotAI/Kimi-Linear">Kimi Linear</a> and <a href="https://huggingface.co/moonshotai/Kimi-K3">Kimi K3</a>. Its direct predecessor, <a href="https://arxiv.org/abs/2412.06464">Gated DeltaNet</a>, combines Mamba-2-style decay with DeltaNet's associative-memory update. The concrete reference throughout this post is Kimi K3's official Hugging Face code plus the production kernels in <a href="https://github.com/fla-org/flash-linear-attention">Flash Linear Attention (FLA)</a>.</p>
+</div>
+
+<nav class="toc"><div class="toc-title">Contents</div><ol>
+  <li><a href="#s1"><span class="n">1</span>Where KDA sits in K3</a></li>
+  <li><a href="#s2"><span class="n">2</span>Why ordinary attention caches tokens</a></li>
+  <li><a href="#s3"><span class="n">3</span>Linear attention as memory</a></li>
+  <li><a href="#s4"><span class="n">4</span>DeltaNet: correct the memory</a></li>
+  <li><a href="#s5"><span class="n">5</span>GDN to KDA: learn to forget</a></li>
+  <li><a href="#s6"><span class="n">6</span>One complete KDA update</a></li>
+  <li><a href="#s7"><span class="n">7</span>One K3 KDA layer</a></li>
+  <li><a href="#s8"><span class="n">8</span>The Triton decode kernel</a></li>
+  <li><a href="#s9"><span class="n">9</span>Prefill, chunks, and packed requests</a></li>
+  <li><a href="#s10"><span class="n">10</span>Why K3 still uses MLA</a></li>
+  <li><a href="#s11"><span class="n">11</span>Cache size: KDA vs MLA</a></li>
+  <li><a href="#s12"><span class="n">12</span>Source map and mental model</a></li>
+</ol></nav>
+
+<h2 id="s1"><span class="num">1.</span>Where KDA sits in Kimi K3</h2>
+<p>Kimi K3's text backbone has <strong>93 decoder layers</strong>. The configuration marks 69 as KDA layers and 24 as full MLA layers. The dominant rhythm is:</p>
+<div class="pipe">
+  <div class="split">
+    <div class="node green"><b>KDA</b><br/>fixed recurrent state</div>
+    <div class="node green"><b>KDA</b><br/>fixed recurrent state</div>
+    <div class="node green"><b>KDA</b><br/>fixed recurrent state</div>
+  </div>
+  <div class="adown">↓ every fourth layer</div>
+  <div class="node warm"><b>Full MLA</b><br/>global token-to-token attention</div>
+  <div class="mini-note">repeat 3:1 through most of the stack; the final layer is also full attention</div>
+</div>
+<p>These layers solve different problems. KDA compresses the past into a fixed matrix, so decode cost does not grow with context length. MLA can still look directly at every cached token, which helps exact long-context retrieval. K3 spends most layers on the cheap recurrent path and periodically restores full global interaction.</p>
+<div class="callout"><p style="margin:0"><strong>Keep the names separate:</strong> KDA is one attention mechanism. Kimi K3 is the larger hybrid architecture containing KDA, MLA, MoE blocks, and—in the multimodal model—a vision tower.</p></div>
+
+<h2 id="s2"><span class="num">2.</span>Why ordinary attention caches tokens</h2>
+<p>For one query \(q_t\), ordinary causal attention compares it with every earlier key and mixes the corresponding values:</p>
+\[
+o_t=\sum_{i\le t}
+\operatorname{softmax}_i\!\left(\frac{q_t^\top k_i}{\sqrt{d_k}}\right)v_i.
+\]
+<p>The useful feature is direct access: token \(t\) can assign a fresh weight to every earlier token. The cost is that decoding must preserve every earlier \(k_i\) and \(v_i\).</p>
+<div class="pipe">
+  <div class="node">new token produces &nbsp; q_t, k_t, v_t</div>
+  <div class="adown">↓ append</div>
+  <div class="node warm">KV cache: &nbsp; (k_1,v_1), (k_2,v_2), ... , (k_t,v_t)</div>
+  <div class="adown">↓ next query scans all cached tokens</div>
+  <div class="node">cache size and decode work grow with context length</div>
+</div>
+<p>Softmax prevents us from simply computing \(K^\top V\) once and reusing it: the normalization depends on the current query and all of its scores. Linear attention changes the interaction so the history can be summarized before the query arrives.</p>
+
+<h2 id="s3"><span class="num">3.</span>Linear attention as a fixed associative memory</h2>
+<p>Start with the smallest useful case. Keys and values are both two-dimensional. Store this first pair:</p>
+\[
+k_1=\begin{bmatrix}1\\0\end{bmatrix},
+\qquad
+v_1=\begin{bmatrix}3\\4\end{bmatrix}.
+\]
+<p>The outer product writes a matrix:</p>
+\[
+S_1=k_1v_1^\top
+=
+\begin{bmatrix}1\\0\end{bmatrix}
+\begin{bmatrix}3&4\end{bmatrix}
+=
+\begin{bmatrix}3&4\\0&0\end{bmatrix}.
+\]
+<p>Now store a second pair, \(k_2=[0,1]^\top\), \(v_2=[5,6]^\top\):</p>
+\[
+S_2=S_1+k_2v_2^\top
+=
+\begin{bmatrix}3&4\\5&6\end{bmatrix}.
+\]
+<div class="example">
+  <div class="ex-title">Read the memory</div>
+  <p>Ask with \(q=[0.25,0.75]^\top\). The output is:</p>
+  \[
+  S_2^\top q
+  =
+  0.25\begin{bmatrix}3\\4\end{bmatrix}
+  +
+  0.75\begin{bmatrix}5\\6\end{bmatrix}
+  =
+  \begin{bmatrix}4.5\\5.5\end{bmatrix}.
+  \]
+  <div class="result"><strong>The query mixes rows of the memory.</strong> Each row is a complete value-space vector associated with one key-space coordinate.</div>
+</div>
+<p>Now generalize. Let a key have width \(K\), a value have width \(V\), and use column vectors:</p>
+\[
+k_t,q_t\in\mathbb{R}^{K},
+\qquad v_t\in\mathbb{R}^{V},
+\qquad S_t\in\mathbb{R}^{K\times V}.
+\]
+<p>Causal linear attention is the recurrence:</p>
+<div class="eqcard">
+  <div class="caption">Add an association, then read it</div>
+  \[
+  S_t=S_{t-1}+k_tv_t^\top,
+  \qquad
+  o_t=S_t^\top q_t.
+  \]
+</div>
+<p>The state remains \(K\times V\) whether the sequence has 10 tokens or one million. That is the storage win.</p>
+<div class="callout warn"><span class="label">The most important shape correction</span>
+<p>\(S_t\) is <strong>not</strong> a token-by-token attention matrix. It has no sequence dimension. In K3, one head's state is \(128\times128\): key coordinates by value coordinates. The sequence has already been compressed into that matrix.</p>
+</div>
+<h3>What plain additive memory gets wrong</h3>
+<p>The same fixed state is also the bottleneck. Outer products from many tokens overlap. If a new token uses a key similar to an old key, it adds another value on top; it cannot deliberately replace the old association. Nothing is forgotten, so interference accumulates.</p>
+
+<h2 id="s4"><span class="num">4.</span>DeltaNet: write the error, not the whole value</h2>
+<p>Suppose the memory currently maps \(k=[1,0]^\top\) to \([3,4]^\top\), but a new token wants that same key to map to \([9,2]^\top\). Adding the whole new value would leave both associations superposed. DeltaNet first asks what the memory already returns:</p>
+\[
+\text{recalled value}=S_{t-1}^\top k_t.
+\]
+<p>Then it computes only what is missing:</p>
+\[
+\text{value error}=v_t-S_{t-1}^\top k_t.
+\]
+<div class="example">
+  <div class="ex-title">A half-strength correction</div>
+  <p>Old recall: \([3,4]\). New target: \([9,2]\). The error is \([6,-2]\).</p>
+  <p>With update strength \(\beta=0.5\), write half the error: \([3,-1]\). The new recall becomes:</p>
+  \[
+  [3,4]+[3,-1]=[6,3].
+  \]
+  <div class="result">The memory moves halfway from its old answer to the new target. It does not blindly add another full value.</div>
+</div>
+<p>The general delta-rule update is:</p>
+<div class="eqcard">
+  <div class="caption">DeltaNet</div>
+  \[
+  e_t=v_t-S_{t-1}^\top k_t,
+  \qquad
+  S_t=S_{t-1}+\beta_tk_te_t^\top.
+  \]
+</div>
+<p>Here \(\beta_t\in(0,1)\) is a learned update strength. If \(k_t\) is unit-normalized, then reading with the same key after the update interpolates toward the target:</p>
+\[
+S_t^\top k_t
+=(1-\beta_t)S_{t-1}^\top k_t+\beta_tv_t.
+\]
+<p>That is why the delta rule is naturally described as an online learning step: \(S\) is a fast-weight map, and each token trains it on one \(k_t\mapsto v_t\) example.</p>
+<div class="callout"><p style="margin:0"><strong>One crisp correction:</strong> DeltaNet does not “subtract the current value.” It subtracts the value already recalled from memory from the new target value, then writes the residual.</p></div>
+
+<h2 id="s5"><span class="num">5.</span>Gated DeltaNet to KDA: learn when each channel forgets</h2>
+<p>DeltaNet can surgically revise the current key direction, but it has no fast way to clear broadly stale context. Gated DeltaNet (GDN) adds one data-dependent retention scalar \(\alpha_t\) per head. KDA changes that scalar into a vector with one retention value per key dimension.</p>
+<div class="lineage">
+  <div class="item"><span class="name">Mamba-2</span><span class="change">adaptive scalar decay; additive state update in the SSD view</span></div>
+  <div class="item"><span class="name">DeltaNet</span><span class="change">targeted error-correcting write</span></div>
+  <div class="item"><span class="name">GDN</span><span class="change">delta write + one decay per head</span></div>
+  <div class="item"><span class="name">KDA</span><span class="change">delta write + one decay per key channel</span></div>
+</div>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Mechanism</th><th>Forget gate</th><th>Targeted delta correction?</th></tr></thead>
+<tbody>
+<tr><td>Mamba-2 / SSD view</td><td>one scalar per token and head</td><td>no</td></tr>
+<tr><td>DeltaNet</td><td>none</td><td>yes</td></tr>
+<tr><td>Gated DeltaNet</td><td>\(\alpha_t\in\mathbb{R}\) per token and head</td><td>yes</td></tr>
+<tr><td>KDA</td><td>\(\boldsymbol{\alpha}_t\in\mathbb{R}^{K}\) per token and head</td><td>yes</td></tr>
+</tbody></table></div>
+<h3>See the diagonal gate before the formula</h3>
+<p>Take a four-row state and four retention values:</p>
+\[
+S=
+\begin{bmatrix}
+1&2&3&4\\
+5&6&7&8\\
+9&10&11&12\\
+13&14&15&16
+\end{bmatrix},
+\qquad
+\boldsymbol{\alpha}=
+\begin{bmatrix}0.5\\0.9\\0.1\\1.0\end{bmatrix}.
+\]
+<p>KDA scales each whole row:</p>
+\[
+\operatorname{Diag}(\boldsymbol{\alpha})S
+=
+\begin{bmatrix}
+0.5&1&1.5&2\\
+4.5&5.4&6.3&7.2\\
+0.9&1&1.1&1.2\\
+13&14&15&16
+\end{bmatrix}.
+\]
+<p>The first key coordinate is halved, the third is nearly cleared, and the fourth is retained. Implementations do not construct a diagonal matrix; they broadcast the four retention values across the rows and multiply elementwise.</p>
+<div class="eqcard">
+  <div class="caption">GDN versus KDA</div>
+  \[
+  \text{GDN:}\quad
+  \bar S_t=\alpha_tS_{t-1}
+  \]
+  \[
+  \text{KDA:}\quad
+  \bar S_t=\operatorname{Diag}(\boldsymbol{\alpha}_t)S_{t-1}.
+  \]
+  <p>The subsequent delta update is the same kind of error-correcting write. The core algorithmic change from GDN is the granularity of this decay; making it train efficiently requires KDA's new chunkwise formulation.</p>
+</div>
+<h3>Why not one independent gate for every state element?</h3>
+<p>The most general recurrence could predict \(G_t\in(0,1)^{K\times V}\) and apply \(G_t\odot S_{t-1}\). The <a href="https://arxiv.org/abs/2312.06635">GLA paper</a> explicitly starts from this form. In practice, full gates are factorized as \(G_t=\alpha_t\otimes\gamma_t\), or reduced to KDA's key-side vector.</p>
+<p>An unconstrained K3 gate would grow from \(96\times128=12{,}288\) outputs per token to \(96\times128\times128=1{,}572{,}864\)—128 times larger. It would also give every value coordinate different temporal weights, preventing the value dimensions from sharing the same efficient chunkwise attention calculation. GLA reported only marginal gains from adding the second factor. Recent extensions such as <a href="https://arxiv.org/abs/2605.22791">Gated DeltaNet-2</a> instead add structured key-side erase and value-side write vectors while preserving the rank-one update.</p>
+
+<h2 id="s6"><span class="num">6.</span>One complete KDA update</h2>
+<p>We can now read the entire recurrence without hiding any operation. Assume \(q_t\) and \(k_t\) have already been normalized.</p>
+<div class="step">
+  <div class="stitle"><span class="sn">1</span><span class="st">Forget across key coordinates</span><span class="shape">[K,V] → [K,V]</span></div>
+  \[
+  \bar S_t=\operatorname{Diag}(\boldsymbol{\alpha}_t)S_{t-1}.
+  \]
+  <div class="why"><strong>This is broad forgetting.</strong> It affects all rows according to 128 learned channel decisions. It is predicted from the current token, but it is not restricted to the current key direction.</div>
+</div>
+<div class="step">
+  <div class="stitle"><span class="sn">2</span><span class="st">Read what the decayed memory currently says</span><span class="shape">[K,V]ᵀ × [K] → [V]</span></div>
+  \[
+  \hat v_t=\bar S_t^\top k_t.
+  \]
+</div>
+<div class="step">
+  <div class="stitle"><span class="sn">3</span><span class="st">Compute and scale the value error</span><span class="shape">[V]</span></div>
+  \[
+  e_t=v_t-\hat v_t,
+  \qquad
+  \tilde e_t=\beta_te_t.
+  \]
+  <div class="why"><strong>Kimi's \(\beta_t\) is one scalar per token and head.</strong> It is shared across all 128 key and value coordinates.</div>
+</div>
+<div class="step">
+  <div class="stitle"><span class="sn">4</span><span class="st">Write the correction along the current key</span><span class="shape">[K] × [V] → [K,V]</span></div>
+  \[
+  S_t=\bar S_t+k_t\tilde e_t^\top.
+  \]
+</div>
+<div class="step">
+  <div class="stitle"><span class="sn">5</span><span class="st">Read the updated state with the query</span><span class="shape">[K,V]ᵀ × [K] → [V]</span></div>
+  \[
+  o_t=S_t^\top q_t.
+  \]
+</div>
+<p>Combining Steps 1–4 gives the report's compact equation:</p>
+<div class="eqcard">
+  <div class="caption">Kimi Delta Attention</div>
+  \[
+  \boxed{
+  S_t=
+  \left(I-\beta_tk_tk_t^\top\right)
+  \operatorname{Diag}(\boldsymbol{\alpha}_t)S_{t-1}
+  +
+  \beta_tk_tv_t^\top
+  }
+  \]
+  \[
+  o_t=S_t^\top q_t.
+  \]
+</div>
+<p>The state transition is diagonal plus rank one:</p>
+\[
+\left(I-\beta_tk_tk_t^\top\right)\operatorname{Diag}(\boldsymbol{\alpha}_t)
+=
+\operatorname{Diag}(\boldsymbol{\alpha}_t)
+-
+\beta_tk_t(k_t\odot\boldsymbol{\alpha}_t)^\top.
+\]
+<p>This structure is the engineering key: KDA gains channel-wise forgetting without giving up the matrix operations needed by its specialized chunkwise training algorithm.</p>
+<h3>Exactly how K3 computes the forget values</h3>
+<p>K3 does not use the raw projected gate directly. For head \(h\) and key channel \(j\), let \(g_{t,h,j}\) be the token-dependent projection, \(b_{h,j}\) the learned channel bias, and \(A_{\log,h}\) one learned sensitivity scalar for the whole head. K3 computes:</p>
+\[
+\alpha_{t,h,j}
+=
+\exp\!\left[
+-5\,
+\sigma\!\left(
+e^{A_{\log,h}}
+\left(g_{t,h,j}+b_{h,j}\right)
+\right)
+\right].
+\]
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Quantity</th><th>Shape in K3</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td>raw \(g\)</td><td><code>[B,T,96,128]</code></td><td>dynamic signal from the current token</td></tr>
+<tr><td><code>dt_bias</code></td><td><code>[96,128]</code></td><td>static baseline / threshold per channel</td></tr>
+<tr><td>\(A_{\log}\)</td><td><code>[96]</code></td><td>positive head-level sensitivity through \(e^{A_{\log}}\)</td></tr>
+<tr><td>final \(\alpha\)</td><td><code>[B,T,96,128]</code></td><td>actual retention factor applied to the state</td></tr>
+</tbody></table></div>
+<p>The sigmoid \(\sigma(\cdot)\) maps into \((0,1)\). Multiplying by \(-5\) creates a log-retention in \((-5,0)\), and the outer exponential produces:</p>
+\[
+\alpha\in(e^{-5},1)\approx(0.0067,1).
+\]
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Sigmoid output</th><th>Log-retention</th><th>Actual retention</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td>near 0</td><td>near 0</td><td>near 1</td><td>retain</td></tr>
+<tr><td>0.5</td><td>-2.5</td><td>0.082</td><td>strong decay</td></tr>
+<tr><td>near 1</td><td>near -5</td><td>0.0067</td><td>almost erase</td></tr>
+</tbody></table></div>
+<div class="callout warn"><span class="label">KDA recurrence versus K3 gate parameterization</span>
+<p>The original Kimi Linear formulation uses
+\(\log\alpha=-e^{A_{\log}}\operatorname{softplus}(g+b)\), which has no fixed lower bound.
+Kimi K3 keeps the same KDA state recurrence but switches to the bounded
+\(-5\,\sigma(e^{A_{\log}}(g+b))\) “safe gate” above. The mechanism is KDA in both cases; the checkpoint-specific way of producing \(\alpha\) is different.</p>
+</div>
+<p>The update strength has a simpler path. K3 projects the hidden state to 96 raw values and applies sigmoid inside the kernel:</p>
+\[
+\tilde\beta_{t,h}=\operatorname{b\_proj}(x_t)_h,
+\qquad
+\beta_{t,h}=\sigma(\tilde\beta_{t,h}).
+\]
+
+<h2 id="s7"><span class="num">7.</span>One Kimi K3 KDA layer, end to end</h2>
+<p>Now follow the real tensors. K3's text hidden width is 7168. Every KDA layer uses 96 heads with key and value width 128.</p>
+<div class="dims">
+  <span class="dimchip">hidden <b>7168</b></span>
+  <span class="dimchip">heads <b>96</b></span>
+  <span class="dimchip">key width <b>128</b></span>
+  <span class="dimchip">value width <b>128</b></span>
+  <span class="dimchip">projected width <b>12,288</b></span>
+</div>
+<div class="pipe">
+  <div class="node">hidden states &nbsp; [B,T,7168]</div>
+  <div class="adown">↓ three independent linear projections</div>
+  <div class="split">
+    <div class="node cool">Q &nbsp; [B,T,12288]</div>
+    <div class="node cool">K &nbsp; [B,T,12288]</div>
+    <div class="node cool">V &nbsp; [B,T,12288]</div>
+  </div>
+  <div class="adown">↓ separate depthwise causal Conv1d, width 4, then SiLU</div>
+  <div class="node">channels: &nbsp; ch 0, ch 1, ... , ch 12287 &nbsp; (shape unchanged)</div>
+  <div class="adown">↓ reshape 12288 = 96 × 128</div>
+  <div class="split">
+    <div class="node acc">q &nbsp; [B,T,96,128]</div>
+    <div class="node acc">k &nbsp; [B,T,96,128]</div>
+    <div class="node acc">v &nbsp; [B,T,96,128]</div>
+  </div>
+  <div class="adown">↓ KDA recurrence + fixed state</div>
+  <div class="node green">o &nbsp; [B,T,96,128]</div>
+  <div class="adown">↓ per-head RMSNorm × sigmoid(output gate)</div>
+  <div class="node">join heads &nbsp; [B,T,12288] &nbsp; → output projection → &nbsp; [B,T,7168]</div>
+</div>
+<h3>The short convolution is temporal, not channel mixing</h3>
+<p>Each of the 12,288 channels owns its own four-tap filter. For channel \(c\):</p>
+\[
+y_{t,c}
+=
+\operatorname{SiLU}\!\left(
+w_{c,0}x_{t-3,c}
++w_{c,1}x_{t-2,c}
++w_{c,2}x_{t-1,c}
++w_{c,3}x_{t,c}
+\right).
+\]
+<p>There is no sum across other channels because the convolution uses <code>groups=12288</code>. Q, K, and V each have a separate convolution and a separate four-slot cache:</p>
+<pre><code>conv_state_q  [B, 12288, 4]
+conv_state_k  [B, 12288, 4]
+conv_state_v  [B, 12288, 4]</code></pre>
+<p>During decode, the one new projected token joins those cached values. These are <strong>pre-convolution recent activations</strong>, not past attention keys and values.</p>
+<h3>Q/K normalization and query scaling</h3>
+<p>Inside the KDA kernel, each head's Q and K vectors are L2-normalized. The query is additionally scaled by \(1/\sqrt{128}\):</p>
+\[
+k_t\leftarrow\frac{k_t}{\lVert k_t\rVert_2},
+\qquad
+q_t\leftarrow
+\frac{q_t}{\lVert q_t\rVert_2\sqrt{128}}.
+\]
+<p>Kimi does not pass an explicit scale from the attention module; FLA defaults to <code>k.shape[-1] ** -0.5</code>. The scaling keeps the state readout from growing with key width.</p>
+<h3>The output gate is not the forget gate</h3>
+<p>After KDA returns \(o=S^\top q\), K3 reuses the Python variable name <code>g</code> for a completely different gate. Because <code>use_full_rank_gate=true</code>, it projects directly from 7168 to 12,288 output logits:</p>
+\[
+g^{\text{out}}=\operatorname{Linear}_{7168\rightarrow12288}(x).
+\]
+<p>For every head and value channel:</p>
+\[
+o'_j
+=
+\frac{o_j}{\sqrt{\frac1{128}\sum_r o_r^2+\epsilon}}
+\;w_j\;
+\sigma(g^{\text{out}}_j).
+\]
+<p>The learned RMSNorm weight \(w\in\mathbb{R}^{128}\) is static and shared across tokens and heads; the sigmoid output gate is dynamic per token, head, and channel.</p>
+
+<h2 id="s8"><span class="num">8.</span>The Triton decode kernel, without pointer mysticism</h2>
+<p>Kimi chooses FLA's fused recurrent kernel when caching is enabled and the query length is one. For K3:</p>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Kernel quantity</th><th>K3 value</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td>\(K,V\)</td><td>128, 128</td><td>logical state is \(128\times128\) per head</td></tr>
+<tr><td><code>BK</code></td><td>128</td><td>one program covers every key coordinate</td></tr>
+<tr><td><code>BV</code></td><td>32</td><td>one program covers 32 value coordinates</td></tr>
+<tr><td>programs per head</td><td>4</td><td>\(128/32\) value tiles</td></tr>
+<tr><td>grid</td><td><code>4 × N × 96</code></td><td>value tile × sequence × head</td></tr>
+</tbody></table></div>
+<p>Kimi requests <code>state_v_first=True</code> (through the older alias <code>transpose_state_layout=True</code>). The logical state is still \(S\in\mathbb{R}^{K\times V}\), but memory stores \(S^\top\) as <code>[N,96,V,K]</code>. One program keeps this tile in fp32:</p>
+<pre><code>b_h  [BV, BK] = [32, 128]   <span class="dim"># tile of Sᵀ</span>
+b_q  [BK]     = [128]
+b_k  [BK]     = [128]
+b_v  [BV]     = [32]</code></pre>
+<h3>Four programs cover one head</h3>
+<pre><code>program 0: Sᵀ[value  0:32, key 0:128]
+program 1: Sᵀ[value 32:64, key 0:128]
+program 2: Sᵀ[value 64:96, key 0:128]
+program 3: Sᵀ[value 96:128,key 0:128]</code></pre>
+<p>No individual program loads the entire state. Together, the four programs cover the head's full \(128\times128\) matrix.</p>
+<h3>How <code>tl.load</code> knows its size</h3>
+<p>A Triton pointer expression can itself be a tensor of addresses. For the forget signal:</p>
+<pre><code>o_k = [0, 1, 2, ... , 127]                 <span class="dim"># shape [128]</span>
+p_g = base_address_for_this_token_and_head + o_k <span class="dim"># 128 addresses</span>
+b_g = tl.load(p_g)                          <span class="dim"># 128 loaded values</span></code></pre>
+<p>The pointer tensor's shape determines the load shape. The same idea makes the state pointer a <code>[32,128]</code> matrix of addresses. Masks such as <code>o_v &lt; V</code> disable addresses in a partial final tile; K3's \(V=128\) happens to divide evenly by 32.</p>
+<h3>The token loop is the recurrence</h3>
+<p>After loading the initial state tile, the kernel loops through tokens. Its core is only the five steps we derived:</p>
+<pre><code><span class="gate">b_h *= exp(log_retention)</span>                 <span class="dim"># forget</span>
+b_v -= sum(b_h * b_k[None, :], axis=1)   <span class="dim"># v - Sᵀk</span>
+b_v *= sigmoid(raw_beta)                 <span class="dim"># β error</span>
+<span class="state">b_h += b_v[:, None] * b_k[None, :]</span>     <span class="dim"># update Sᵀ</span>
+<span class="hi">b_o  = sum(b_h * b_q[None, :], axis=1)</span>   <span class="dim"># Sᵀq</span></code></pre>
+<p>Because <code>b_h</code> stores \(S^\top\), the outer-product update appears transposed: \((\beta e)k^\top\) rather than \(k(\beta e)^\top\). It is the same logical update.</p>
+<div class="callout note"><span class="label">What changes during these lines</span>
+<p><code>b_v</code> begins as the incoming value tile. After the subtraction it becomes the <strong>value-error tile</strong>. After multiplication by beta it becomes the scaled correction. Reusing the register avoids allocating three separate vectors.</p>
+</div>
+<h3>Output and final state are written, not returned by Triton</h3>
+<p>The Python wrapper preallocates:</p>
+<pre><code>out          [B,T,96,128]      <span class="dim"># same dtype as v</span>
+final_state  [N,96,128,128]    <span class="dim"># fp32, V-first</span></code></pre>
+<p>The kernel stores each 32-value output tile through <code>p_o</code> and each final state tile through <code>p_ht</code>. A Triton kernel has no Python return value; after the launch, the wrapper returns the tensors whose memory the kernel filled.</p>
+<div class="callout green"><span class="label">Decode path in one sentence</span>
+<p>Load one head's fixed memory in four value tiles, apply one token's forget–correct–read recurrence, write 128 output values, and cache the updated matrix for the next token.</p>
+</div>
+
+<h2 id="s9"><span class="num">9.</span>Prefill, chunks, and packed requests</h2>
+<p>Training, prefill, and decode use the <strong>same KDA recurrence</strong>. They differ in how it is scheduled.</p>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Situation</th><th>Kimi path</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>training</td><td><code>chunk_kda</code></td><td>has a backward pass and exposes large matrix multiplications</td></tr>
+<tr><td>prefill, many tokens</td><td><code>chunk_kda</code></td><td>parallel work within fixed-size chunks</td></tr>
+<tr><td>cached decode, one token</td><td><code>fused_recurrent_kda</code></td><td>one direct recurrent step with the cached state</td></tr>
+</tbody></table></div>
+<p>The attention module makes the decode choice with:</p>
+<pre><code>mode = "fused_recurrent" if use_cache and q_len == 1 else "chunk"</code></pre>
+<p>The fused kernel is capable of looping over multiple tokens, but Kimi normally sends prefill to the chunk implementation. Chunking compresses products of KDA's diagonal-plus-rank-one transitions into dense operations that tensor cores can execute efficiently.</p>
+<h3>What <code>cu_seqlens</code> means</h3>
+<p>Variable-length requests can be unpadded and concatenated into one packed token axis. The original batch dimension is then represented by boundary offsets.</p>
+<div class="example">
+  <div class="ex-title">Three requests with lengths 3, 5, and 2</div>
+  <pre><code>packed tokens: [request 0 ...][request 1 ........][request 2 ..]
+cu_seqlens:    [0, 3, 8, 10]</code></pre>
+  <p>Request 0 occupies packed positions <code>[0,3)</code>, request 1 occupies <code>[3,8)</code>, and request 2 occupies <code>[8,10)</code>.</p>
+</div>
+<p>This is not “decode mode,” and it is not kernel tile padding. It is simply the boundary map that prevents the short convolution and recurrent state from crossing from one packed request into the next.</p>
+
+<h2 id="s10"><span class="num">10.</span>Why Kimi K3 still uses MLA</h2>
+<p>KDA's fixed state is efficient precisely because it compresses history. Compression can lose exact token-level detail, especially when many similar associations compete. Every fourth layer, MLA restores full pairwise access to the cached sequence.</p>
+<div class="split two">
+  <div class="node green"><b>KDA</b><br/>fixed \(128\times128\) state per head<br/>constant decode memory per layer<br/>lossy associative compression</div>
+  <div class="node warm"><b>MLA</b><br/>one compressed cache entry per token<br/>global token-to-token lookup<br/>memory still grows with context</div>
+</div>
+<p>K3's MLA is DeepSeek-style in its low-rank projections:</p>
+<ul>
+  <li>96 query heads;</li>
+  <li>query low-rank width 1536;</li>
+  <li>shared KV latent width 512;</li>
+  <li>128 content-key channels and a 64-wide shared key branch;</li>
+  <li>value width 128 per head.</li>
+</ul>
+<p>But K3 sets <code>mla_use_nope=true</code>. The readable code retains variable names such as <code>q_rot</code> and <code>k_rot</code>, yet <code>rotary_emb=None</code>: no rotation is applied. The Kimi Linear report deliberately delegates position and recency to KDA, and notes that NoPE makes the MLA layers convertible to an efficient pure-MQA form during inference.</p>
+<p>MLA also has a full-rank output gate:</p>
+\[
+\text{MLA output}
+\leftarrow
+\text{MLA output}\odot
+\sigma(\operatorname{Linear}_{7168\rightarrow12288}(x)).
+\]
+<p>For a full walkthrough of the latent and the two decode factorizations, see <a href="mla.html">Understanding MLA</a> and <a href="mla-decoding.html">MLA Decoding: Materialize vs Absorb</a>.</p>
+
+<h2 id="s11"><span class="num">11.</span>Cache size: KDA versus MLA</h2>
+<p>There are two separate comparisons: one layer's cache representation, and the 93-layer hybrid as a whole.</p>
+<h3>One full-attention layer: expanded K/V versus MLA</h3>
+<p>With K3's dimensions, an expanded multi-head cache stores per token:</p>
+\[
+96(192\text{-wide key}+128\text{-wide value})
+=30{,}720\text{ values}.
+\]
+<p>The MLA projection creates a 512-wide KV latent plus a 64-wide shared key branch:</p>
+\[
+512+64=576\text{ values per token}.
+\]
+<div class="cachebar">
+  <div class="row"><div class="name">Expanded MHA-style K/V</div><div class="track"><div class="fill full" style="width:100%">30,720 values / token</div></div></div>
+  <div class="row"><div class="name">Compressed MLA entry</div><div class="track"><div class="fill hybrid" style="width:1.875%"></div><span style="position:relative;left:.55rem;top:-1.68rem;font-size:.78rem;font-weight:650;color:var(--accent)">576 values / token</span></div></div>
+</div>
+<p>That is about <strong>53× smaller</strong> than materialized K/V for one K3-sized full-attention layer.</p>
+<div class="callout note"><span class="label">Reference code versus production cache</span>
+<p>The official Hugging Face path reconstructs per-head keys and values and passes them to a generic cache, so that readable file does not realize the 576-wide cache. Optimized vLLM/SGLang-style MLA serving stores the compressed representation and changes the computation's factorization. Architecture and runtime implementation must not be conflated.</p>
+</div>
+<h3>One KDA layer: fixed state</h3>
+<p>One KDA recurrent state contains:</p>
+\[
+96\times128\times128=1{,}572{,}864
+\]
+<p>fp32 values, exactly <strong>6 MiB per request per layer</strong>. The three four-slot bf16 convolution caches add about 0.281 MiB. This does not change when the context grows.</p>
+<h3>The hybrid crossover</h3>
+<p>An all-MLA 93-layer comparison model has 93 token-growing caches. K3 has only 24; its other 69 layers carry fixed KDA and convolution state. Under the assumptions shown below, the fixed-state overhead is larger at very short contexts, then the hybrid crosses over near 5.7K tokens and approaches a 74% reduction.</p>
+<div class="panel">
+  <div class="controls">
+    <label>Context length
+      <select id="context-select">
+        <option value="4096">4,096</option>
+        <option value="8192" selected>8,192</option>
+        <option value="16384">16,384</option>
+        <option value="131072">131,072</option>
+        <option value="1048576">1,048,576</option>
+      </select>
+    </label>
+  </div>
+  <div class="metrics">
+    <div class="metric full"><span>93-layer all-MLA cache</span><b id="all-mla-size">—</b></div>
+    <div class="metric hybrid"><span>K3: 24 MLA + 69 KDA</span><b id="k3-size">—</b></div>
+  </div>
+  <div class="cachebar">
+    <div class="row"><div class="name">All MLA</div><div class="track"><div id="all-mla-bar" class="fill full" style="width:100%">100%</div></div></div>
+    <div class="row"><div class="name">K3 hybrid</div><div class="track"><div id="k3-bar" class="fill hybrid" style="width:50%"></div></div></div>
+  </div>
+  <div id="cache-readout" class="readout">—</div>
+</div>
+<div class="callout warn"><span class="label">What the calculator assumes</span>
+<p>One request; bf16 MLA entries of width 576; fp32 KDA recurrent state; bf16 four-slot Q/K/V convolution state; no allocator padding, cache quantization, speculative branches, or batch sharing. It compares cache mechanisms, not total model memory. Production kernels and cache formats can move the exact numbers.</p>
+</div>
+<p>At K3's maximum 1,048,576-token context, this simplified estimate gives roughly <strong>112.3 GB</strong> for 93 all-MLA layers versus <strong>29.4 GB</strong> for K3's hybrid cache. Almost all of the hybrid's long-context growth comes from its 24 MLA layers; the 69 KDA layers remain at about 0.45 GB combined per request.</p>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Layer type</th><th>Persistent decode memory</th><th>Grows with tokens?</th></tr></thead>
+<tbody>
+<tr><td>KDA</td><td><code>recurrent_state [B,96,128,128]</code> + three convolution states</td><td>no</td></tr>
+<tr><td>MLA</td><td>compressed KV representation in optimized serving</td><td>yes</td></tr>
+<tr><td>HF reference MLA</td><td><code>key_cache</code> + <code>value_cache</code> after reconstruction</td><td>yes—and larger than optimized MLA</td></tr>
+</tbody></table></div>
+
+<h2 id="s12"><span class="num">12.</span>Source map and final mental model</h2>
+<p>Kimi K3 ships its architecture as remote code in the model repository. The multimodal wrapper eventually hands text processing to <code>KimiLinearForCausalLM</code>. For source-first reading, use this order:</p>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Read</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td><a href="https://huggingface.co/moonshotai/Kimi-K3/blob/main/modeling_kimi_linear.py"><code>modeling_kimi_linear.py</code></a></td><td>K3's MLA, KDA layer, projections, caches, mode selection, and output gates</td></tr>
+<tr><td><a href="https://github.com/fla-org/flash-linear-attention/blob/main/fla/ops/kda/naive.py"><code>fla/ops/kda/naive.py</code></a></td><td>the recurrence in the most readable executable form</td></tr>
+<tr><td><a href="https://github.com/fla-org/flash-linear-attention/blob/main/fla/ops/kda/fused_recurrent.py"><code>fused_recurrent.py</code></a></td><td>decode kernel, state tiling, fp32 accumulation, and cache stores</td></tr>
+<tr><td><a href="https://github.com/fla-org/flash-linear-attention/blob/main/fla/ops/kda/chunk.py"><code>chunk.py</code></a></td><td>training/prefill autograd entry</td></tr>
+<tr><td><a href="https://github.com/fla-org/flash-linear-attention/blob/main/fla/modules/conv/short_conv.py"><code>short_conv.py</code></a></td><td>depthwise causal short convolution and its four-slot state</td></tr>
+<tr><td><a href="https://arxiv.org/abs/2510.26692">Kimi Linear report</a></td><td>derivation, DPLR chunk algorithm, ablations, hybrid design, and efficiency results</td></tr>
+</tbody></table></div>
+<h3>The misconceptions worth keeping cleared</h3>
+<div class="wrapscroll"><table class="ptable">
+<thead><tr><th>Tempting interpretation</th><th>Correct mental model</th></tr></thead>
+<tbody>
+<tr><td>\(S\) is a token attention matrix</td><td>\(S\) is a fixed \(K\times V\) associative map with no sequence axis</td></tr>
+<tr><td>KDA's rows “are values”</td><td>each row is one key-coordinate's complete contribution in value space</td></tr>
+<tr><td>the forget gate acts only along \(k_t\)</td><td>forgetting scales every key row; the delta correction is the operation targeted by \(k_t\)</td></tr>
+<tr><td>\(\beta\) is per channel in K3</td><td>\(\beta\) is one dynamic scalar per token and head; \(\alpha\) is per key channel</td></tr>
+<tr><td>short-conv state is a KV cache</td><td>it stores four recent pre-convolution projected values per Q/K/V channel</td></tr>
+<tr><td><code>tl.load(pointer)</code> always loads one scalar</td><td>a Triton pointer can be a tensor of addresses; its shape determines the load shape</td></tr>
+<tr><td>prefill and decode use different attention math</td><td>same recurrence, different schedules: chunk-parallel versus fused recurrent</td></tr>
+<tr><td>K3 has no growing cache</td><td>KDA layers are fixed-state; the 24 MLA layers still grow with context</td></tr>
+</tbody></table></div>
+<div class="eqcard">
+  <div class="caption">KDA in one continuous thought</div>
+  <p style="text-align:center;color:var(--ink)"><strong>Forget broadly by key channel. Read the old value at the current key. Write only the error. Read the updated memory with the query.</strong></p>
+  \[
+  \bar S_t=\operatorname{Diag}(\boldsymbol{\alpha}_t)S_{t-1},
+  \quad
+  e_t=v_t-\bar S_t^\top k_t,
+  \quad
+  S_t=\bar S_t+\beta_tk_te_t^\top,
+  \quad
+  o_t=S_t^\top q_t.
+  \]
+</div>
+<h3>References</h3>
+<ul>
+  <li><a href="https://arxiv.org/abs/2510.26692">Kimi Linear: An Expressive, Efficient Attention Architecture</a>.</li>
+  <li><a href="https://github.com/MoonshotAI/Kimi-K3/blob/main/k3_tech_report.pdf">Kimi K3 Technical Report</a>.</li>
+  <li><a href="https://arxiv.org/abs/2412.06464">Gated Delta Networks: Improving Mamba2 with Delta Rule</a>.</li>
+  <li><a href="https://arxiv.org/abs/2102.11174">Linear Transformers Are Secretly Fast Weight Programmers</a>.</li>
+  <li><a href="https://arxiv.org/abs/2312.06635">Gated Linear Attention Transformers with Hardware-Efficient Training</a>.</li>
+  <li><a href="https://arxiv.org/abs/2405.21060">Transformers are SSMs: Generalized Models and Efficient Algorithms Through Structured State Space Duality</a>.</li>
+  <li><a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model</a>.</li>
+  <li><a href="https://github.com/MoonshotAI/Kimi-Linear">MoonshotAI/Kimi-Linear</a>, <a href="https://huggingface.co/moonshotai/Kimi-K3">Kimi K3 model repository</a>, and <a href="https://github.com/fla-org/flash-linear-attention/tree/main/fla/ops/kda">FLA KDA kernels</a>.</li>
+</ul>
+<h3>How to cite this post</h3>
+<pre><code>Dong, S. (2026). Linear Attention, From Scratch to Kimi 3
+(Kimi Delta Attention).
+https://simondong1.github.io/linear-attention.html</code></pre>
+</main>
+<footer><div class="wrap"><p>Written by <a href="https://x.com/dongsixiang"><strong>Simon Dong</strong></a> · August 2026.</p><p><a href="/">&larr; Back to blog</a></p></div></footer>
+<script>
+(function(){
+  var select=document.getElementById("context-select");
+  var allSize=document.getElementById("all-mla-size");
+  var k3Size=document.getElementById("k3-size");
+  var allBar=document.getElementById("all-mla-bar");
+  var k3Bar=document.getElementById("k3-bar");
+  var readout=document.getElementById("cache-readout");
+  var fixedKdaBytes=454459392;
+  var bytesPerMlaTokenPerLayer=576*2;
+  function fmt(bytes){
+    if(bytes>=1e12)return (bytes/1e12).toFixed(2)+" TB";
+    if(bytes>=1e9)return (bytes/1e9).toFixed(2)+" GB";
+    return (bytes/1e6).toFixed(1)+" MB";
+  }
+  function update(){
+    var tokens=Number(select.value);
+    var all=tokens*93*bytesPerMlaTokenPerLayer;
+    var k3=fixedKdaBytes+tokens*24*bytesPerMlaTokenPerLayer;
+    var max=Math.max(all,k3);
+    var reduction=(1-k3/all)*100;
+    allSize.textContent=fmt(all);
+    k3Size.textContent=fmt(k3);
+    allBar.style.width=Math.max(2,all/max*100)+"%";
+    k3Bar.style.width=Math.max(2,k3/max*100)+"%";
+    allBar.textContent=all>=k3?"100%":"";
+    k3Bar.textContent=k3<all?(k3/all*100).toFixed(1)+"%":"";
+    if(reduction>=0){
+      readout.innerHTML="At <b>"+tokens.toLocaleString()+" tokens</b>, the simplified K3 hybrid cache is <b>"+reduction.toFixed(1)+"% smaller</b> than the 93-layer all-MLA cache.";
+    }else{
+      readout.innerHTML="At <b>"+tokens.toLocaleString()+" tokens</b>, K3's fixed recurrent states still outweigh the saved token cache. The crossover is about <b>5,717 tokens</b>.";
+    }
+  }
+  select.addEventListener("change",update);update();
+})();
+(function(){
+  var links=Array.prototype.slice.call(document.querySelectorAll("nav.toc a"));
+  var byId={};links.forEach(function(a){byId[a.getAttribute("href").slice(1)]=a});
+  var heads=Array.prototype.slice.call(document.querySelectorAll("main h2[id]"));
+  if(!("IntersectionObserver" in window)||!heads.length)return;
+  var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove("active")});if(byId[e.target.id])byId[e.target.id].classList.add("active")}})},{rootMargin:"-12% 0px -78% 0px",threshold:0});
+  heads.forEach(function(h){obs.observe(h)});
+})();
+</script>
+</body>
+</html>

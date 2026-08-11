@@ -7,6 +7,13 @@
     <language>en-us</language>
     <atom:link href="https://simondong1.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)</title>
+      <link>https://simondong1.github.io/linear-attention.html</link>
+      <guid isPermaLink="true">https://simondong1.github.io/linear-attention.html</guid>
+      <pubDate>Mon, 10 Aug 2026 00:00:00 +0000</pubDate>
+      <description>Build linear attention from an associative memory, add DeltaNet and channel-wise forgetting, then follow Kimi K3 through its KDA kernel and hybrid MLA cache.</description>
+    </item>
+    <item>
       <title>Understanding PPO for Language Models</title>
       <link>https://simondong1.github.io/ppo.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/ppo.html</guid>

@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simon Dong — Blog</title>
-  <meta name="description" content="Visual technical notes on reinforcement learning for language models and LLM internals, including PPO, MLA, GQA, and RoPE. By Simon Dong, MLE @ Roblox.">
+  <meta name="description" content="Visual technical notes on reinforcement learning for language models and LLM internals, including Kimi Delta Attention, PPO, MLA, GQA, and RoPE. By Simon Dong, MLE @ Roblox.">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="author" content="Simon Dong">
   <link rel="canonical" href="https://simondong1.github.io/">
   <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml">
   <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt">
   <meta property="og:title" content="Simon Dong — Blog">
-  <meta property="og:description" content="Visual technical notes on PPO, MLA, GQA, RoPE, and modern language-model systems.">
+  <meta property="og:description" content="Visual technical notes on Kimi Delta Attention, PPO, MLA, GQA, RoPE, and modern language-model systems.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://simondong1.github.io/">
   <meta property="og:site_name" content="Simon Dong">
@@ -21,7 +21,7 @@
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Simon Dong — Blog">
-  <meta name="twitter:description" content="Visual technical notes on PPO, MLA, GQA, RoPE, and modern language-model systems.">
+  <meta name="twitter:description" content="Visual technical notes on Kimi Delta Attention, PPO, MLA, GQA, RoPE, and modern language-model systems.">
   <meta name="twitter:image" content="https://simondong1.github.io/assets/ppo-og.png?v=1">
   <meta name="twitter:creator" content="@dongsixiang">
   <script type="application/ld+json">
@@ -53,6 +53,12 @@
         "name": "Simon Dong Blog",
         "author": { "@id": "https://simondong1.github.io/#person" },
         "blogPost": [
+          {
+            "@type": "BlogPosting",
+            "headline": "Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)",
+            "url": "https://simondong1.github.io/linear-attention.html",
+            "datePublished": "2026-08-10"
+          },
           {
             "@type": "BlogPosting",
             "headline": "Understanding PPO for Language Models",
@@ -122,6 +128,11 @@
     </nav>
 
     <h2 class="section-title">Blog</h2>
+    <a class="post" href="https://simondong1.github.io/linear-attention.html">
+      <p class="meta">August 2026 · Attention Variants · Kimi Delta Attention</p>
+      <h2>Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)</h2>
+      <p>Build a fixed associative memory, repair it with the delta rule, add channel-wise forgetting, then follow Kimi K3 through its KDA kernel and hybrid MLA cache.</p>
+    </a>
     <a class="post" href="https://simondong1.github.io/ppo.html">
       <p class="meta">July 2026 · RL for LLMs · Part 1</p>
       <h2>Understanding PPO for Language Models</h2>
