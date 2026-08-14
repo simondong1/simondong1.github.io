@@ -11,7 +11,7 @@
       <link>https://simondong1.github.io/linear-attention.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/linear-attention.html</guid>
       <pubDate>Mon, 10 Aug 2026 00:00:00 +0000</pubDate>
-      <description>Build linear attention from an associative memory, add DeltaNet and channel-wise forgetting, then follow Kimi K3 through its KDA kernel and hybrid MLA cache.</description>
+      <description>Build linear attention from an associative memory, add DeltaNet and channel-wise forgetting, then work through one complete KDA update and Kimi K3's hybrid cache.</description>
     </item>
     <item>
       <title>Understanding PPO for Language Models</title>

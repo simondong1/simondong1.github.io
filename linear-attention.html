@@ -4,13 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)</title>
-<meta name="description" content="An intuition-first, source-level guide from linear attention and DeltaNet to Gated DeltaNet, Kimi Delta Attention, Kimi K3's Triton decode kernel, and its hybrid MLA cache." />
+<meta name="description" content="An intuition-first guide from linear attention and DeltaNet to Gated DeltaNet, a complete numerical Kimi Delta Attention update, and Kimi K3's hybrid MLA cache." />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href="https://simondong1.github.io/linear-attention.html" />
 <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
 <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
 <meta property="og:title" content="Linear Attention, From Scratch to Kimi 3" />
-<meta property="og:description" content="Build linear attention from a 2x2 memory, fix it with the delta rule, add KDA's channel-wise forgetting, then read the Kimi K3 implementation." />
+<meta property="og:description" content="Build linear attention from a 2x2 memory, fix it with the delta rule, then work through one complete Kimi Delta Attention update." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://simondong1.github.io/linear-attention.html" />
 <meta property="og:site_name" content="Simon Dong" />
@@ -19,14 +19,14 @@
 <meta name="twitter:site" content="@dongsixiang" />
 <meta name="twitter:creator" content="@dongsixiang" />
 <meta name="twitter:title" content="Linear Attention, From Scratch to Kimi 3" />
-<meta name="twitter:description" content="Linear attention, DeltaNet, Gated DeltaNet, KDA, the Triton kernel, and Kimi K3's MLA hybrid — one continuous walkthrough." />
+<meta name="twitter:description" content="Linear attention, DeltaNet, Gated DeltaNet, one complete KDA example, and Kimi K3's MLA hybrid — one continuous walkthrough." />
 <meta name="author" content="Simon Dong" />
 <meta name="citation_title" content="Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)" />
 <meta name="citation_author" content="Dong, Simon" />
 <meta name="citation_publication_date" content="2026/08/10" />
 <meta name="citation_fulltext_html_url" content="https://simondong1.github.io/linear-attention.html" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"TechArticle","headline":"Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)","description":"An intuition-first and source-level guide from linear attention and DeltaNet to Kimi Delta Attention and Kimi K3's hybrid attention architecture.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-08-10","dateModified":"2026-08-13","mainEntityOfPage":"https://simondong1.github.io/linear-attention.html","keywords":["linear attention","Kimi K3","Kimi Delta Attention","KDA","DeltaNet","Gated DeltaNet","MLA","KV cache","Triton"]}
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)","description":"An intuition-first guide from linear attention and DeltaNet to a complete Kimi Delta Attention update and Kimi K3's hybrid attention architecture.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-08-10","dateModified":"2026-08-14","mainEntityOfPage":"https://simondong1.github.io/linear-attention.html","keywords":["linear attention","Kimi K3","Kimi Delta Attention","KDA","DeltaNet","Gated DeltaNet","MLA","KV cache"]}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -126,8 +126,8 @@
 <header class="hero"><div class="wrap">
   <p class="eyebrow">Attention Variants · Source Walkthrough</p>
   <h1 class="title">Linear Attention, From Scratch to Kimi 3 <span class="title-expansion">(Kimi Delta Attention)</span></h1>
-  <p class="subtitle">Start with a two-dimensional associative memory. Add error-correcting writes, adaptive forgetting, and KDA's channel-wise gate. Then follow the exact Kimi K3 dimensions through the attention module and Triton decode kernel.</p>
-  <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>August 2026</span><span class="dot">•</span><span>~28 min read</span></div>
+  <p class="subtitle">Start with a two-dimensional associative memory. Add error-correcting writes, adaptive forgetting, and KDA's channel-wise gate. Then work through one complete KDA update using Kimi K3's real dimensions as the reference.</p>
+  <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>August 2026</span><span class="dot">•</span><span>~24 min read</span></div>
 </div></header>
 
 <main class="wrap">
@@ -143,9 +143,9 @@
   <li><a href="#s3"><span class="n">3</span>Linear attention as memory</a></li>
   <li><a href="#s4"><span class="n">4</span>DeltaNet: correct the memory</a></li>
   <li><a href="#s5"><span class="n">5</span>GDN to KDA: learn to forget</a></li>
-  <li><a href="#s6"><span class="n">6</span>One complete KDA update</a></li>
+  <li><a href="#s6"><span class="n">6</span>The complete KDA recurrence</a></li>
   <li><a href="#s7"><span class="n">7</span>One K3 KDA layer</a></li>
-  <li><a href="#s8"><span class="n">8</span>The Triton decode kernel</a></li>
+  <li><a href="#s8"><span class="n">8</span>A complete KDA example</a></li>
   <li><a href="#s9"><span class="n">9</span>Prefill, chunks, and packed requests</a></li>
   <li><a href="#s10"><span class="n">10</span>Why K3 keeps MLA layers</a></li>
   <li><a href="#s11"><span class="n">11</span>Cache size: KDA vs MLA</a></li>
@@ -184,6 +184,8 @@ o_t=\sum_{i\le t}
 <p>Softmax prevents us from simply computing \(K^\top V\) once and reusing it: the normalization depends on the current query and all of its scores. Linear attention changes the interaction so the history can be summarized before the query arrives.</p>
 
 <h2 id="s3"><span class="num">3.</span>Linear attention as a fixed associative memory</h2>
+<p><strong>What are we trying to do?</strong> Ordinary attention keeps every past key and value as a growing list. Linear attention tries to replace that list with one fixed matrix \(S\). Each arriving key–value pair writes into \(S\); a later query reads from it.</p>
+<p>The two-dimensional example below is not yet DeltaNet or KDA. It is the minimal baseline that shows what the matrix stores, how an outer product writes a key–value association, and how a query retrieves a mixture from that memory.</p>
 <p>Start with the smallest useful case. Keys and values are both two-dimensional. Store this first pair:</p>
 \[
 k_1=\begin{bmatrix}1\\0\end{bmatrix},
@@ -334,7 +336,7 @@ S=
 <p>The most general recurrence could predict \(G_t\in(0,1)^{K\times V}\) and apply \(G_t\odot S_{t-1}\). The <a href="https://arxiv.org/abs/2312.06635">GLA paper</a> explicitly starts from this form. In practice, full gates are factorized as \(G_t=\alpha_t\otimes\gamma_t\), or reduced to KDA's key-side vector.</p>
 <p>An unconstrained K3 gate would grow from \(96\times128=12{,}288\) outputs per token to \(96\times128\times128=1{,}572{,}864\)—128 times larger. It would also give every value coordinate different temporal weights, preventing the value dimensions from sharing the same efficient chunkwise attention calculation. GLA reported only marginal gains from adding the second factor. Recent extensions such as <a href="https://arxiv.org/abs/2605.22791">Gated DeltaNet-2</a> instead add structured key-side erase and value-side write vectors while preserving the rank-one update.</p>
 
-<h2 id="s6"><span class="num">6.</span>One complete KDA update</h2>
+<h2 id="s6"><span class="num">6.</span>The complete KDA recurrence</h2>
 <p>We can now read the entire recurrence without hiding any operation. Assume \(q_t\) and \(k_t\) have already been normalized.</p>
 <div class="step">
   <div class="stitle"><span class="sn">1</span><span class="st">Forget across key coordinates</span><span class="shape">[K,V] → [K,V]</span></div>
@@ -488,7 +490,7 @@ conv_state_k  [B, 12288, 4]
 conv_state_v  [B, 12288, 4]</code></pre>
 <p>During decode, the one new projected token joins those cached values. These are <strong>pre-convolution recent activations</strong>, not past attention keys and values.</p>
 <h3>Q/K normalization and query scaling</h3>
-<p>Inside the KDA kernel, each head's Q and K vectors are L2-normalized. The query is additionally scaled by \(1/\sqrt{128}\):</p>
+<p>Before the KDA recurrence, each head's Q and K vectors are L2-normalized. The query is additionally scaled by \(1/\sqrt{128}\):</p>
 \[
 k_t\leftarrow\frac{k_t}{\lVert k_t\rVert_2},
 \qquad
@@ -511,52 +513,119 @@ o'_j
 \]
 <p>The learned RMSNorm weight \(w\in\mathbb{R}^{128}\) is static and shared across tokens and heads; the sigmoid output gate is dynamic per token, head, and channel.</p>
 
-<h2 id="s8"><span class="num">8.</span>The Triton decode kernel, without pointer mysticism</h2>
-<p>Kimi chooses FLA's fused recurrent kernel when caching is enabled and the query length is one. For K3:</p>
-<div class="wrapscroll"><table class="ptable">
-<thead><tr><th>Kernel quantity</th><th>K3 value</th><th>Meaning</th></tr></thead>
-<tbody>
-<tr><td>\(K,V\)</td><td>128, 128</td><td>logical state is \(128\times128\) per head</td></tr>
-<tr><td><code>BK</code></td><td>128</td><td>one program covers every key coordinate</td></tr>
-<tr><td><code>BV</code></td><td>32</td><td>one program covers 32 value coordinates</td></tr>
-<tr><td>programs per head</td><td>4</td><td>\(128/32\) value tiles</td></tr>
-<tr><td>grid</td><td><code>4 × N × 96</code></td><td>value tile × sequence × head</td></tr>
-</tbody></table></div>
-<p>Kimi requests <code>state_v_first=True</code> (through the older alias <code>transpose_state_layout=True</code>). The logical state is still \(S\in\mathbb{R}^{K\times V}\), but memory stores \(S^\top\) as <code>[N,96,V,K]</code>. One program keeps this tile in fp32:</p>
-<pre><code>b_h  [BV, BK] = [32, 128]   <span class="dim"># tile of Sᵀ</span>
-b_q  [BK]     = [128]
-b_k  [BK]     = [128]
-b_v  [BV]     = [32]</code></pre>
-<h3>Four programs cover one head</h3>
-<pre><code>program 0: Sᵀ[value  0:32, key 0:128]
-program 1: Sᵀ[value 32:64, key 0:128]
-program 2: Sᵀ[value 64:96, key 0:128]
-program 3: Sᵀ[value 96:128,key 0:128]</code></pre>
-<p>No individual program loads the entire state. Together, the four programs cover the head's full \(128\times128\) matrix.</p>
-<h3>How <code>tl.load</code> knows its size</h3>
-<p>A Triton pointer expression can itself be a tensor of addresses. For the forget signal:</p>
-<pre><code>o_k = [0, 1, 2, ... , 127]                 <span class="dim"># shape [128]</span>
-p_g = base_address_for_this_token_and_head + o_k <span class="dim"># 128 addresses</span>
-b_g = tl.load(p_g)                          <span class="dim"># 128 loaded values</span></code></pre>
-<p>The pointer tensor's shape determines the load shape. The same idea makes the state pointer a <code>[32,128]</code> matrix of addresses. Masks such as <code>o_v &lt; V</code> disable addresses in a partial final tile; K3's \(V=128\) happens to divide evenly by 32.</p>
-<h3>The token loop is the recurrence</h3>
-<p>After loading the initial state tile, the kernel loops through tokens. Its core is only the five steps we derived:</p>
-<pre><code><span class="gate">b_h *= exp(log_retention)</span>                 <span class="dim"># forget</span>
-b_v -= sum(b_h * b_k[None, :], axis=1)   <span class="dim"># v - Sᵀk</span>
-b_v *= sigmoid(raw_beta)                 <span class="dim"># β error</span>
-<span class="state">b_h += b_v[:, None] * b_k[None, :]</span>     <span class="dim"># update Sᵀ</span>
-<span class="hi">b_o  = sum(b_h * b_q[None, :], axis=1)</span>   <span class="dim"># Sᵀq</span></code></pre>
-<p>Because <code>b_h</code> stores \(S^\top\), the outer-product update appears transposed: \((\beta e)k^\top\) rather than \(k(\beta e)^\top\). It is the same logical update.</p>
-<div class="callout note"><span class="label">What changes during these lines</span>
-<p><code>b_v</code> begins as the incoming value tile. After the subtraction it becomes the <strong>value-error tile</strong>. After multiplication by beta it becomes the scaled correction. Reusing the register avoids allocating three separate vectors.</p>
+<h2 id="s8"><span class="num">8.</span>A complete KDA update, with numbers</h2>
+<p>We have met every KDA operation separately. Now let one token perform the whole sequence: <strong>forget the old state, check what the current key already recalls, write half of the error, then read the updated state.</strong></p>
+<p>Use a two-dimensional state so every number stays visible. Before the current token arrives:</p>
+\[
+S_{t-1}=
+\begin{bmatrix}
+2&0\\
+0&1
+\end{bmatrix}.
+\]
+<div class="example">
+  <div class="ex-title">Inputs from the current token</div>
+  <p><strong>Retention:</strong> \(\boldsymbol{\alpha}_t=\begin{bmatrix}0.5\\1\end{bmatrix}\) — halve row 1; keep row 2.</p>
+  <p><strong>Key and query:</strong> \(k_t=q_t=\begin{bmatrix}1\\0\end{bmatrix}\) — address the first key coordinate.</p>
+  <p><strong>Target value:</strong> \(v_t=\begin{bmatrix}3\\2\end{bmatrix}\) — the association this token wants.</p>
+  <p><strong>Update strength:</strong> \(\beta_t=0.5\) — write half of the error.</p>
 </div>
-<h3>Output and final state are written, not returned by Triton</h3>
-<p>The Python wrapper preallocates:</p>
-<pre><code>out          [B,T,96,128]      <span class="dim"># same dtype as v</span>
-final_state  [N,96,128,128]    <span class="dim"># fp32, V-first</span></code></pre>
-<p>The kernel stores each 32-value output tile through <code>p_o</code> and each final state tile through <code>p_ht</code>. A Triton kernel has no Python return value; after the launch, the wrapper returns the tensors whose memory the kernel filled.</p>
-<div class="callout green"><span class="label">Decode path in one sentence</span>
-<p>Load one head's fixed memory in four value tiles, apply one token's forget–correct–read recurrence, write 128 output values, and cache the updated matrix for the next token.</p>
+
+<div class="step">
+  <div class="stitle"><span class="sn">1</span><span class="st">Forget</span><span class="shape">scale state rows</span></div>
+  \[
+  \operatorname{Diag}(\boldsymbol{\alpha}_t)
+  =
+  \begin{bmatrix}
+  0.5&0\\
+  0&1
+  \end{bmatrix}
+  \]
+  \[
+  \bar S_t
+  =
+  \operatorname{Diag}(\boldsymbol{\alpha}_t)S_{t-1}
+  =
+  \begin{bmatrix}
+  1&0\\
+  0&1
+  \end{bmatrix}.
+  \]
+  <div class="why">The first key-coordinate row is halved. The second row is retained.</div>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">2</span><span class="st">Recall at the current key</span><span class="shape">[2,2]ᵀ × [2] → [2]</span></div>
+  \[
+  \hat v_t
+  =
+  \bar S_t^\top k_t
+  =
+  \begin{bmatrix}1\\0\end{bmatrix}.
+  \]
+  <div class="why">After forgetting, memory currently answers \([1,0]^\top\) for this key.</div>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">3</span><span class="st">Compute and scale the error</span><span class="shape">target − recall</span></div>
+  \[
+  e_t
+  =
+  v_t-\hat v_t
+  =
+  \begin{bmatrix}3\\2\end{bmatrix}
+  -
+  \begin{bmatrix}1\\0\end{bmatrix}
+  =
+  \begin{bmatrix}2\\2\end{bmatrix},
+  \]
+  \[
+  \beta_te_t
+  =
+  \begin{bmatrix}1\\1\end{bmatrix}.
+  \]
+  <div class="why">The target is \([3,2]^\top\), but \(\beta=0.5\), so this token writes only half of the missing value.</div>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">4</span><span class="st">Write along the current key</span><span class="shape">outer product</span></div>
+  \[
+  k_t(\beta_te_t)^\top
+  =
+  \begin{bmatrix}1\\0\end{bmatrix}
+  \begin{bmatrix}1&1\end{bmatrix}
+  =
+  \begin{bmatrix}
+  1&1\\
+  0&0
+  \end{bmatrix},
+  \]
+  \[
+  S_t
+  =
+  \bar S_t+k_t(\beta_te_t)^\top
+  =
+  \begin{bmatrix}
+  2&1\\
+  0&1
+  \end{bmatrix}.
+  \]
+  <div class="why">Only the row selected by \(k_t=[1,0]^\top\) receives the correction.</div>
+</div>
+
+<div class="step">
+  <div class="stitle"><span class="sn">5</span><span class="st">Read with the query</span><span class="shape">[2,2]ᵀ × [2] → [2]</span></div>
+  \[
+  o_t
+  =
+  S_t^\top q_t
+  =
+  \begin{bmatrix}2\\1\end{bmatrix}.
+  \]
+</div>
+
+<div class="callout green"><span class="label">What changed?</span>
+<p>After forgetting, this key recalled \([1,0]^\top\). The new target was \([3,2]^\top\). A half-strength delta update moved the answer exactly halfway to \([2,1]^\top\). That is one complete KDA token update.</p>
 </div>
 
 <h2 id="s9"><span class="num">9.</span>Prefill, chunks, and packed requests</h2>
@@ -638,8 +707,6 @@ cu_seqlens:    [0, 3, 8, 10]</code></pre>
 <tbody>
 <tr><td><a href="https://huggingface.co/moonshotai/Kimi-K3/blob/main/modeling_kimi_linear.py"><code>modeling_kimi_linear.py</code></a></td><td>K3's MLA, KDA layer, projections, caches, mode selection, and output gates</td></tr>
 <tr><td><a href="https://github.com/fla-org/flash-linear-attention/blob/main/fla/ops/kda/naive.py"><code>fla/ops/kda/naive.py</code></a></td><td>the recurrence in the most readable executable form</td></tr>
-<tr><td><a href="https://github.com/fla-org/flash-linear-attention/blob/main/fla/ops/kda/fused_recurrent.py"><code>fused_recurrent.py</code></a></td><td>decode kernel, state tiling, fp32 accumulation, and cache stores</td></tr>
-<tr><td><a href="https://github.com/fla-org/flash-linear-attention/blob/main/fla/ops/kda/chunk.py"><code>chunk.py</code></a></td><td>training/prefill autograd entry</td></tr>
 <tr><td><a href="https://github.com/fla-org/flash-linear-attention/blob/main/fla/modules/conv/short_conv.py"><code>short_conv.py</code></a></td><td>depthwise causal short convolution and its four-slot state</td></tr>
 <tr><td><a href="https://arxiv.org/abs/2510.26692">Kimi Linear report</a></td><td>derivation, DPLR chunk algorithm, ablations, hybrid design, and efficiency results</td></tr>
 </tbody></table></div>
@@ -652,7 +719,6 @@ cu_seqlens:    [0, 3, 8, 10]</code></pre>
 <tr><td>the forget gate acts only along \(k_t\)</td><td>forgetting scales every key row; the delta correction is the operation targeted by \(k_t\)</td></tr>
 <tr><td>\(\beta\) is per channel in K3</td><td>\(\beta\) is one dynamic scalar per token and head; \(\alpha\) is per key channel</td></tr>
 <tr><td>short-conv state is a KV cache</td><td>it stores four recent pre-convolution projected values per Q/K/V channel</td></tr>
-<tr><td><code>tl.load(pointer)</code> always loads one scalar</td><td>a Triton pointer can be a tensor of addresses; its shape determines the load shape</td></tr>
 <tr><td>prefill and decode use different attention math</td><td>same recurrence, different schedules: chunk-parallel versus fused recurrent</td></tr>
 <tr><td>K3 has no growing cache</td><td>KDA layers are fixed-state; the 24 MLA layers still grow with context</td></tr>
 </tbody></table></div>
