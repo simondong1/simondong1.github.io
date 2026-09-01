@@ -122,6 +122,29 @@
 
   .state{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:1rem 0 .2rem}
   .state .box{max-width:none}
+  .walkrow{display:flex;gap:.45rem;justify-content:center;margin:1.05rem 0 .25rem}
+  .wcell{width:5rem;min-height:5rem;border-radius:12px;border:1px solid #e7e8ec;background:#f6f7f9;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;gap:.12rem}
+  .wcell .kk{font-size:.68rem;color:var(--muted)}
+  .wcell .sc{font-size:1.15rem;font-weight:700;color:var(--ink)}
+  .wcell.live{background:var(--accent);border-color:var(--accent);color:#fff}
+  .wcell.live .kk,.wcell.live .sc{color:#fff}
+  .wcell.done{background:#fff;border-style:dashed}
+  .wcell.done .sc{color:var(--muted)}
+  .reuse{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:1.15rem 0 .3rem}
+  .slot{border:1px solid var(--line);border-radius:12px;padding:.7rem .45rem;text-align:center;background:#fff}
+  .slot .lab{font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .slot .val{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:.95rem;margin:.28rem 0 .12rem}
+  .slot .tag{font-size:.72rem;color:var(--ink-soft)}
+  .slot.stay{background:var(--green-soft);border-color:#cce8d2}
+  .slot.stream{background:var(--cool-soft);border-color:#bfe6f7}
+  .slot.kill{background:var(--accent-soft);border-color:#dfe2fb}
+  .eqcard.plain{border-color:#dfe2fb;background:var(--accent-soft)}
+  .eqcard.plain .caption{color:var(--accent)}
+  .eqcard mjx-container{overflow-x:auto;max-width:100%}
+  .readmore{display:grid;gap:.45rem;margin:.7rem 0 0}
+  .readmore a{display:block;border:1px solid var(--line);background:#fff;border-radius:10px;padding:.55rem .75rem;color:var(--ink-soft);font-size:.9rem}
+  .readmore a:hover{color:var(--accent);border-color:#dfe2fb;background:var(--accent-soft)}
+  .stub{border:1px dashed var(--line);border-radius:14px;padding:1.1rem 1.2rem;color:var(--ink-soft);background:#fff;margin:1.1rem 0}
 
   .homes{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
   .home{border:1px solid var(--line);border-radius:14px;padding:1rem .95rem;background:#fff}
@@ -144,9 +167,10 @@
   footer{border-top:1px solid var(--line);margin-top:3.6rem;padding:2.3rem 0 4rem;font-size:.9rem;color:var(--muted)}
   footer a{color:var(--ink-soft)}
   ul{margin:1rem 0;padding-left:1.2rem}li{margin:.35rem 0}
+  @media(max-width:900px){.reuse{grid-template-columns:1fr 1fr}}
   @media(max-width:640px){
     header.hero{padding:3.5rem 0 2rem}
-    .pair,.metrics,.state,.homes{grid-template-columns:1fr}
+    .pair,.metrics,.state,.homes,.reuse{grid-template-columns:1fr}
     .barrow{grid-template-columns:1fr}.barrow .name{text-align:left}
   }
 </style>
@@ -168,6 +192,7 @@
   <li><a href="#s1"><span class="n">1</span>How</a></li>
   <li><a href="#s2"><span class="n">2</span>How much</a></li>
   <li><a href="#s3"><span class="n">3</span>The tile walk</a></li>
+  <li><a href="#s4"><span class="n">4</span>Performance</a></li>
 </ol></nav>
 
 <h2 id="s1"><span class="num">1.</span>How</h2>
@@ -297,7 +322,43 @@
 
 <h2 id="s3"><span class="num">3.</span>The tile walk</h2>
 
-<p>A block keeps a query tile on-chip and walks key/value tiles. Scores exist for one tile, then they are gone.</p>
+<p>One query, four keys. Already-scaled scores \([1,\ 3,\ 0,\ 2]\). Values \([10,\ 20,\ 30,\ 40]\). Same softmax as writing the full row — one score at a time.</p>
+
+<div class="walkrow" id="walk-keys" aria-hidden="true"></div>
+<p class="caption">Filled = live score. Dashed = already folded into the running output.</p>
+<div class="playrow">
+  <button class="btn" id="btn-play" type="button">Play walk</button>
+  <button class="btn" id="btn-step" type="button">Step</button>
+</div>
+
+<p>Q stays on-chip. K and V stream. The score slot is overwritten.</p>
+<div class="reuse" id="reuse">
+  <div class="slot stay"><div class="lab">Query</div><div class="val" id="ru-q">stays</div><div class="tag">reused all tiles</div></div>
+  <div class="slot stream"><div class="lab">Key</div><div class="val" id="ru-k">—</div><div class="tag">loaded this tile</div></div>
+  <div class="slot stream"><div class="lab">Value</div><div class="val" id="ru-v">—</div><div class="tag">loaded this tile</div></div>
+  <div class="slot kill"><div class="lab">Score</div><div class="val" id="ru-s">—</div><div class="tag">registers, then gone</div></div>
+</div>
+<p class="caption">Only the query is reused. Scores never accumulate. After the last key, \(o \approx 24.2\) — the same mix as a full-row softmax.</p>
+
+<p>The fold-in is <em>online softmax</em>: keep a running max, a running sum of exponentials, and a running weighted mix of values. A new tile updates those three. If its max is bigger, rescale the old sum and mix first, then add. You never need the rest of the row.</p>
+
+<div class="eqcard plain">
+  <div class="caption">Online softmax, one update</div>
+  \[
+  \begin{aligned}
+  m' &= \max(m,x)\\
+  \ell &\leftarrow e^{m-m'}\ell + e^{x-m'}\\
+  O &\leftarrow e^{m-m'}O + e^{x-m'}v
+  \end{aligned}
+  \]
+</div>
+<p class="caption">\(x\) this score, \(v\) this value. \(m\) running max, \(\ell\) running exp-sum, \(O\) running mix. Then \(o = O/\ell\). Flash does this per key-tile. The algebra is in the guides below.</p>
+
+<div class="readmore">
+  <a href="https://arxiv.org/abs/1805.02867">Milakov &amp; Gimelshein, 2018 — the original online-softmax paper</a>
+  <a href="https://ceyxasm.github.io/posts/flash-attention/">Ceyxasm — FlashAttention, with the three-step merge</a>
+  <a href="https://datta0.github.io/posts/flash-attention/">Datta — why tiling plus that merge is still exact</a>
+</div>
 
 <div class="smat" style="max-width:26rem">
   <div class="axes">
@@ -306,25 +367,21 @@
   </div>
   <div class="xlab">key tiles →</div>
 </div>
-<div class="playrow">
-  <button class="btn" id="btn-play" type="button">Play walk</button>
-</div>
-<p class="caption" id="walk-cap">Filled = scores that exist right now. Dashed = already folded into the running output.</p>
-
-<div class="state">
-  <div class="box run">running max</div>
-  <div class="box run">running sum</div>
-  <div class="box o">running output</div>
-</div>
-<p class="caption">Each tile updates those three, then the scores are gone. Later tiles can still merge: rescale by the new max, then add.</p>
+<p class="caption">Same loop on a real block: one query tile, many key tiles.</p>
 
 <div class="callout green"><span class="label">Mental model</span>
-<p>Speedup is HBM trips, not FLOPs. Hopper and Blackwell only change the multiplier for the same walk.</p>
+<p>Speedup is HBM trips, not FLOPs. Q is reused. K and V stream. Scores are a tile in registers, folded in with online softmax. Hopper and Blackwell only change the multiplier for the same walk.</p>
+</div>
+
+<h2 id="s4"><span class="num">4.</span>Performance</h2>
+<div class="stub">
+  <p style="margin:0">Kernel times for this walk — Qwen3.8-27B, Flash vs a materializing softmax — land here next.</p>
 </div>
 
 <h3>References</h3>
 <ul>
   <li>Dao et al., <em>FlashAttention</em> (arXiv 2205.14135) — IO-aware tiling.</li>
+  <li>Milakov &amp; Gimelshein, <em>Online normalizer calculation for softmax</em> (arXiv 1805.02867).</li>
   <li>Dao, <em>FlashAttention-2</em> (arXiv 2307.08691).</li>
   <li>Shah et al., <em>FlashAttention-3</em> (arXiv 2407.08608).</li>
   <li>Earlier: <a href="/gqa.html">GQA</a>, <a href="/mla.html">MLA</a>, <a href="/linear-attention.html">linear attention</a>.</li>
@@ -363,12 +420,37 @@ https://simondong1.github.io/flash-attention.html</code></pre>
   cells(document.getElementById("grid-naive"),"naive",0);
   cells(document.getElementById("grid-flash"),"flash",0);
   var walk=document.getElementById("grid-walk"), step=0, timer=null;
-  cells(walk,"walk",0);
-  function setStep(s){step=s%(N/TILE);cells(walk,"walk",step);}
+  var SCORES=[1,3,0,2], VALS=[10,20,30,40];
+  function paintKeys(s){
+    var row=document.getElementById("walk-keys");
+    row.innerHTML="";
+    for(var i=0;i<4;i++){
+      var d=document.createElement("div");
+      d.className="wcell"+(i===s?" live":i<s?" done":"");
+      d.innerHTML="<span class='kk'>k"+i+"</span><span class='sc'>"+SCORES[i]+"</span>";
+      row.appendChild(d);
+    }
+  }
+  function showMath(s){
+    document.getElementById("ru-k").textContent=SCORES[s];
+    document.getElementById("ru-v").textContent=VALS[s];
+    document.getElementById("ru-s").textContent=SCORES[s];
+  }
+  function setStep(s){
+    step=((s%4)+4)%4;
+    cells(walk,"walk",step);
+    paintKeys(step);
+    showMath(step);
+  }
+  setStep(0);
   document.getElementById("btn-play").addEventListener("click",function(){
     if(timer){clearInterval(timer);timer=null;this.textContent="Play walk";return;}
     this.textContent="Pause";
-    timer=setInterval(function(){setStep(step+1);},700);
+    timer=setInterval(function(){setStep(step+1);},1100);
+  });
+  document.getElementById("btn-step").addEventListener("click",function(){
+    if(timer){clearInterval(timer);timer=null;document.getElementById("btn-play").textContent="Play walk";}
+    setStep(step+1);
   });
 
   function fmt(b){
