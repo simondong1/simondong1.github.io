@@ -7,6 +7,13 @@
     <language>en-us</language>
     <atom:link href="https://simondong1.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Understanding Flash Attention</title>
+      <link>https://simondong1.github.io/flash-attention.html</link>
+      <guid isPermaLink="true">https://simondong1.github.io/flash-attention.html</guid>
+      <pubDate>Mon, 31 Aug 2026 00:00:00 +0000</pubDate>
+      <description>The same softmax attention math, without writing the score matrix. Tiles, online softmax, and what changes from Hopper to Blackwell.</description>
+    </item>
+    <item>
       <title>Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)</title>
       <link>https://simondong1.github.io/linear-attention.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/linear-attention.html</guid>

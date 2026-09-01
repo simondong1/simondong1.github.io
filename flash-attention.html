@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Understanding Flash Attention</title>
+<meta name="description" content="What Flash Attention computes, why it never writes the score matrix, and how the tiled online-softmax loop is the same on Hopper and Blackwell SM120." />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<link rel="canonical" href="https://simondong1.github.io/flash-attention.html" />
+<link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
+<link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
+<meta property="og:title" content="Understanding Flash Attention" />
+<meta property="og:description" content="The same softmax attention math, without writing the score matrix. A visual walk through tiles, online softmax, and GPU generations." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/flash-attention.html" />
+<meta property="og:site_name" content="Simon Dong" />
+<meta property="og:locale" content="en_US" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:site" content="@dongsixiang" />
+<meta name="twitter:creator" content="@dongsixiang" />
+<meta name="twitter:title" content="Understanding Flash Attention" />
+<meta name="twitter:description" content="The same softmax attention math, without writing the score matrix." />
+<meta name="author" content="Simon Dong" />
+<meta name="citation_title" content="Understanding Flash Attention" />
+<meta name="citation_author" content="Dong, Simon" />
+<meta name="citation_publication_date" content="2026/08/31" />
+<meta name="citation_fulltext_html_url" content="https://simondong1.github.io/flash-attention.html" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Understanding Flash Attention","description":"What Flash Attention computes, why it never writes the score matrix, and how the tiled online-softmax loop is the same on Hopper and Blackwell SM120.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-08-31","dateModified":"2026-08-31","mainEntityOfPage":"https://simondong1.github.io/flash-attention.html","keywords":["Flash Attention","online softmax","FA3","FA4","SM120","Qwen3"]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"]]},svg:{fontCache:"global"}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root{
+    --bg:#fbfbfa;--surface:#fff;--ink:#1f2328;--ink-soft:#475059;--muted:#8b949e;
+    --line:#e8e8e6;--accent:#4f46e5;--accent-soft:#eef0fe;--warm:#e5484d;
+    --warm-soft:#fdecec;--cool:#0ea5e9;--cool-soft:#e7f6fe;--green:#15803d;
+    --green-soft:#edf8ef;--amber:#b45309;--amber-soft:#fff7e6;
+    --code-bg:#0d1117;--code-ink:#e6edf3;--maxw:48rem
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;font-size:1.05rem;line-height:1.7;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+  header.hero{padding:6rem 0 2.9rem;border-bottom:1px solid var(--line);margin-bottom:3.4rem}
+  .eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:650;margin:0 0 1.1rem}
+  h1.title{font-weight:800;font-size:clamp(2.45rem,5.8vw,4.15rem);line-height:1.06;letter-spacing:-.035em;margin:0 0 1rem}
+  .title-expansion{display:block;margin-top:.42rem;font-size:clamp(1.2rem,2.5vw,1.7rem);line-height:1.2;color:var(--ink-soft);font-weight:650}
+  .subtitle{font-size:1.22rem;color:var(--ink-soft);margin:0 0 1.9rem;line-height:1.55;max-width:44rem}
+  .byline{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-size:.9rem;color:var(--muted)}
+  .byline .who{color:var(--ink);font-weight:600}.byline .dot{color:var(--line)}
+  h2{font-weight:700;font-size:1.72rem;letter-spacing:-.02em;line-height:1.2;margin:3.6rem 0 1rem;scroll-margin-top:1.5rem}
+  h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}
+  h3{font-weight:650;font-size:1.18rem;margin:2.25rem 0 .65rem;scroll-margin-top:1.5rem}
+  p{margin:1.05rem 0}.lede{font-size:1.22rem;line-height:1.62;letter-spacing:-.01em;margin:0 0 1.8rem}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}a:hover{border-color:var(--accent)}
+  strong{font-weight:650}
+  ul,ol{margin:1.1rem 0;padding-left:1.3rem}li{margin:.45rem 0}
+  code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em;background:#f0f1f4;color:#c72568;padding:.12em .4em;border-radius:5px;border:1px solid #e7e8ec}
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:1.08rem 1.28rem;margin:1.8rem 0}
+  .callout.note{border-left-color:var(--cool)}.callout.green{border-left-color:var(--green)}
+  .callout .label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);display:block;margin-bottom:.35rem}
+  .callout.note .label{color:var(--cool)}.callout.green .label{color:var(--green)}.callout p{margin:.4rem 0}
+  nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.5rem;margin:0 0 2rem}
+  nav.toc .toc-title{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.8rem}
+  nav.toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2rem;font-size:.93rem}
+  nav.toc li{margin:.3rem 0;break-inside:avoid}nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.16rem .5rem;border-radius:6px}
+  nav.toc a:hover,nav.toc a.active{color:var(--accent);background:var(--accent-soft)}nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}
+  @media(min-width:1320px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 48rem)/2 - 16.2rem);width:14.2rem;max-height:calc(100vh - 7rem);overflow-y:auto;background:none;border:none;padding:0;margin:0}nav.toc ol{columns:1;font-size:.81rem}}
+  .wrapscroll{overflow-x:auto}
+  table.ptable{width:100%;border-collapse:collapse;margin:1.35rem 0;font-size:.9rem}
+  table.ptable th,table.ptable td{text-align:left;padding:.62rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+  table.ptable th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+  table.ptable td:first-child{font-weight:600}
+  .pipe{border:1px solid var(--line);border-radius:14px;padding:1.15rem 1rem;background:#fff;margin:1.55rem 0}
+  .node{border-radius:9px;padding:.58rem .7rem;font-family:"JetBrains Mono",monospace;font-size:.78rem;text-align:center;margin:.38rem auto;border:1px solid #e7e8ec;background:#f6f7f9;line-height:1.42;max-width:34rem}
+  .node.warm{background:var(--warm-soft);border-color:#f3c0c2;color:#a32a2e}
+  .node.cool{background:var(--cool-soft);border-color:#bfe6f7;color:#0b6a8c}
+  .node.acc{background:var(--accent-soft);border-color:#dfe2fb;color:var(--accent)}
+  .node.green{background:var(--green-soft);border-color:#cce8d2;color:#12652f}
+  .node.amber{background:var(--amber-soft);border-color:#f3d7a3;color:var(--amber)}
+  .adown{text-align:center;color:var(--muted);font-size:.95rem;margin:.06rem 0}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;max-width:36rem;margin:.5rem auto}
+  .split .node{width:100%;margin:0}
+  .mini-note{text-align:center;font-size:.8rem;color:var(--muted);margin:.45rem 0 0}
+  .eqcard{border:1px solid #dfe2fb;background:var(--accent-soft);border-radius:14px;padding:1rem 1.2rem;margin:1.55rem 0;text-align:center}
+  .eqcard .caption{font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700;margin-bottom:.45rem}
+  .example{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1.12rem 1.25rem;margin:1.5rem 0}
+  .example .ex-title{font-size:.74rem;text-transform:uppercase;letter-spacing:.1em;color:var(--green);font-weight:700;margin-bottom:.65rem}
+  .example p{margin:.62rem 0}
+  .example .result{background:var(--green-soft);border:1px solid #cce8d2;border-radius:9px;padding:.65rem .8rem;margin-top:.8rem}
+  .cachebar{margin:1.4rem 0}
+  .cachebar .row{display:grid;grid-template-columns:9.5rem 1fr;gap:.7rem;align-items:center;margin:.55rem 0}
+  .cachebar .name{font-size:.85rem;font-weight:600;color:var(--ink-soft);text-align:right}
+  .cachebar .track{background:#f0f1f4;border-radius:8px;overflow:hidden;height:2.15rem;border:1px solid var(--line)}
+  .cachebar .fill{height:100%;display:flex;align-items:center;padding-left:.65rem;color:#fff;font-size:.78rem;font-weight:650;white-space:nowrap}
+  .cachebar .fill.full{background:var(--warm)}.cachebar .fill.fixed{background:var(--green);min-width:12.6rem}
+  .gridviz{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;max-width:22rem;margin:1rem auto}
+  .cell{aspect-ratio:1;border-radius:8px;border:1px solid #e7e8ec;background:#f6f7f9;display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--ink-soft)}
+  .cell.on{background:var(--accent-soft);border-color:#dfe2fb;color:var(--accent);font-weight:700}
+  .cell.gone{background:#fff;border-style:dashed;color:var(--muted)}
+  .dims{display:flex;flex-wrap:wrap;gap:.42rem;margin:1rem 0}
+  .dimchip{display:inline-flex;gap:.35rem;font-family:"JetBrains Mono",monospace;font-size:.78rem;background:#f6f7f9;border:1px solid #e7e8ec;border-radius:6px;padding:.18rem .5rem;color:var(--ink-soft)}
+  .dimchip b{color:var(--ink)}
+  footer{border-top:1px solid var(--line);margin-top:4rem;padding:2.5rem 0 4rem;font-size:.9rem;color:var(--muted)}
+  footer a{color:var(--ink-soft)}
+  mjx-container[display="true"]{margin:1.35rem 0 !important;overflow-x:auto}
+  @media(max-width:640px){header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}.split{grid-template-columns:1fr}.cachebar .row{grid-template-columns:1fr}.cachebar .name{text-align:left}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <p class="eyebrow">Kernels · Softmax Attention</p>
+  <h1 class="title">Understanding Flash Attention <span class="title-expansion">The same math, without the score matrix</span></h1>
+  <p class="subtitle">Flash Attention is not a new attention formula. It is a way to run the usual softmax attention so the big query-by-key score matrix never lands in GPU memory.</p>
+  <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>August 2026</span><span class="dot">•</span><span>Kernels</span></div>
+</div></header>
+
+<main class="wrap">
+<p class="lede"><strong>Every modern softmax transformer still computes the same thing:</strong> compare queries to keys, turn those scores into weights, mix the values. Flash Attention changes only <em>where those scores live</em>. They exist for the length of one tile, in registers, then they are gone.</p>
+
+<div class="callout note"><span class="label">Where this kernel is used</span>
+<p>Flash Attention (FA2 / FA3 / FA4) is the default softmax-attention kernel behind PyTorch SDPA, vLLM, and SGLang for models that still do <a href="/gqa.html">grouped-query attention</a> — Qwen3, Llama, Gemma, and the GQA layers of hybrid models. It does <em>not</em> run <a href="/linear-attention.html">linear attention</a> (KDA, Mamba, GDN). Those replace the growing key/value list with a fixed state and use a different kernel family.</p>
+</div>
+
+<nav class="toc"><div class="toc-title">Contents</div><ol>
+  <li><a href="#s1"><span class="n">1</span>What the kernel computes</a></li>
+  <li><a href="#s2"><span class="n">2</span>Tiles, memory, online softmax</a></li>
+  <li><a href="#s3"><span class="n">3</span>Next: Qwen3-8B on B200</a></li>
+</ol></nav>
+
+<h2 id="s1"><span class="num">1.</span>What the kernel computes</h2>
+
+<p>Start from one attention head and a short sequence. Each token has already been projected into a query, a key, and a value. Flash Attention does not do those projections. It takes the three tensors and returns the mixed output.</p>
+
+<div class="dims">
+  <span class="dimchip">Q <b>queries</b></span>
+  <span class="dimchip">K <b>keys</b></span>
+  <span class="dimchip">V <b>values</b></span>
+  <span class="dimchip">O <b>output</b></span>
+</div>
+
+<p>For each query token, the head does three things:</p>
+
+<ol>
+  <li>Dot that query with every key. That produces one score per key token.</li>
+  <li>Turn the scores into weights that sum to one (softmax).</li>
+  <li>Mix the values with those weights. That mix is the output for this query.</li>
+</ol>
+
+<p>This is the same rule as the 2017 transformer. If \(q\) is one query, \(k_j\) and \(v_j\) are the key and value at position \(j\), and \(\text{scale}\) is usually \(1/\sqrt{d}\):</p>
+
+<div class="eqcard">
+  <div class="caption">One query, many keys</div>
+  \[
+  \mathrm{score}_j = \mathrm{scale}\cdot q\cdot k_j,\qquad
+  w_j = \frac{e^{\mathrm{score}_j}}{\sum_i e^{\mathrm{score}_i}},\qquad
+  o = \sum_j w_j\, v_j
+  \]
+</div>
+
+<p>Causal decoding adds one extra rule: a query at position \(t\) may only use keys \(0\ldots t\). Sliding-window and ALiBi change <em>which</em> scores are allowed, or add a bias, before the same softmax. <a href="/mla.html">MLA</a> is still this formula with a different width for keys versus values. Linear attention is not this formula.</p>
+
+<div class="example">
+  <div class="ex-title">Smallest useful example — what object we are building</div>
+  <p>Problem: one query, four keys. We want the weighted mix of four values. This is the <em>baseline</em> — the math Flash Attention must match, not yet the kernel.</p>
+  <p>Already-scaled scores \(\mathrm{score} = [1,\ 3,\ 0,\ 2]\). Values (one channel) \(v = [10,\ 20,\ 30,\ 40]\).</p>
+  <p>The largest score is \(3\). Softmax subtracts that max first so the exponentials stay finite:</p>
+  \[
+  e^{\mathrm{score}-\,3} = [e^{-2},\ 1,\ e^{-3},\ e^{-1}]
+  \approx [0.135,\ 1,\ 0.050,\ 0.368]
+  \]
+  <p>Those four numbers sum to about \(1.553\). Divide, then mix:</p>
+  \[
+  o \approx \frac{0.135\cdot 10 + 1\cdot 20 + 0.050\cdot 30 + 0.368\cdot 40}{1.553} \approx 24.2
+  \]
+  <div class="result">The output is one number per channel, not a four-by-four matrix. The four scores were only a temporary tool to get the weights.</div>
+</div>
+
+<p>The naive implementation writes every score into a matrix \(S\) of shape (number of queries) × (number of keys), softmaxes the whole row, then multiplies by \(V\). That \(S\) is the object Flash Attention refuses to store.</p>
+
+<h2 id="s2"><span class="num">2.</span>Tiles, memory, and online softmax</h2>
+
+<h3>Why the score matrix is the problem</h3>
+
+<p>Queries and keys grow with sequence length. Their outer product grows with length squared. For one Qwen3-8B layer, batch 1, 2,048 tokens, 32 query heads, float32 scores:</p>
+
+\[
+2048 \times 2048 \times 32 \times 4\ \mathrm{bytes} = 512\ \mathrm{MB}
+\]
+
+<p>That is <em>only</em> the temporary scores for one layer, written and read once. The model has 36 layers. Flash Attention’s claim is not a new formula. It is: <strong>never allocate that matrix.</strong></p>
+
+<div class="cachebar">
+  <div class="row"><div class="name">Naive scores \(S\)</div><div class="track"><div class="fill full" style="width:100%">512 MB · one layer, 2k tokens</div></div></div>
+  <div class="row"><div class="name">Flash score tile</div><div class="track"><div class="fill fixed" style="width:8%">tens of KB in registers</div></div></div>
+</div>
+<p class="mini-note">Same math. Different residence. Keys and values still stream from memory; only \(S\) disappears.</p>
+
+<h3>The loop</h3>
+
+<p>Cut the query axis into tiles of height \(M\) and the key axis into tiles of width \(N\). One thread block owns one query tile. It keeps that query tile in fast memory, then walks key/value tiles from left to right.</p>
+
+<div class="pipe">
+  <div class="node cool">Load query tile · stays for the whole walk</div>
+  <div class="adown">↓</div>
+  <div class="node">For each key tile along the sequence</div>
+  <div class="adown">↓</div>
+  <div class="split">
+    <div class="node cool">Load K tile</div>
+    <div class="node cool">Load V tile</div>
+  </div>
+  <div class="adown">↓</div>
+  <div class="node acc">acc_S = query-tile · key-tile<sup>T</sup><br>lives in registers, this tile only</div>
+  <div class="adown">↓</div>
+  <div class="node amber">Online softmax<br>update running max, sum, and output</div>
+  <div class="adown">↓</div>
+  <div class="node warm">Discard acc_S · overwrite next tile</div>
+  <div class="adown">↓</div>
+  <div class="node green">Write output tile</div>
+</div>
+<p class="mini-note">Q is reused. K and V stream. S is born and dies inside the block. O accumulates.</p>
+
+<p>Picture one query row and four keys, two keys per tile. The gold cells are the only scores that exist right now. The dashed cells were already folded into the running output and thrown away.</p>
+
+<div class="gridviz" aria-hidden="true">
+  <div class="cell gone">k0</div><div class="cell gone">k1</div><div class="cell on">k2</div><div class="cell on">k3</div>
+</div>
+<p class="mini-note">Tile 2 is live. Tile 1’s scores are gone. The running max, sum, and output still know about tile 1.</p>
+
+<h3>Online softmax — same example, two tiles</h3>
+
+<p>Problem this calculation solves: show that the \(24.2\) from section 1 can be obtained without holding all four scores at once. Object we are building: a running triple (max, sum of exp, weighted values). This <em>is</em> the Flash Attention mechanism, on four numbers.</p>
+
+<div class="example">
+  <div class="ex-title">Tile 1 · keys 0 and 1 · scores 1, 3 · values 10, 20</div>
+  <p>Local max \(m_1 = 3\). Local exp-sum \(\ell_1 = e^{-2} + 1 \approx 1.135\). Local mix \(O_1 = e^{-2}\cdot 10 + 1\cdot 20 \approx 21.35\).</p>
+</div>
+<div class="example">
+  <div class="ex-title">Tile 2 · keys 2 and 3 · scores 0, 2 · values 30, 40</div>
+  <p>New max is still \(3\). The first tile does not need rescaling. Local exp-sum \(\ell_2 = e^{-3} + e^{-1} \approx 0.418\). Local mix \(O_2 \approx 16.21\).</p>
+  <p>Merge is addition, because the max did not move:</p>
+  \[
+  \ell = \ell_1 + \ell_2 \approx 1.553,\qquad
+  O = O_1 + O_2 \approx 37.56,\qquad
+  o = O / \ell \approx 24.2
+  \]
+</div>
+
+<p>If the second tile had beaten the max, Flash Attention would rescale the old sum and the old mix by \(e^{m_{\mathrm{old}} - m_{\mathrm{new}}}\) first, then add. That is the identity that lets a later tile correct an earlier one. The combine step of split-KV (long decode, many thread blocks on one row) uses the same identity.</p>
+
+<div class="eqcard">
+  <div class="caption">Running state after every key tile</div>
+  \[
+  m \leftarrow \max(m, m_{\mathrm{tile}}),\quad
+  \ell \leftarrow e^{m_{\mathrm{old}}-m}\,\ell + \ell_{\mathrm{tile}},\quad
+  O \leftarrow e^{m_{\mathrm{old}}-m}\,O + O_{\mathrm{tile}}
+  \]
+</div>
+
+<p>Nothing in that triple grows with sequence length except the number of loop iterations. The score tile’s size is fixed: \(M \times N\) floats, split across the threads of one block, then overwritten.</p>
+
+<h3>Same loop, three GPU generations</h3>
+
+<p>Dao-lab Flash Attention 4 (CuTe, current <code>fa4-v4.0.0.beta10</code>) dispatches on compute capability. The walk above does not change. The unit that multiplies the tiles does.</p>
+
+<div class="wrapscroll">
+<table class="ptable">
+  <thead><tr><th>GPU</th><th>FA path</th><th>Who multiplies the tile</th><th>Typical tile (head dim 128)</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Ampere SM80</td>
+      <td>FA2 / FA4-cute SM80</td>
+      <td>Warp <code>mma.sync</code>, 4 warps, 128 threads</td>
+      <td>128 × 64</td>
+    </tr>
+    <tr>
+      <td>Hopper SM90</td>
+      <td>FA3 C++, or FA4-cute SM90</td>
+      <td>Warpgroup WGMMA; TMA can load contiguous K/V</td>
+      <td>128 × 128</td>
+    </tr>
+    <tr>
+      <td>Blackwell datacenter SM100</td>
+      <td>FA4 UMMA</td>
+      <td>UMMA into tensor memory (TMEM)</td>
+      <td>128 × 128, optional 2-CTA</td>
+    </tr>
+    <tr>
+      <td>Blackwell GeForce / RTX PRO SM120</td>
+      <td>FA4-cute <em>as SM80</em></td>
+      <td>Same <code>mma.sync</code> as Ampere; 99 KB shared memory</td>
+      <td>128 × 64 (128 × 128 would starve occupancy)</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>FA4-cute is the CuTe-DSL rewrite of that same loop (<code>pip install flash-attn-4</code>). It is not automatically faster than FA3. On Hopper, FA3 is the mature C++ kernel in <code>hopper/</code>; vLLM still prefers it on SM90 and only falls through to FA4 for shapes FA3 cannot run. On B200, FA3 does not exist — FA4’s SM100 UMMA path is the Dao-lab kernel. On SM120, FA4-cute subclasses the Ampere SM80 kernel and only changes the shared-memory budget. vLLM’s FA4 gate is SM90 / SM100 / SM110, not SM120.</p>
+
+<p>So “running FA on Blackwell” is ambiguous until you name the chip. B200 (SM100) is a new MMA unit. RTX PRO 6000 (SM120) is Flash Attention’s Ampere loop on a Blackwell memory system.</p>
+
+<h2 id="s3"><span class="num">3.</span>Next: Qwen3-8B on B200</h2>
+
+<p>A later note will take the released <a href="https://huggingface.co/Qwen/Qwen3-8B">Qwen3-8B</a> shapes — 32 query heads, 8 KV heads, head dim 128, 36 layers — and time the same tensors through a materializing softmax and through Flash Attention on B200 (SM100). Sections 1–2 do not depend on that measurement.</p>
+
+<div class="callout green"><span class="label">Mental model so far</span>
+<p>Softmax attention is scores, then weights, then a mix of values. Flash Attention computes that per key-tile, keeps only a running max, a running sum, and a running output, and overwrites the scores. Hopper and SM100 buy a faster multiplier for the same loop. SM120 runs the Ampere version of that loop.</p>
+</div>
+
+<h3>References</h3>
+<ul>
+  <li>Dao et al., <em>FlashAttention</em> (arXiv 2205.14135) — IO-aware tiling and online softmax.</li>
+  <li>Dao, <em>FlashAttention-2</em> (arXiv 2307.08691) — better work partitioning.</li>
+  <li>Shah et al., <em>FlashAttention-3</em> (arXiv 2407.08608) — Hopper WGMMA / TMA.</li>
+  <li>Dao-AILab, <a href="https://github.com/Dao-AILab/flash-attention">flash-attention</a> FA4 CuTe: <code>flash_attn/cute/flash_fwd_sm120.py</code>, <code>interface.py</code>.</li>
+  <li>Earlier in this series: <a href="/gqa.html">GQA</a>, <a href="/mla.html">MLA</a>, <a href="/linear-attention.html">linear attention / KDA</a>.</li>
+</ul>
+
+<h3>How to cite this post</h3>
+<pre style="background:#0d1117;color:#e6edf3;border-radius:14px;padding:1.2rem 1.35rem;overflow-x:auto;font-size:.82rem;font-family:JetBrains Mono,monospace"><code>Dong, S. (2026). Understanding Flash Attention.
+https://simondong1.github.io/flash-attention.html</code></pre>
+</main>
+<footer><div class="wrap">
+  <p>Written by <a href="https://x.com/dongsixiang"><strong>Simon Dong</strong></a> · August 2026.</p>
+  <p><a href="/">&larr; Back to blog</a></p>
+</div></footer>
+<script>
+(function(){
+  var links=Array.prototype.slice.call(document.querySelectorAll("nav.toc a"));
+  var byId={};links.forEach(function(a){byId[a.getAttribute("href").slice(1)]=a});
+  var heads=Array.prototype.slice.call(document.querySelectorAll("main h2[id]"));
+  if(!("IntersectionObserver" in window)||!heads.length)return;
+  var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove("active")});if(byId[e.target.id])byId[e.target.id].classList.add("active")}})},{rootMargin:"-12% 0px -78% 0px",threshold:0});
+  heads.forEach(function(h){obs.observe(h)});
+})();
+</script>
+</body>
+</html>

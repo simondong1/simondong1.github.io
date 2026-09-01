@@ -6,6 +6,9 @@ HOST=simondong1.github.io
 KEYLOC="https://${HOST}/${KEY}.txt"
 URLS=(
   "https://${HOST}/"
+  "https://${HOST}/flash-attention.html"
+  "https://${HOST}/linear-attention.html"
+  "https://${HOST}/ppo.html"
   "https://${HOST}/mla-decoding.html"
   "https://${HOST}/mla.html"
   "https://${HOST}/gqa.html"
