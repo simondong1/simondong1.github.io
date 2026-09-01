@@ -31,6 +31,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"]]},svg:{fontCache:"global"}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <style>
   :root{
     --bg:#fbfbfa;--surface:#fff;--ink:#1f2328;--ink-soft:#475059;--muted:#8b949e;
@@ -129,6 +131,10 @@
   .where .good{color:#12652f;background:#f7fbf8}
   .where div:nth-last-child(-n+3){border-bottom:none}
 
+  .eqcard{border:1px solid #f3c0c2;background:var(--warm-soft);border-radius:14px;padding:1rem 1.15rem;margin:1.2rem 0;text-align:center}
+  .eqcard .caption{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--warm);font-weight:700;margin:0 0 .5rem;text-align:center}
+  .eqcard .shape{font-family:"JetBrains Mono",monospace;font-size:.78rem;color:#a32a2e;margin:.55rem 0 0}
+  mjx-container[display="true"]{margin:.55rem 0 !important;overflow-x:auto}
   .callout.green{border-left-color:var(--green)}
   .callout.green .label{color:var(--green)}
   footer{border-top:1px solid var(--line);margin-top:3.6rem;padding:2.3rem 0 4rem;font-size:.9rem;color:var(--muted)}
@@ -164,6 +170,18 @@
 <h2 id="s1"><span class="num">1.</span>How</h2>
 
 <p>FLOPs stay the same. The speedup is skipping the score-matrix round-trip through HBM.</p>
+
+<p>Reminder — one head:</p>
+<div class="eqcard">
+  <div class="caption">The big matrix is scores</div>
+  \[
+  \mathrm{scores}=QK^{\top}
+  \]
+  \[
+  O=\mathrm{softmax}(\mathrm{scores}/\sqrt{d})\,V
+  \]
+  <p class="shape">scores: queries × keys &nbsp;·&nbsp; grows with sequence²</p>
+</div>
 
 <div class="pair">
   <div class="panel bad">
