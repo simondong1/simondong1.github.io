@@ -123,13 +123,17 @@
   .state{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin:1rem 0 .2rem}
   .state .box{max-width:none}
 
-  .where{display:grid;grid-template-columns:7.5rem 1fr 1fr;gap:0;margin:1.2rem 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:.86rem}
-  .where div{padding:.55rem .65rem;border-bottom:1px solid var(--line)}
-  .where .h{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:var(--muted);background:#f6f7f9}
-  .where .r{font-weight:650}
-  .where .bad{color:#a32a2e;background:#fff8f8}
-  .where .good{color:#12652f;background:#f7fbf8}
-  .where div:nth-last-child(-n+3){border-bottom:none}
+  .homes{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
+  .home{border:1px solid var(--line);border-radius:14px;padding:1rem .95rem;background:#fff}
+  .home p{margin:0}
+  .home.bad{border-color:#f3c0c2;background:#fff8f8}
+  .home.good{border-color:#cce8d2;background:#f7fbf8}
+  .home .loc{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin:0 0 .35rem}
+  .home.bad .loc{color:var(--warm)}.home.good .loc{color:var(--green)}
+  .home .what{font-weight:650;margin:0 0 .25rem}
+  .home .sz{font-family:"JetBrains Mono",monospace;font-size:1.45rem;font-weight:700;line-height:1.15;margin:.2rem 0 .35rem}
+  .home.bad .sz{color:#a32a2e}.home.good .sz{color:#12652f}
+  .home .note{font-size:.8rem;color:var(--ink-soft);margin:0}
 
   .eqcard{border:1px solid #f3c0c2;background:var(--warm-soft);border-radius:14px;padding:1rem 1.15rem;margin:1.2rem 0;text-align:center}
   .eqcard .caption{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--warm);font-weight:700;margin:0 0 .5rem;text-align:center}
@@ -142,8 +146,7 @@
   ul{margin:1rem 0;padding-left:1.2rem}li{margin:.35rem 0}
   @media(max-width:640px){
     header.hero{padding:3.5rem 0 2rem}
-    .pair,.metrics,.state{grid-template-columns:1fr}
-    .where{font-size:.78rem}
+    .pair,.metrics,.state,.homes{grid-template-columns:1fr}
     .barrow{grid-template-columns:1fr}.barrow .name{text-align:left}
   }
 </style>
@@ -241,7 +244,7 @@
 
 <h2 id="s2"><span class="num">2.</span>How much</h2>
 
-<p>Qwen3-8B, one layer, batch 1, 32 query heads, float32 scores. Move sequence length.</p>
+<p><a href="https://huggingface.co/Qwen/Qwen3.8-27B">Qwen3.8-27B</a>, one softmax layer, batch 1, 24 query heads, float32 scores. Flash only runs on these 16 GQA layers — the other 48 are <a href="/linear-attention.html">Gated DeltaNet</a>. Move sequence length.</p>
 
 <div class="gain">
   <div class="controls">
@@ -249,20 +252,34 @@
     <input id="seq" type="range" min="0" max="6" step="1" value="2" />
     <span class="seq" id="seq-label">2,048</span>
   </div>
+  <div class="homes">
+    <div class="home bad">
+      <p class="loc">HBM · off-chip DRAM</p>
+      <p class="what">Entire score matrix</p>
+      <p class="sz" id="home-matrix">384 MB</p>
+      <p class="note">Naive writes it here, then reads it back.</p>
+    </div>
+    <div class="home good">
+      <p class="loc">Registers · on-chip</p>
+      <p class="what">One score tile</p>
+      <p class="sz">32 KB</p>
+      <p class="note">Flash overwrites this every key tile. Size does not grow.</p>
+    </div>
+  </div>
   <div class="metrics">
     <div class="metric bad">
       <span>Naive score matrix</span>
-      <b id="naive-s">512 MB</b>
+      <b id="naive-s">384 MB</b>
       <small>written to HBM, then read back</small>
     </div>
     <div class="metric good">
       <span>Flash extra for scores</span>
       <b>0</b>
-      <small>one ~33 KB tile, then overwritten</small>
+      <small>the 32 KB tile is overwritten, not allocated in HBM</small>
     </div>
     <div class="metric bad">
       <span>Extra HBM traffic</span>
-      <b id="naive-t">1.0 GB</b>
+      <b id="naive-t">768 MB</b>
       <small>write scores + read scores</small>
     </div>
     <div class="metric good">
@@ -272,22 +289,10 @@
     </div>
   </div>
   <div class="bars">
-    <div class="barrow"><div class="name">Naive scores</div><div class="track"><div class="fill warm" id="bar-naive" style="width:25%">512 MB</div></div></div>
-    <div class="barrow"><div class="name">Flash tile</div><div class="track"><div class="fill green" style="width:4%">33 KB</div></div></div>
+    <div class="barrow"><div class="name">Naive scores</div><div class="track"><div class="fill warm" id="bar-naive" style="width:100%">384 MB</div></div></div>
+    <div class="barrow"><div class="name">Flash tile</div><div class="track"><div class="fill green" style="width:4%">32 KB</div></div></div>
   </div>
-  <p class="caption">36 layers. At 8k tokens the naive matrix is 8 GB — one layer, scores only.</p>
-</div>
-
-<div class="where" aria-label="Where each tensor lives">
-  <div class="h"></div>
-  <div class="h">Naive</div>
-  <div class="h">Flash</div>
-  <div class="r">queries, keys, values, output</div>
-  <div>HBM</div>
-  <div>HBM</div>
-  <div class="r">scores</div>
-  <div class="bad">HBM · sequence²</div>
-  <div class="good">registers · one tile</div>
+  <p class="caption">At 8k tokens one softmax layer is 6 GB of scores. Sixteen such layers in this model.</p>
 </div>
 
 <h2 id="s3"><span class="num">3.</span>The tile walk</h2>
@@ -375,10 +380,11 @@ https://simondong1.github.io/flash-attention.html</code></pre>
   var seqEl=document.getElementById("seq");
   function render(){
     var seq=SEQS[+seqEl.value];
-    var S=seq*seq*32*4;
+    var S=seq*seq*24*4;
     document.getElementById("seq-label").textContent=seq.toLocaleString();
     document.getElementById("naive-s").textContent=fmt(S);
     document.getElementById("naive-t").textContent=fmt(2*S);
+    document.getElementById("home-matrix").textContent=fmt(S);
     var bar=document.getElementById("bar-naive");
     bar.style.width="100%";
     bar.textContent=fmt(S);
