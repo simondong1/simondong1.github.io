@@ -145,6 +145,27 @@
   .readmore a{display:block;border:1px solid var(--line);background:#fff;border-radius:10px;padding:.55rem .75rem;color:var(--ink-soft);font-size:.9rem}
   .readmore a:hover{color:var(--accent);border-color:#dfe2fb;background:var(--accent-soft)}
   .stub{border:1px dashed var(--line);border-radius:14px;padding:1.1rem 1.2rem;color:var(--ink-soft);background:#fff;margin:1.1rem 0}
+  .algos{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin:1.15rem 0}
+  .algo{border:1px solid var(--line);border-radius:12px;background:#fff;padding:.75rem .85rem}
+  .algo b{display:block;font-size:.84rem;margin-bottom:.12rem}
+  .algo span{display:block;color:var(--ink-soft);font-size:.79rem;line-height:1.45}
+  .timing{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1rem;margin:1.25rem 0}
+  .timing-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .timing-panel h3{font-size:.86rem;margin:0 0 .25rem;text-align:center}
+  .timing-panel svg{display:block;width:100%;height:auto;overflow:visible}
+  .chart-grid{stroke:var(--line);stroke-width:1}
+  .chart-axis{stroke:var(--muted);stroke-width:1}
+  .chart-label{fill:var(--muted);font:11px "JetBrains Mono",monospace}
+  .chart-line{fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+  .chart-dot{stroke:#fff;stroke-width:1.5}
+  .chart-naive{stroke:var(--warm);fill:var(--warm)}
+  .chart-sdpa{stroke:var(--cool);fill:var(--cool)}
+  .chart-fa4{stroke:var(--green);fill:var(--green)}
+  .chart-flashinfer{stroke:var(--accent);fill:var(--accent)}
+  .timing-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:.35rem .85rem;margin:.6rem 0 .1rem;font-size:.76rem;color:var(--ink-soft)}
+  .timing-legend i{display:inline-block;width:.72rem;height:.18rem;margin-right:.3rem;vertical-align:.18rem;border-radius:2px}
+  .timing-legend .naive{background:var(--warm)}.timing-legend .sdpa{background:var(--cool)}
+  .timing-legend .fa4{background:var(--green)}.timing-legend .flashinfer{background:var(--accent)}
 
   .homes{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
   .home{border:1px solid var(--line);border-radius:14px;padding:1rem .95rem;background:#fff}
@@ -167,10 +188,10 @@
   footer{border-top:1px solid var(--line);margin-top:3.6rem;padding:2.3rem 0 4rem;font-size:.9rem;color:var(--muted)}
   footer a{color:var(--ink-soft)}
   ul{margin:1rem 0;padding-left:1.2rem}li{margin:.35rem 0}
-  @media(max-width:900px){.reuse{grid-template-columns:1fr 1fr}}
+  @media(max-width:900px){.reuse{grid-template-columns:1fr 1fr}.timing-grid{grid-template-columns:1fr}}
   @media(max-width:640px){
     header.hero{padding:3.5rem 0 2rem}
-    .pair,.metrics,.state,.homes,.reuse{grid-template-columns:1fr}
+    .pair,.metrics,.state,.homes,.reuse,.algos{grid-template-columns:1fr}
     .barrow{grid-template-columns:1fr}.barrow .name{text-align:left}
   }
 </style>
@@ -374,9 +395,38 @@
 </div>
 
 <h2 id="s4"><span class="num">4.</span>Performance</h2>
-<div class="stub">
-  <p style="margin:0">Kernel times for this walk — Qwen3.8-27B, Flash vs a materializing softmax — land here next.</p>
+
+<p>Four implementations compute the same attention output:</p>
+<div class="algos">
+  <div class="algo"><b>Naive</b><span>Materializes the full score matrix, applies softmax, then multiplies by V.</span></div>
+  <div class="algo"><b>PyTorch SDPA</b><span>PyTorch's fused scaled-dot-product attention backend for this SM100 shape.</span></div>
+  <div class="algo"><b>FlashAttention-4</b><span>CuTe SM100 kernel: tiled online softmax, with the head-dimension-256 2-CTA path.</span></div>
+  <div class="algo"><b>FlashInfer</b><span>Serving-oriented kernels: fused prefill and tensor-core decode for Qwen's GQA group size of six.</span></div>
 </div>
+
+<div class="timing">
+  <div class="timing-grid">
+    <div class="timing-panel">
+      <h3>Prefill kernel latency</h3>
+      <svg id="prefill-chart" viewBox="0 0 620 300" role="img" aria-label="Prefill attention latency in milliseconds by sequence length"></svg>
+    </div>
+    <div class="timing-panel">
+      <h3>Decode kernel latency</h3>
+      <svg id="decode-chart" viewBox="0 0 620 300" role="img" aria-label="Decode attention latency in milliseconds by KV-cache length"></svg>
+    </div>
+  </div>
+  <div class="timing-legend">
+    <span><i class="naive"></i>Naive</span><span><i class="sdpa"></i>PyTorch SDPA</span>
+    <span><i class="fa4"></i>FlashAttention-4</span><span><i class="flashinfer"></i>FlashInfer</span>
+  </div>
+  <p class="caption">Latency (ms, logarithmic y-axis) · one NVIDIA B200 (SM100) · BF16 · batch 1 · Qwen3.8-27B full-attention shape: 24 Q heads, 4 KV heads, head dimension 256.</p>
+</div>
+
+<div class="callout green"><span class="label">Result</span>
+<p>FA4 wins prefill: at 8k tokens it takes <strong>0.599 ms</strong>, versus 2.279 ms for SDPA and 2.486 ms for FlashInfer. Decode flips the result: at a 32k KV cache, FlashInfer takes <strong>0.039 ms</strong>, versus 0.307 ms for FA4.</p>
+</div>
+
+<p>Each point discards five warmups, then averages 20 launches timed with CUDA events. Prefill uses a causal square query/key sequence; decode uses one new query token over the existing KV cache. The decode loop reuses the same tensors, so its data can remain warm in the B200's L2 cache: these points compare kernels, not end-to-end serving latency.</p>
 
 <h3>References</h3>
 <ul>
@@ -473,6 +523,53 @@ https://simondong1.github.io/flash-attention.html</code></pre>
   }
   seqEl.addEventListener("input",render);
   render();
+
+  function drawTimingChart(id, seqs, series, yMin, yMax, ticks){
+    var svg=document.getElementById(id), NS="http://www.w3.org/2000/svg";
+    var W=620,H=300,L=64,R=18,T=18,B=48,pw=W-L-R,ph=H-T-B;
+    function node(tag,attrs,text){
+      var n=document.createElementNS(NS,tag);
+      Object.keys(attrs||{}).forEach(function(k){n.setAttribute(k,attrs[k]);});
+      if(text!==undefined)n.textContent=text;
+      svg.appendChild(n);return n;
+    }
+    function x(i){return L+(seqs.length===1?pw/2:i*pw/(seqs.length-1));}
+    function y(v){return T+(Math.log10(yMax)-Math.log10(v))/(Math.log10(yMax)-Math.log10(yMin))*ph;}
+    ticks.forEach(function(v){
+      var yy=y(v);
+      node("line",{x1:L,y1:yy,x2:W-R,y2:yy,class:"chart-grid"});
+      node("text",{x:L-8,y:yy+4,"text-anchor":"end",class:"chart-label"},String(v));
+    });
+    node("line",{x1:L,y1:T,x2:L,y2:H-B,class:"chart-axis"});
+    node("line",{x1:L,y1:H-B,x2:W-R,y2:H-B,class:"chart-axis"});
+    seqs.forEach(function(s,i){
+      node("text",{x:x(i),y:H-B+19,"text-anchor":"middle",class:"chart-label"},s);
+    });
+    node("text",{x:14,y:T+ph/2,transform:"rotate(-90 14 "+(T+ph/2)+")","text-anchor":"middle",class:"chart-label"},"Latency (ms, log)");
+    node("text",{x:L+pw/2,y:H-7,"text-anchor":"middle",class:"chart-label"},"Sequence / KV length (tokens)");
+    series.forEach(function(s){
+      var points=[];
+      s.values.forEach(function(v,i){if(v!==null)points.push(x(i)+","+y(v));});
+      node("polyline",{points:points.join(" "),class:"chart-line chart-"+s.key});
+      s.values.forEach(function(v,i){
+        if(v===null)return;
+        var c=node("circle",{cx:x(i),cy:y(v),r:4,class:"chart-dot chart-"+s.key});
+        var title=document.createElementNS(NS,"title");title.textContent=s.name+": "+v+" ms";c.appendChild(title);
+      });
+    });
+  }
+  drawTimingChart("prefill-chart",["1k","4k","8k"],[
+    {key:"naive",name:"Naive",values:[.356,5.291,null]},
+    {key:"sdpa",name:"PyTorch SDPA",values:[.069,.639,2.279]},
+    {key:"fa4",name:"FlashAttention-4",values:[.052,.190,.599]},
+    {key:"flashinfer",name:"FlashInfer",values:[.070,.686,2.486]}
+  ],.04,10,[.05,.1,.5,1,5,10]);
+  drawTimingChart("decode-chart",["1k","8k","32k"],[
+    {key:"naive",name:"Naive",values:[.098,.245,.862]},
+    {key:"sdpa",name:"PyTorch SDPA",values:[.024,.032,.054]},
+    {key:"fa4",name:"FlashAttention-4",values:[.052,.084,.307]},
+    {key:"flashinfer",name:"FlashInfer",values:[.026,.026,.039]}
+  ],.02,1,[.02,.05,.1,.2,.5,1]);
 
   var links=[].slice.call(document.querySelectorAll("nav.toc a"));
   var byId={};links.forEach(function(a){byId[a.getAttribute("href").slice(1)]=a;});
