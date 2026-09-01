@@ -215,8 +215,7 @@
   ul{margin:1rem 0;padding-left:1.2rem}li{margin:.35rem 0}
   @media(max-width:900px){.reuse{grid-template-columns:1fr 1fr}.timing-grid{grid-template-columns:1fr}}
   @media(min-width:901px){
-    .timing,figure.shot,.mtbl{width:min(70rem,calc(100vw - 3rem));margin-left:50%;transform:translateX(-50%)}
-    .timing{padding:1.35rem 1.6rem}
+    figure.shot,.mtbl{width:min(70rem,calc(100vw - 3rem));margin-left:50%;transform:translateX(-50%)}
   }
   @media(max-width:640px){
     header.hero{padding:3.5rem 0 2rem}
@@ -427,7 +426,7 @@
 
 <h2 id="s4"><span class="num">4.</span>Performance</h2>
 
-<p>Four implementations compute the same attention output:</p>
+<p>On one NVIDIA B200, we evaluate the full-attention shape used by 16 of Qwen3.8-27B's 64 layers: batch 1, bfloat16, 24 query heads, 4 key/value heads, and head dimension 256. We compare an eager PyTorch baseline, PyTorch scaled dot-product attention, FlashAttention-4, and FlashInfer; FlashInfer uses its single-prefill kernel for prefill and its tensor-core single-decode kernel for decode.</p>
 <div class="algos">
   <div class="algo"><b>Naive PyTorch eager baseline</b><span>Explicitly expands grouped key/value heads, materializes float32 scores, applies softmax, then multiplies by V. This is a diagnostic baseline, not every possible naive implementation.</span></div>
   <div class="algo"><b>PyTorch SDPA</b><span>PyTorch's fused scaled-dot-product attention backend for this SM100 shape.</span></div>
@@ -457,19 +456,7 @@
 <p>FlashAttention-4 wins prefill: at 8k tokens it takes <strong>0.599 ms</strong>, versus 2.279 ms for SDPA and 2.486 ms for FlashInfer. Decode flips the result: at a 32k key/value cache, FlashInfer takes <strong>0.039 ms</strong>, versus 0.307 ms for FlashAttention-4.</p>
 </div>
 
-<p>Each point discards five warmups, then averages 20 backend invocations timed with CUDA events. An invocation may contain one or several kernels. Prefill uses a causal square query/key sequence; decode uses one new query token over the existing key/value cache. The decode loop reuses the same tensors, so its data can remain warm in the B200's on-chip L2 cache: these points compare backend calls, not end-to-end serving latency.</p>
-
-<div class="callout"><span class="label">Measurement contract</span>
-<p>One B200, batch 1, bfloat16 inputs, 24 query heads, 4 key/value heads, head dimension 256, softmax scale 0.0625. Correctness was checked at 128 tokens against a float32-softmax reference: maximum absolute error 0.0156 for prefill and 0.00391 for decode. This profiles one of Qwen3.8-27B's 16 full-attention layers, not the complete 27-billion-parameter model.</p>
-<p>PyTorch 2.13.0 with CUDA 13.0; FlashAttention-4 4.0.0b19; FlashInfer 0.6.17; NVIDIA driver 580.105.08; Nsight Compute 2025.3.1. PyTorch's scaled dot-product attention API dispatched its fused <code>flash_fwd</code> kernels. Nsight used 19 replay passes for each primary kernel.</p>
-</div>
-
-<p>The charts decide the winner. <a href="https://developer.nvidia.com/nsight-compute">Nsight Compute</a> explains every implementation. It profiles one complete GPU launch — every block and thread — and replays it to collect hardware counters. The reports use the same 4k prefill and 32k decode shapes, but run under Nsight's replay conditions; default cache control flushes GPU caches between the 19 passes. Cache counters therefore do not represent the warm timing loop. Use profiler durations to explain structure, not wall-clock speed.</p>
-
-<figure class="shot">
-  <img src="assets/fa4/fa4-summary.png" alt="Nsight Compute result row for FlashAttention-4 prefill: 361.82 microseconds on a B200">
-  <p class="caption">One row is one complete fused kernel. Naive attention has 12 rows at 4k because score conversion, masking, softmax and the two matrix multiplies are separate.</p>
-</figure>
+<p>Each point averages 20 backend calls after five warmups; correctness was checked at 128 tokens against a float32-softmax reference (maximum absolute error 0.0156 prefill, 0.00391 decode). Decode reuses the same tensors and can be L2-cache-warm, so CUDA events decide kernel speed while <a href="https://developer.nvidia.com/nsight-compute">Nsight Compute</a> replay durations explain structure, not end-to-end serving latency.</p>
 
 <h3>Prefill: all four implementations</h3>
 
@@ -490,7 +477,24 @@
   <div class="algo"><b>FlashInfer prefill · not the winner for this shape</b><span>One kernel, but the profile resembles SDPA: 175 million instructions, 20.43% load/store use, 64.02% on-chip memory pressure, no Tensor Memory. In this B200 experiment, its advantage appears during split-key/value decode, not square prefill.</span></div>
 </div>
 
-<p>Four Nsight sections, in the order they appear.</p>
+<h3>Naive prefill: twelve kernels, not one bad kernel</h3>
+
+<figure class="shot">
+  <img src="assets/fa4/naive-prefill.png" alt="Nsight Compute summary showing twelve separate naive prefill kernel launches">
+  <p class="caption">Here are the naive kernels: twelve rows. Score conversion and scaling take 2.03 ms; mask construction and application 1.65 ms; softmax 2.25 ms; bfloat16 conversion 0.38 ms; grouped-head expansion 0.16 ms; the two matrix multiplies only 0.60 ms.</p>
+</figure>
+
+<div class="hbar" aria-label="Naive prefill Nsight duration decomposition">
+  <div class="row"><div class="name">Score prep + mask</div><div class="track"><div class="fill" style="width:52%;background:var(--warm)">3.68 ms</div></div><div class="val">52.0%</div></div>
+  <div class="row"><div class="name">Softmax</div><div class="track"><div class="fill" style="width:31.8%;background:#f58518">2.25 ms</div></div><div class="val">31.8%</div></div>
+  <div class="row"><div class="name">QKᵀ + PV</div><div class="track"><div class="fill" style="width:8.5%;background:var(--cool)">0.60</div></div><div class="val">8.5%</div></div>
+  <div class="row"><div class="name">Float32 → BF16</div><div class="track"><div class="fill" style="width:5.4%;background:#72b7b2">0.38</div></div><div class="val">5.4%</div></div>
+  <div class="row"><div class="name">Grouped-query expansion</div><div class="track"><div class="fill" style="width:2.2%;background:#e7ba52"></div></div><div class="val">2.2%</div></div>
+</div>
+
+<p>The QKᵀ matrix multiply itself is respectable: 56.40% compute throughput, 34.54% HBM throughput, 255 registers/thread, 217.4 KB dynamic shared memory and 9.37% occupancy. Optimizing that kernel cannot rescue the call: 91.5% of profiled duration is score conversion/scaling, mask work, standalone softmax, output conversion, and grouped-head expansion. Fusion removes whole tensors and launches; it is the first optimization, before Tensor Memory.</p>
+
+<p>For the three fused prefill kernels, read the four Nsight sections in order.</p>
 
 <h3>1. Speed of Light — which unit is closest to its peak?</h3>
 
@@ -499,6 +503,11 @@
 <div class="term"><b>Compute throughput</b><span>How busy the strongest compute pipeline is, as a percent of its peak.</span></div>
 <div class="term"><b>Memory throughput</b><span>The maximum among many on-chip and off-chip memory paths — not high-bandwidth memory by itself.</span></div>
 <div class="term"><b>DRAM throughput</b><span>High-bandwidth memory (HBM) only. A high value can identify bandwidth saturation; a low value does not by itself rule out memory latency stalls.</span></div>
+
+<figure class="shot">
+  <img src="assets/fa4/nsight-speed-of-light.png" alt="Nsight Compute GPU Speed of Light section for FlashAttention-4 prefill">
+  <p class="caption">What the Nsight section actually looks like. FlashAttention-4 keeps compute 55.49% busy while its busiest memory path reaches only 17.60%; off-chip DRAM is 3.27%.</p>
+</figure>
 
 <table class="mtbl">
   <thead><tr><th>4k prefill</th><th>FlashAttention-4</th><th>PyTorch SDPA</th><th>FlashInfer</th></tr></thead>
@@ -521,6 +530,11 @@
 <h3>2. Compute workload — Tensor Memory versus ordinary load/store</h3>
 
 <p>A <em>warp</em> is 32 threads that issue instructions together. <em>Instructions per cycle</em> is how many those warps retire per clock. <em>Issue slots busy</em> is how often a warp scheduler actually sends an instruction.</p>
+
+<figure class="shot">
+  <img src="assets/fa4/nsight-compute-workload.png" alt="Nsight Compute Compute Workload Analysis charts for FlashAttention-4 prefill">
+  <p class="caption">The left chart counts cycles occupied: Tensor Memory and tensor-core paths dominate. The right counts issued instructions: few Tensor Memory instructions keep the dedicated hardware busy for many cycles.</p>
+</figure>
 
 <table class="mtbl">
   <thead><tr><th>4k fused kernel</th><th>FlashAttention-4</th><th>PyTorch SDPA</th><th>FlashInfer</th></tr></thead>
@@ -549,6 +563,11 @@
 
 <p>L1 is the per-multiprocessor cache. L1/TEX is NVIDIA's combined Level-1 and texture-data path. L2 is the chip-wide cache in front of high-bandwidth memory. Shared memory is a separate, programmer-controlled scratchpad that lives in the same on-chip SRAM as L1 but is not the cache. Tensor Memory is a third on-chip space.</p>
 
+<figure class="shot">
+  <img src="assets/fa4/nsight-memory-workload.png" alt="Nsight Compute Memory Workload Analysis section for FlashAttention-4 prefill">
+  <p class="caption">The memory section separates byte rate, cache hits, access-hardware activity, request bandwidth, memory-instruction pipes, and spills. “Memory busy” is not synonymous with HBM.</p>
+</figure>
+
 <table class="mtbl">
   <thead><tr><th></th><th>FlashAttention-4</th><th>PyTorch SDPA</th><th>FlashInfer</th></tr></thead>
   <tbody>
@@ -572,8 +591,8 @@
 <p>A warp issues one instruction, then waits until it can issue the next. <strong>Warp cycles per issued instruction</strong> is that interval, averaged over every warp and cycle. The bar chart is the breakdown of that interval. It is not “time waiting for a bigger GEMM to be assigned.” A larger matrix usually means more launches or more loop trips, not a larger number on this chart. The number rises only when the <em>next</em> instruction cannot issue.</p>
 
 <figure class="shot">
-  <img src="assets/fa4/fa4-warp.png" alt="Nsight Compute warp state chart for FlashAttention-4 prefill">
-  <p class="caption">FlashAttention-4 warp states. Long scoreboard 3.41 and barrier 2.41 dominate the 9.37-cycle interval. The kernel is latency-exposed and still faster, because each issued instruction launches more work.</p>
+  <img src="assets/fa4/nsight-warp-state.png" alt="Nsight Compute Warp State Statistics chart for FlashAttention-4 prefill">
+  <p class="caption">The chart now shows the evidence directly: long-scoreboard waits (3.41 cycles) and barriers (2.41) dominate the 9.37-cycle interval between issued instructions.</p>
 </figure>
 
 <table class="mtbl">
@@ -637,23 +656,6 @@
   <img src="assets/fa4/sdpa-occupancy.png" alt="Nsight Compute occupancy for PyTorch SDPA prefill">
   <p class="caption">SDPA: theoretical 12.50%, achieved 12.06%. Block limit from registers = 2, from shared memory = 2. Same story as FlashAttention-4 — resources, not a broken scheduler.</p>
 </figure>
-
-<h3>Naive prefill: the profile is twelve kernels, not one bad kernel</h3>
-
-<figure class="shot">
-  <img src="assets/fa4/naive-prefill.png" alt="Nsight Compute summary showing twelve separate naive prefill kernel launches">
-  <p class="caption">The profile is the visualization: twelve rows. Score conversion and scaling take 2.03 ms; mask construction and application 1.65 ms; softmax 2.25 ms; bfloat16 conversion 0.38 ms; grouped-head expansion 0.16 ms; the two matrix multiplies only 0.60 ms.</p>
-</figure>
-
-<div class="hbar" aria-label="Naive prefill Nsight duration decomposition">
-  <div class="row"><div class="name">Score prep + mask</div><div class="track"><div class="fill" style="width:52%;background:var(--warm)">3.68 ms</div></div><div class="val">52.0%</div></div>
-  <div class="row"><div class="name">Softmax</div><div class="track"><div class="fill" style="width:31.8%;background:#f58518">2.25 ms</div></div><div class="val">31.8%</div></div>
-  <div class="row"><div class="name">QKᵀ + PV</div><div class="track"><div class="fill" style="width:8.5%;background:var(--cool)">0.60</div></div><div class="val">8.5%</div></div>
-  <div class="row"><div class="name">Float32 → BF16</div><div class="track"><div class="fill" style="width:5.4%;background:#72b7b2">0.38</div></div><div class="val">5.4%</div></div>
-  <div class="row"><div class="name">Grouped-query expansion</div><div class="track"><div class="fill" style="width:2.2%;background:#e7ba52"></div></div><div class="val">2.2%</div></div>
-</div>
-
-<p>The QKᵀ matrix multiply itself is respectable: 56.40% compute throughput, 34.54% HBM throughput, 255 registers/thread, 217.4 KB dynamic shared memory and 9.37% occupancy. Optimizing that kernel cannot rescue the call: 91.5% of profiled duration is score conversion/scaling, mask work, standalone softmax, output conversion, and grouped-head expansion. Fusion removes whole tensors and launches; it is the first optimization, before Tensor Memory.</p>
 
 <h3>Decode flips because the grid cannot fill 148 multiprocessors</h3>
 
