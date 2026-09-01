@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Understanding Flash Attention</title>
-<meta name="description" content="Flash Attention is the same softmax. The gain is that the score matrix never hits GPU memory. A visual walk through that bandwidth win." />
+<title>How Flash Attention Speeds Up — and By How Much</title>
+<meta name="description" content="How Flash Attention speeds up: keep scores in registers so the GPU stops waiting on HBM. And how much that save is." />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href="https://simondong1.github.io/flash-attention.html" />
 <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
 <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
-<meta property="og:title" content="Understanding Flash Attention" />
-<meta property="og:description" content="Same softmax. The score matrix never hits GPU memory. Visual walk through the bandwidth gain." />
+<meta property="og:title" content="How Flash Attention Speeds Up — and By How Much" />
+<meta property="og:description" content="How the kernel avoids HBM, and how large that save is." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://simondong1.github.io/flash-attention.html" />
 <meta property="og:site_name" content="Simon Dong" />
@@ -18,15 +18,15 @@
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:site" content="@dongsixiang" />
 <meta name="twitter:creator" content="@dongsixiang" />
-<meta name="twitter:title" content="Understanding Flash Attention" />
-<meta name="twitter:description" content="Same softmax. The score matrix never hits GPU memory." />
+<meta name="twitter:title" content="How Flash Attention Speeds Up — and By How Much" />
+<meta name="twitter:description" content="How the kernel avoids HBM, and how large that save is." />
 <meta name="author" content="Simon Dong" />
-<meta name="citation_title" content="Understanding Flash Attention" />
+<meta name="citation_title" content="How Flash Attention Speeds Up — and By How Much" />
 <meta name="citation_author" content="Dong, Simon" />
 <meta name="citation_publication_date" content="2026/08/31" />
 <meta name="citation_fulltext_html_url" content="https://simondong1.github.io/flash-attention.html" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"TechArticle","headline":"Understanding Flash Attention","description":"Flash Attention is the same softmax. The gain is that the score matrix never hits GPU memory.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-08-31","dateModified":"2026-08-31","mainEntityOfPage":"https://simondong1.github.io/flash-attention.html","keywords":["Flash Attention","online softmax","HBM","Qwen3"]}
+{"@context":"https://schema.org","@type":"TechArticle","headline":"How Flash Attention Speeds Up — and By How Much","description":"How Flash Attention speeds up: keep scores in registers so the GPU stops waiting on HBM. And how much that save is.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-08-31","dateModified":"2026-09-01","mainEntityOfPage":"https://simondong1.github.io/flash-attention.html","keywords":["Flash Attention","HBM","online softmax","Qwen3"]}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -145,27 +145,25 @@
 <body>
 <header class="hero"><div class="wrap">
   <p class="eyebrow">Kernels · Softmax Attention</p>
-  <h1 class="title">Understanding Flash Attention <span class="title-expansion">Same softmax. Scores never hit HBM.</span></h1>
-  <p class="subtitle">The formula does not change. The score matrix stops living in GPU memory. That is the whole gain.</p>
+  <h1 class="title">How Flash Attention Speeds Up <span class="title-expansion">And by how much</span></h1>
+  <p class="subtitle">Attention waits on HBM. Keep scores in registers and that wait goes away.</p>
   <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>August 2026</span><span class="dot">•</span><span>Kernels</span></div>
 </div></header>
 
 <main class="wrap">
-<p class="lede">Attention is still: scores from queries·keys, softmax, mix values. Flash Attention changes only <em>where the scores live</em>.</p>
-
 <div class="callout"><span class="label">Where this kernel is used</span>
-<p>Default softmax kernel in PyTorch SDPA, vLLM, SGLang — Qwen3, Llama, Gemma, and other <a href="/gqa.html">GQA</a> models. Not <a href="/linear-attention.html">linear attention</a>. <a href="/mla.html">MLA</a> is still this softmax, different widths.</p>
+<p>Default softmax kernel in PyTorch SDPA, vLLM, SGLang — Qwen3, Llama, Gemma, and other <a href="/gqa.html">GQA</a> models. Not <a href="/linear-attention.html">linear attention</a>.</p>
 </div>
 
 <nav class="toc"><div class="toc-title">Contents</div><ol>
-  <li><a href="#s1"><span class="n">1</span>Same math, two residences</a></li>
-  <li><a href="#s2"><span class="n">2</span>The gain</a></li>
-  <li><a href="#s3"><span class="n">3</span>How the tile walk works</a></li>
+  <li><a href="#s1"><span class="n">1</span>How</a></li>
+  <li><a href="#s2"><span class="n">2</span>How much</a></li>
+  <li><a href="#s3"><span class="n">3</span>The tile walk</a></li>
 </ol></nav>
 
-<h2 id="s1"><span class="num">1.</span>Same math, two residences</h2>
+<h2 id="s1"><span class="num">1.</span>How</h2>
 
-<p>One head. Queries and keys already exist. The kernel returns the mixed output.</p>
+<p>FLOPs stay the same. The speedup is skipping the score-matrix round-trip through HBM.</p>
 
 <div class="pair">
   <div class="panel bad">
@@ -193,7 +191,7 @@
     </div>
   </div>
 </div>
-<p class="caption">Same three steps. The red matrix is what Flash refuses to store.</p>
+<p class="caption">The wait is the red matrix.</p>
 
 <div class="pair">
   <div>
@@ -223,9 +221,7 @@
   <span><i class="swatch gone"></i>already folded away</span>
 </div>
 
-<h2 id="s2"><span class="num">2.</span>The gain</h2>
-
-<p>Not fewer FLOPs. Fewer trips to HBM. Attention is memory-bound. Killing the score matrix is a bandwidth win that also shrinks peak memory.</p>
+<h2 id="s2"><span class="num">2.</span>How much</h2>
 
 <p>Qwen3-8B, one layer, batch 1, 32 query heads, float32 scores. Move sequence length.</p>
 
@@ -276,9 +272,9 @@
   <div class="good">registers · one tile</div>
 </div>
 
-<h2 id="s3"><span class="num">3.</span>How the tile walk works</h2>
+<h2 id="s3"><span class="num">3.</span>The tile walk</h2>
 
-<p>A block owns one query tile. It keeps that tile on-chip and walks key/value tiles left to right.</p>
+<p>A block keeps a query tile on-chip and walks key/value tiles. Scores exist for one tile, then they are gone.</p>
 
 <div class="smat" style="max-width:26rem">
   <div class="axes">
@@ -300,7 +296,7 @@
 <p class="caption">Each tile updates those three, then the scores are gone. Later tiles can still merge: rescale by the new max, then add.</p>
 
 <div class="callout green"><span class="label">Mental model</span>
-<p>Same softmax. Scores are a tile in registers, not a matrix in HBM. That is the memory cut and the speedup. Hopper and Blackwell only change the multiplier for the same walk.</p>
+<p>Speedup is HBM trips, not FLOPs. Hopper and Blackwell only change the multiplier for the same walk.</p>
 </div>
 
 <h3>References</h3>
@@ -312,7 +308,7 @@
 </ul>
 
 <h3>How to cite this post</h3>
-<pre style="background:#0d1117;color:#e6edf3;border-radius:14px;padding:1.15rem 1.3rem;overflow-x:auto;font-size:.82rem;font-family:JetBrains Mono,monospace"><code>Dong, S. (2026). Understanding Flash Attention.
+<pre style="background:#0d1117;color:#e6edf3;border-radius:14px;padding:1.15rem 1.3rem;overflow-x:auto;font-size:.82rem;font-family:JetBrains Mono,monospace"><code>Dong, S. (2026). How Flash Attention Speeds Up — and By How Much.
 https://simondong1.github.io/flash-attention.html</code></pre>
 </main>
 <footer><div class="wrap">
