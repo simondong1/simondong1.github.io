@@ -11,7 +11,7 @@
       <link>https://simondong1.github.io/flash-attention.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/flash-attention.html</guid>
       <pubDate>Mon, 31 Aug 2026 00:00:00 +0000</pubDate>
-      <description>How the kernel avoids HBM, and how large that save is.</description>
+      <description>How the kernel avoids HBM, and how large that save is — measured on one B200 with Qwen3.8-27B's attention shape.</description>
     </item>
     <item>
       <title>Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)</title>

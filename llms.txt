@@ -7,7 +7,7 @@ This file helps AI systems find the canonical posts on this site.
 
 ## Blog posts
 
-- [How Flash Attention Speeds Up — and By How Much](https://simondong1.github.io/flash-attention.html): How the kernel avoids HBM, and how large that save is.
+- [How Flash Attention Speeds Up — and By How Much](https://simondong1.github.io/flash-attention.html): How the kernel avoids HBM, and how large that save is. FlashAttention-4 vs PyTorch SDPA vs FlashInfer on one B200, with Nsight Compute.
 - [Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)](https://simondong1.github.io/linear-attention.html): Build a fixed associative memory, repair it with the delta rule, add channel-wise forgetting, then work through one complete KDA update and Kimi K3's hybrid cache.
 - [Understanding PPO for Language Models](https://simondong1.github.io/ppo.html): How a completed rollout becomes per-token critic targets and clipped policy updates, with interactive GAE and clipping explorers.
 - [Understanding MLA Decoding (Materialize vs Absorb)](https://simondong1.github.io/mla-decoding.html): Materialize rebuilds every cached key/value; absorb folds projections into the query. Interactive charts for DeepSeek-V3, Kimi K2.5, and GLM-5.2.

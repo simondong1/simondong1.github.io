@@ -4,13 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>How Flash Attention Speeds Up — and By How Much</title>
-<meta name="description" content="How Flash Attention speeds up: keep scores in registers so the GPU stops waiting on HBM. And how much that save is." />
+<meta name="description" content="How Flash Attention speeds up: keep scores in registers so the GPU stops waiting on HBM. Measured on one B200 with Qwen3.8-27B's attention shape." />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href="https://simondong1.github.io/flash-attention.html" />
 <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
 <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
 <meta property="og:title" content="How Flash Attention Speeds Up — and By How Much" />
-<meta property="og:description" content="How the kernel avoids HBM, and how large that save is." />
+<meta property="og:description" content="How the kernel avoids HBM, and how large that save is — measured on one B200." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://simondong1.github.io/flash-attention.html" />
 <meta property="og:site_name" content="Simon Dong" />
@@ -167,6 +167,30 @@
   .timing-legend .naive{background:var(--warm)}.timing-legend .sdpa{background:var(--cool)}
   .timing-legend .fa4{background:var(--green)}.timing-legend .flashinfer{background:var(--accent)}
 
+  h3{font-weight:700;font-size:1.12rem;letter-spacing:-.015em;margin:2.1rem 0 .7rem}
+  figure.shot{margin:1.25rem 0 1.5rem}
+  figure.shot img{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:#0b0d10;display:block}
+  .mtbl{width:100%;border-collapse:collapse;font-size:.84rem;margin:1.1rem 0;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .mtbl th,.mtbl td{padding:.48rem .6rem;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+  .mtbl th:first-child,.mtbl td:first-child{text-align:left;font-weight:650}
+  .mtbl thead th{font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:#f7f7f5;text-align:right}
+  .mtbl thead th:first-child{text-align:left}
+  .mtbl tr:last-child td{border-bottom:none}
+  .mtbl .win{color:#12652f;font-weight:700}
+  .hbar{margin:.7rem 0}
+  .hbar .row{display:grid;grid-template-columns:7.4rem 1fr 4.4rem;gap:.45rem;align-items:center;margin:.38rem 0}
+  .hbar .name{font-size:.78rem;font-weight:650;color:var(--ink-soft);text-align:right}
+  .hbar .track{background:#f0f1f4;border-radius:7px;height:1.45rem;border:1px solid var(--line);overflow:hidden}
+  .hbar .fill{height:100%;display:flex;align-items:center;padding-left:.45rem;color:#fff;font-size:.68rem;font-weight:650}
+  .hbar .val{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700}
+  .smgrid{display:grid;grid-template-columns:repeat(37,1fr);gap:2px;margin:.55rem 0 .2rem}
+  .sm{aspect-ratio:1;border-radius:2px;background:#ecece8}
+  .sm.on{background:var(--green)}
+  .sm.half{background:#f3d7a3}
+  .term{border:1px solid var(--line);border-radius:12px;background:#fff;padding:.7rem .85rem;margin:.7rem 0}
+  .term b{display:block;font-size:.8rem;margin-bottom:.15rem}
+  .term span{display:block;font-size:.8rem;color:var(--ink-soft);line-height:1.45}
+
   .homes{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
   .home{border:1px solid var(--line);border-radius:14px;padding:1rem .95rem;background:#fff}
   .home p{margin:0}
@@ -192,7 +216,8 @@
   @media(max-width:640px){
     header.hero{padding:3.5rem 0 2rem}
     .pair,.metrics,.state,.homes,.reuse,.algos{grid-template-columns:1fr}
-    .barrow{grid-template-columns:1fr}.barrow .name{text-align:left}
+    .barrow,.hbar .row{grid-template-columns:1fr}.barrow .name,.hbar .name{text-align:left}
+    .mtbl{display:block;overflow-x:auto}
   }
 </style>
 </head>
@@ -426,7 +451,214 @@
 <p>FA4 wins prefill: at 8k tokens it takes <strong>0.599 ms</strong>, versus 2.279 ms for SDPA and 2.486 ms for FlashInfer. Decode flips the result: at a 32k KV cache, FlashInfer takes <strong>0.039 ms</strong>, versus 0.307 ms for FA4.</p>
 </div>
 
-<p>Each point discards five warmups, then averages 20 launches timed with CUDA events. Prefill uses a causal square query/key sequence; decode uses one new query token over the existing KV cache. The decode loop reuses the same tensors, so its data can remain warm in the B200's L2 cache: these points compare kernels, not end-to-end serving latency.</p>
+<p>Each point discards five warmups, then averages 20 launches timed with CUDA events. Prefill uses a causal square query/key sequence; decode uses one new query token over the existing KV cache. The decode loop reuses the same tensors, so its data can remain warm in the B200's on-chip L2 cache: these points compare kernels, not end-to-end serving latency.</p>
+
+<p>The charts decide the winner. <a href="https://developer.nvidia.com/nsight-compute">Nsight Compute</a> explains why. It is NVIDIA's kernel profiler: one complete GPU launch, every thread the kernel asked for, counters collected across replayed passes. The 4k prefill reports below are the same attention call as the 0.190&nbsp;ms / 0.639&nbsp;ms points. Nsight times are longer than CUDA-event times because the profiler replays the kernel to collect counters — use them to compare structure, not wall-clock speed.</p>
+
+<figure class="shot">
+  <img src="assets/fa4/fa4-summary.png" alt="Nsight Compute result row for FlashAttention-4 prefill: 361.82 microseconds on a B200">
+  <p class="caption">FlashAttention-4 prefill in Nsight: one fused kernel, 361.82 µs instrumented, 347,336 GPU cycles, 923 MHz. PyTorch SDPA's matching report is 1.08 ms and 1,195,700 cycles.</p>
+</figure>
+
+<h3>Where the 3× prefill gain comes from</h3>
+
+<p>FlashAttention-4 and PyTorch SDPA keep their busiest compute pipelines similarly busy — 55% versus 59%. They issue instructions at the same rate. FlashAttention-4 still finishes in one-third the time because it executes one-third the hardware instructions, and each of those instructions does more useful work.</p>
+
+<div class="hbar" aria-label="Instruction count and duration">
+  <div class="row"><div class="name">Instructions</div><div class="track"><div class="fill green" style="width:33%">61M</div></div><div class="val">FA4</div></div>
+  <div class="row"><div class="name"></div><div class="track"><div class="fill" style="width:100%;background:var(--cool)">186M</div></div><div class="val">SDPA</div></div>
+  <div class="row"><div class="name">Nsight duration</div><div class="track"><div class="fill green" style="width:34%">0.36 ms</div></div><div class="val">FA4</div></div>
+  <div class="row"><div class="name"></div><div class="track"><div class="fill" style="width:100%;background:var(--cool)">1.08 ms</div></div><div class="val">SDPA</div></div>
+</div>
+<p class="caption">Same attention output. 186 ÷ 61 = 3.06× more executed instructions. 1.08 ÷ 0.36 = 2.98× longer. The arithmetic is the proof.</p>
+
+<p>Four Nsight sections, in the order they appear.</p>
+
+<h3>1. Speed of Light — which unit is closest to its peak?</h3>
+
+<p>Speed of Light is utilization versus the hardware maximum while the kernel runs. It is a <em>rate</em>, not total work. Two kernels can both show 55% compute; the slower one just stays at 55% for longer.</p>
+
+<div class="term"><b>Compute throughput</b><span>How busy the strongest compute pipeline is, as a percent of its peak.</span></div>
+<div class="term"><b>Memory throughput</b><span>The maximum among many on-chip and off-chip memory paths — not high-bandwidth memory by itself.</span></div>
+<div class="term"><b>DRAM throughput</b><span>High-bandwidth memory (HBM) only. The number that answers “are we waiting on off-chip DRAM?”</span></div>
+
+<table class="mtbl">
+  <thead><tr><th>4k prefill</th><th>FlashAttention-4</th><th>PyTorch SDPA</th><th>FlashInfer</th></tr></thead>
+  <tbody>
+    <tr><td>Duration (Nsight)</td><td class="win">361.82 µs</td><td>1.08 ms</td><td>1.18 ms</td></tr>
+    <tr><td>Elapsed GPU cycles</td><td class="win">347,336</td><td>1,195,700</td><td>1,316,638</td></tr>
+    <tr><td>SM clock</td><td>923 MHz</td><td>1.08 GHz</td><td>1.09 GHz</td></tr>
+    <tr><td>Compute throughput</td><td>55.49%</td><td>58.91%</td><td>55.66%</td></tr>
+    <tr><td>Memory throughput (max path)</td><td class="win">17.60%</td><td>68.77%</td><td>64.02%</td></tr>
+    <tr><td>DRAM / HBM throughput</td><td>3.27%</td><td>1.17%</td><td>1.06%</td></tr>
+    <tr><td>L1/TEX cache throughput</td><td>32.74%</td><td>81.48%</td><td>76.57%</td></tr>
+    <tr><td>L2 cache throughput</td><td>17.91%</td><td>22.59%</td><td>20.13%</td></tr>
+  </tbody>
+</table>
+
+<p>SDPA is not slower because the GPU is idle. It is slower because it keeps both tensor compute and the on-chip load/store path busy for three times as many cycles. Neither kernel is HBM-bound — DRAM is 3% and 1%. SDPA's 69% “memory” number is the L1/TEX load-store data pipe, not DRAM.</p>
+
+<p>FlashInfer prefill looks like SDPA: 55.66% compute, 64% on-chip memory, 1.06% DRAM, 1.18&nbsp;ms. The generic fused backends cluster together. FlashAttention-4 does not.</p>
+
+<h3>2. Compute workload — Tensor Memory versus ordinary load/store</h3>
+
+<p>A <em>warp</em> is 32 threads that issue instructions together. <em>Instructions per cycle</em> is how many those warps retire per clock. <em>Issue slots busy</em> is how often a warp scheduler actually sends an instruction.</p>
+
+<table class="mtbl">
+  <thead><tr><th></th><th>FlashAttention-4</th><th>PyTorch SDPA</th></tr></thead>
+  <tbody>
+    <tr><td>Executed instructions</td><td class="win">60,857,820</td><td>186,178,368</td></tr>
+    <tr><td>Instructions per cycle (active)</td><td>1.28</td><td>1.27</td></tr>
+    <tr><td>Instructions per cycle (elapsed)</td><td>1.06</td><td>1.07</td></tr>
+    <tr><td>Issue slots busy</td><td>26.40%</td><td>26.82%</td></tr>
+    <tr><td>Issued instructions per cycle</td><td>1.28</td><td>1.27</td></tr>
+    <tr><td>SM busy</td><td>54.42%</td><td>58.91%</td></tr>
+    <tr><td>Tensor pipeline (elapsed)</td><td>54.19%</td><td>58.91%</td></tr>
+    <tr><td>Tensor Memory (elapsed)</td><td class="win">55.49%</td><td>0%</td></tr>
+    <tr><td>Load/store pipeline (elapsed)</td><td class="win">0.43%</td><td>22.17%</td></tr>
+    <tr><td>Fused multiply-add pipeline</td><td>19.96%</td><td>8.96%</td></tr>
+    <tr><td>Integer/ALU pipeline</td><td>17.72%</td><td>6.71%</td></tr>
+  </tbody>
+</table>
+
+<p>The schedulers look the same. The instruction vocabulary does not.</p>
+
+<p><strong>Tensor Memory</strong> is a Blackwell-only on-chip store for fifth-generation tensor cores — about 256 KB per streaming multiprocessor, separate from registers and shared memory. A thread issues one asynchronous matrix-multiply; accumulators land in Tensor Memory instead of being sprinkled across thread registers. FlashAttention-4's Tensor Memory path is busy 55% of elapsed cycles, but those operations are only 1.1% of peak <em>instruction rate</em>: a few heavy instructions occupy the hardware for a long time. SDPA never uses Tensor Memory. It issues ordinary tensor and load/store instructions continuously.</p>
+
+<p>That is the prefill gain: same issue rate, one-third the instruction stream, Tensor Memory instead of 22% load/store traffic.</p>
+
+<h3>3. Memory workload — better L1 reuse, not more HBM</h3>
+
+<p>L1 is the per-multiprocessor cache. L2 is the chip-wide cache in front of HBM. Shared memory is a separate, programmer-controlled scratchpad that lives in the same on-chip SRAM as L1 but is not the cache. Tensor Memory is a third on-chip space.</p>
+
+<table class="mtbl">
+  <thead><tr><th></th><th>FlashAttention-4</th><th>PyTorch SDPA</th><th>FlashInfer</th></tr></thead>
+  <tbody>
+    <tr><td>HBM byte rate</td><td>218 GB/s</td><td>78 GB/s</td><td>71 GB/s</td></tr>
+    <tr><td>Approx. HBM bytes moved</td><td>~79 MB</td><td>~84 MB</td><td>~83 MB</td></tr>
+    <tr><td>Mem busy (access hardware)</td><td class="win">16.33%</td><td>68.77%</td><td>64.02%</td></tr>
+    <tr><td>Max request bandwidth</td><td class="win">17.60%</td><td>66.99%</td><td>62.39%</td></tr>
+    <tr><td>Memory pipes busy</td><td>55.49% <small>Tensor Memory</small></td><td>22.17% <small>load/store</small></td><td>20.43%</td></tr>
+    <tr><td>L1/TEX hit rate</td><td class="win">85.91%</td><td>0.01%</td><td>0%</td></tr>
+    <tr><td>L2 hit rate</td><td>80.95%</td><td>94.43%</td><td>94.36%</td></tr>
+    <tr><td>Register spills to local memory</td><td>0</td><td>0</td><td>0</td></tr>
+  </tbody>
+</table>
+
+<p>Both kernels move about the same HBM traffic. FlashAttention-4 moves it three times faster and still uses 3% of peak HBM. SDPA's requests mostly miss or bypass L1 and hit L2 (94%). That is still on-chip — which is why DRAM stays at 1% — but L2 is farther and more expensive than L1. FlashAttention-4's 86% L1 hit rate means more reusable data stays next to the multiprocessor. SDPA's 69% “mem busy” is the cost of orchestrating those L1/TEX load/store wavefronts, not a flood of HBM reads.</p>
+
+<p>Zero spills on every captured kernel: the high register counts stay in the register file. Shared-memory <em>allocation</em> is 197.5 KB per FlashAttention-4 block and 98.3 KB per SDPA block — capacity reserved, not traffic. Both designs spend almost the entire per-multiprocessor SRAM budget; they just spend it differently.</p>
+
+<h3>4. Warp state — waiting longer, doing more per wait</h3>
+
+<p>A warp issues one instruction, then waits until it can issue the next. <strong>Warp cycles per issued instruction</strong> is that interval, averaged over every warp and cycle. The bar chart is the breakdown of that interval. It is not “time waiting for a bigger GEMM to be assigned.” A larger matrix usually means more launches or more loop trips, not a larger number on this chart. The number rises only when the <em>next</em> instruction cannot issue.</p>
+
+<figure class="shot">
+  <img src="assets/fa4/fa4-warp.png" alt="Nsight Compute warp state chart for FlashAttention-4 prefill">
+  <p class="caption">FlashAttention-4 warp states. Long scoreboard 3.41 and barrier 2.41 dominate the 9.37-cycle interval. The kernel is latency-exposed and still faster, because each issued instruction launches more work.</p>
+</figure>
+
+<table class="mtbl">
+  <thead><tr><th>Cycles per issued instruction</th><th>FlashAttention-4</th><th>PyTorch SDPA</th></tr></thead>
+  <tbody>
+    <tr><td>Warp cycles / issued instruction</td><td>9.37</td><td>6.06</td></tr>
+    <tr><td>Issued warps per scheduler</td><td>0.32</td><td>0.32</td></tr>
+    <tr><td>Active lanes / 32</td><td>31.98</td><td>31.99</td></tr>
+    <tr><td>Lanes not predicated off / 32</td><td class="win">31.61</td><td>29.36</td></tr>
+    <tr><td>Long scoreboard (L1/TEX, global)</td><td>3.41</td><td>0.08</td></tr>
+    <tr><td>Barrier</td><td>2.41</td><td>0.24</td></tr>
+    <tr><td>Wait (fixed-latency math/address)</td><td>1.02</td><td>1.93</td></tr>
+    <tr><td>Selected (issued)</td><td>1.00</td><td>1.00</td></tr>
+    <tr><td>Short scoreboard (shared / MIO)</td><td>0.37</td><td>1.18</td></tr>
+    <tr><td>Math-pipe throttle</td><td>0.13</td><td>0.79</td></tr>
+    <tr><td>MIO throttle</td><td>0.03</td><td>0.35</td></tr>
+  </tbody>
+</table>
+
+<div class="term"><b>Stall wait</b><span>The next instruction needs a result from a previous fixed-latency operation — ordinary math, a conversion, an address calculation — and that result is not ready. Not a memory-cache miss. Not a barrier.</span></div>
+<div class="term"><b>Long scoreboard</b><span>Waiting on an outstanding L1/TEX, global, or local memory operation. Can happen even on L1 hits; L1 is fast, not free.</span></div>
+<div class="term"><b>Short scoreboard / MIO throttle</b><span>Usually shared-memory or other memory-input/output queues. This is SDPA's staging tax.</span></div>
+
+<p>FlashAttention-4's warps wait more — 9.37 versus 6.06 cycles — on memory dependencies and 384-thread barriers. That looks worse on this chart and still wins, because the kernel issues far fewer instructions and hides a large asynchronous Tensor Memory operation behind each wait. SDPA's warps move more often, through a longer chain of ordinary tensor, math, and load/store steps. Same 0.32 issued warps per scheduler. Different work per issue.</p>
+
+<p>SDPA also predicates off more lanes (29.36 versus 31.61). About 8% of issued work is masked — tile edges, grouping of six query heads per key head, bounds. FlashAttention-4 keeps almost every lane useful.</p>
+
+<h3>Launch and occupancy — same resource budget, different work unit</h3>
+
+<p>A <em>streaming multiprocessor</em> is one of the B200's 148 compute units. <em>Occupancy</em> is how many warps live on one at once, as a percent of the 64-warp hardware maximum. Low occupancy is only a problem if it leaves the chip empty or unable to hide latency. Both kernels hit the occupancy their resources allow. Prefill has enough blocks either way.</p>
+
+<figure class="shot">
+  <img src="assets/fa4/fa4-occupancy.png" alt="Nsight Compute launch statistics and occupancy for FlashAttention-4">
+  <p class="caption">FlashAttention-4: 768 blocks, 384 threads, 168 registers/thread, 197.5 KB shared memory. Registers and shared memory each cap residency at one block per multiprocessor. Achieved occupancy 18.67% versus 18.75% theoretical.</p>
+</figure>
+
+<table class="mtbl">
+  <thead><tr><th>4k prefill launch</th><th>FlashAttention-4</th><th>PyTorch SDPA</th><th>FlashInfer</th></tr></thead>
+  <tbody>
+    <tr><td>Grid (blocks)</td><td>768</td><td>1,536</td><td>1,536</td></tr>
+    <tr><td>Threads per block</td><td>384</td><td>128</td><td>128</td></tr>
+    <tr><td>Total threads</td><td>294,912</td><td>196,608</td><td>196,608</td></tr>
+    <tr><td>Cluster size</td><td>2 blocks</td><td>none</td><td>none</td></tr>
+    <tr><td>Registers / thread</td><td>168</td><td>242</td><td>252</td></tr>
+    <tr><td>Registers / block</td><td>64,512</td><td>~31,744</td><td>~32,256</td></tr>
+    <tr><td>Shared memory / block</td><td>197.5 KB</td><td>98.3 KB</td><td>98.3 KB</td></tr>
+    <tr><td>Resident blocks / SM</td><td>1</td><td>2</td><td>2</td></tr>
+    <tr><td>Resident warps / SM</td><td>12</td><td>8</td><td>8</td></tr>
+    <tr><td>Waves / SM</td><td>5.19</td><td>5.19</td><td>5.19</td></tr>
+    <tr><td>Theoretical occupancy</td><td>18.75%</td><td>12.50%</td><td>12.50%</td></tr>
+    <tr><td>Achieved occupancy</td><td>18.67%</td><td>12.06%</td><td>11.97%</td></tr>
+    <tr><td>Register spills</td><td>0</td><td>0</td><td>0</td></tr>
+  </tbody>
+</table>
+
+<p>A wave is one full filling of the GPU at that residency. FlashAttention-4: 768 / (148 × 1) = 5.19. SDPA: 1,536 / (148 × 2) = 5.19. Same number of waves, different block shape. Both spend nearly the 65,536-register and ~200 KB shared-memory budget of one multiprocessor. FlashAttention-4 gives the whole budget to one 12-warp cluster pair and Tensor Memory. SDPA splits it across two 4-warp blocks and a conventional tensor path.</p>
+
+<figure class="shot">
+  <img src="assets/fa4/sdpa-occupancy.png" alt="Nsight Compute occupancy for PyTorch SDPA prefill">
+  <p class="caption">SDPA: theoretical 12.50%, achieved 12.06%. Block limit from registers = 2, from shared memory = 2. Same story as FlashAttention-4 — resources, not a broken scheduler.</p>
+</figure>
+
+<h3>Decode flips because the grid cannot fill 148 multiprocessors</h3>
+
+<p>Prefill has thousands of query tokens. Decode has one. FlashAttention-4 keeps the big 2-block cluster kernel and launches 48 blocks — 0.32 waves. Most multiprocessors get no block. FlashInfer splits the KV cache across 296 blocks (two per multiprocessor) and streams HBM.</p>
+
+<div class="pair">
+  <div class="panel bad">
+    <h3>FlashAttention-4 decode · 48 / 148 busy</h3>
+    <div class="smgrid" id="sm-fa4" aria-hidden="true"></div>
+    <p class="caption">48 blocks. DRAM 3.93%. CUDA-event 0.307 ms at 32k.</p>
+  </div>
+  <div class="panel good">
+    <h3>FlashInfer decode · 148 / 148 busy</h3>
+    <div class="smgrid" id="sm-fi" aria-hidden="true"></div>
+    <p class="caption">296 blocks. DRAM 45.54% · 3.02 TB/s. CUDA-event 0.039 ms.</p>
+  </div>
+</div>
+
+<table class="mtbl">
+  <thead><tr><th>32k decode, main kernel</th><th>FlashAttention-4</th><th>PyTorch SDPA</th><th>FlashInfer</th></tr></thead>
+  <tbody>
+    <tr><td>CUDA-event latency</td><td>0.307 ms</td><td>0.054 ms</td><td class="win">0.039 ms</td></tr>
+    <tr><td>Nsight duration</td><td>528.51 µs</td><td>57.25 µs + 52.51 µs combine</td><td class="win">45.63 µs + 11.17 µs merge</td></tr>
+    <tr><td>Grid blocks</td><td>48</td><td>256</td><td class="win">296</td></tr>
+    <tr><td>Waves / SM</td><td>0.32</td><td>~1.7</td><td>2.0</td></tr>
+    <tr><td>Compute throughput</td><td>29.51%</td><td>—</td><td>17.77%</td></tr>
+    <tr><td>DRAM throughput</td><td>3.93%</td><td>36.25%</td><td class="win">45.54%</td></tr>
+    <tr><td>HBM byte rate</td><td>262 GB/s</td><td>—</td><td class="win">3.02 TB/s</td></tr>
+    <tr><td>L2 hit rate</td><td>—</td><td>—</td><td>0.28%</td></tr>
+    <tr><td>Registers / thread</td><td>168</td><td>—</td><td>250</td></tr>
+    <tr><td>Shared memory / block</td><td>197.5 KB</td><td>—</td><td>73.73 KB</td></tr>
+    <tr><td>Spills</td><td>0</td><td>0</td><td>0</td></tr>
+  </tbody>
+</table>
+
+<p>FlashInfer's 0.28% L2 hit rate is the desired decode pattern: the compact key/value cache is larger than L2, so the kernel streams it from HBM. FlashAttention-4 never gets that far — it does not have enough blocks to keep the chip fed. Tensor Memory does not fix underfill. Occupancy on the few busy multiprocessors is still 18.75%; the other 100 sit idle.</p>
+
+<div class="callout green"><span class="label">Serving rule from this shape</span>
+<p>On this Qwen3.8-27B full-attention layer — 24 query heads, 4 key/value heads, head dimension 256, group size 6 — use FlashAttention-4 for prefill and FlashInfer (or SDPA) for decode. Only 16 of 64 layers are this softmax kernel; the other 48 are Gated DeltaNet. Validate in a real server: this microbench reuses warm tensors and is not paged-KV serving.</p>
+</div>
+
+<p>Naive attention, for scale: 12 prefill launches, 91.5% of Nsight time outside the two matrix multiplies. Decode spends 84% expanding grouped keys and values into a dense layout. Fusion is not optional.</p>
 
 <h3>References</h3>
 <ul>
@@ -570,6 +802,19 @@ https://simondong1.github.io/flash-attention.html</code></pre>
     {key:"fa4",name:"FlashAttention-4",values:[.052,.084,.307]},
     {key:"flashinfer",name:"FlashInfer",values:[.026,.026,.039]}
   ],.02,1,[.02,.05,.1,.2,.5,1]);
+
+  function paintSMs(id, onCount){
+    var el=document.getElementById(id);
+    if(!el)return;
+    el.innerHTML="";
+    for(var i=0;i<148;i++){
+      var d=document.createElement("div");
+      d.className="sm"+(i<onCount?" on":"");
+      el.appendChild(d);
+    }
+  }
+  paintSMs("sm-fa4",48);
+  paintSMs("sm-fi",148);
 
   var links=[].slice.call(document.querySelectorAll("nav.toc a"));
   var byId={};links.forEach(function(a){byId[a.getAttribute("href").slice(1)]=a;});
