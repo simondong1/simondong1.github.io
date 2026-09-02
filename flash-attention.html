@@ -4,13 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>How Flash Attention Speeds Up — and By How Much</title>
-<meta name="description" content="Attention waits on HBM. Keep scores in registers and that wait goes away. Measured on one B200 with Qwen3.8-27B's attention shape." />
+<meta name="description" content="Attention waits on HBM. Keep scores in registers and that wait goes away. Profiled on one B200 with Qwen3.8-27B's attention shape." />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href="https://simondong1.github.io/flash-attention.html" />
 <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
 <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
 <meta property="og:title" content="How Flash Attention Speeds Up — and By How Much" />
-<meta property="og:description" content="Attention waits on HBM. Keep scores in registers and that wait goes away. Measured on one B200 with Qwen3.8-27B's attention shape." />
+<meta property="og:description" content="Attention waits on HBM. Keep scores in registers and that wait goes away. Profiled on one B200 with Qwen3.8-27B's attention shape." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://simondong1.github.io/flash-attention.html" />
 <meta property="og:site_name" content="Simon Dong" />
@@ -25,7 +25,7 @@
 <meta name="twitter:site" content="@dongsixiang" />
 <meta name="twitter:creator" content="@dongsixiang" />
 <meta name="twitter:title" content="How Flash Attention Speeds Up — and By How Much" />
-<meta name="twitter:description" content="Attention waits on HBM. Keep scores in registers and that wait goes away. Measured on one B200 with Qwen3.8-27B's attention shape." />
+<meta name="twitter:description" content="Attention waits on HBM. Keep scores in registers and that wait goes away. Profiled on one B200 with Qwen3.8-27B's attention shape." />
 <meta name="twitter:image" content="https://simondong1.github.io/assets/flash-attention-og.png?v=1" />
 <meta name="twitter:image:alt" content="Naive attention writes every score to HBM; Flash Attention keeps one live tile in registers." />
 <meta name="author" content="Simon Dong" />
@@ -34,7 +34,7 @@
 <meta name="citation_publication_date" content="2026/08/31" />
 <meta name="citation_fulltext_html_url" content="https://simondong1.github.io/flash-attention.html" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"TechArticle","headline":"How Flash Attention Speeds Up — and By How Much","description":"Attention waits on HBM. Keep scores in registers and that wait goes away. Measured on one B200 with Qwen3.8-27B's attention shape.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-08-31","dateModified":"2026-09-02","mainEntityOfPage":"https://simondong1.github.io/flash-attention.html","image":["https://simondong1.github.io/assets/flash-attention-og.png?v=1"],"keywords":["Flash Attention","HBM","online softmax","Qwen3"]}
+{"@context":"https://schema.org","@type":"TechArticle","headline":"How Flash Attention Speeds Up — and By How Much","description":"Attention waits on HBM. Keep scores in registers and that wait goes away. Profiled on one B200 with Qwen3.8-27B's attention shape.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-08-31","dateModified":"2026-09-02","mainEntityOfPage":"https://simondong1.github.io/flash-attention.html","image":["https://simondong1.github.io/assets/flash-attention-og.png?v=1"],"keywords":["Flash Attention","HBM","online softmax","Qwen3"]}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -227,7 +227,7 @@
 <header class="hero"><div class="wrap">
   <p class="eyebrow">Kernels · Softmax Attention</p>
   <h1 class="title">How Flash Attention Speeds Up <span class="title-expansion">And by how much</span></h1>
-  <p class="subtitle">Attention waits on HBM. Keep scores in registers and that wait goes away.</p>
+  <p class="subtitle">Attention waits on HBM. Keep scores in registers and that wait goes away. Profiled on one B200.</p>
   <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>August 2026</span><span class="dot">•</span><span>Kernels</span></div>
 </div></header>
 

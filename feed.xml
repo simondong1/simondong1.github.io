@@ -18,7 +18,7 @@
       <link>https://simondong1.github.io/flash-attention.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/flash-attention.html</guid>
       <pubDate>Mon, 31 Aug 2026 00:00:00 +0000</pubDate>
-      <description>Attention waits on HBM. Keep scores in registers and that wait goes away. Measured on one B200 with Qwen3.8-27B's attention shape.</description>
+      <description>Attention waits on HBM. Keep scores in registers and that wait goes away. Profiled on one B200 with Qwen3.8-27B's attention shape.</description>
     </item>
     <item>
       <title>Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)</title>
