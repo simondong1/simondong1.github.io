@@ -30,7 +30,10 @@ posts, then fetch the latest remote branch. Preserve concurrent work.
    small interactive visuals over prose walls, profiler dumps, or pseudocode.
 5. Update the canonical HTML plus `index.html`, `feed.xml`, `sitemap.xml`, and
    `llms.txt` whenever titles, URLs, dates, or descriptions change.
-6. Validate markup, source links, desktop and mobile layout, equations, and
+6. Reader-proofread the page as a first-time reader. Identify every stumble
+   before publishing. This step is required on every blog update, including
+   wording edits and corrections, not only first drafts.
+7. Validate markup, source links, desktop and mobile layout, equations, and
    every interactive control.
 
 Before a worked example, tell the reader what is being computed, what the
@@ -38,6 +41,26 @@ example teaches, and whether it is a baseline or the final mechanism.
 
 When the post depends on several GPU or kernel names at once, add a compact
 terms card after the lede. Expand each acronym on first use in the body too.
+
+## Reader proofread (required on every blog update)
+
+Before publishing any new or revised post, homepage card, or index copy:
+
+1. Read the finished page as a first-time reader who does not already know
+   the hardware, paper, or kernel jargon.
+2. Identify issues as that reader. Write down every stumble: an undefined
+   acronym, a term used before its definition, a sentence that assumes a
+   later section, a diagram label that only makes sense after the prose,
+   two new ideas packed into one sentence, or a symbol (\(S\), \(B_r\),
+   RF) that appears before it is named.
+3. Fix those issues in the page. Do not publish a known list of reader
+   problems, and do not leave “we’ll explain this below” as the first
+   encounter with a name.
+4. Only then run layout validation and publish.
+
+Name matrices and tiles in prose before the first equation that uses them.
+Do not introduce a short form (RF, SS, CTA, \(B_r\)) unless the expanded
+form is already on the page.
 
 ## Performance presentation
 
@@ -49,6 +72,9 @@ terms card after the lede. Expand each acronym on first use in the body too.
   caption. For an ordered sweep such as sequence or cache length, connect
   points belonging to the same algorithm when the comparison calls for a
   trend line. Never connect different algorithms or bridge a missing point.
+  Each measured x-value gets one mean dot. Trend polylines must explicitly
+  render with `fill: none`; shared color classes must not turn them into filled
+  polygons, areas, zones, or triangles.
 - Present the baseline first, then compare optimized implementations against
   it. Immediately after every evidence image, add short finding-first bullets:
   conclusion first, metric evidence second. A caption does not replace those
