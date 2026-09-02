@@ -11,7 +11,7 @@
       <link>https://simondong1.github.io/hopper-to-blackwell-mma.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/hopper-to-blackwell-mma.html</guid>
       <pubDate>Wed, 02 Sep 2026 00:00:00 +0000</pubDate>
-      <description>What an MMA is, why Hopper still parked the result in thread registers, and how Blackwell's new 256 KB Tensor Memory changes the attention pipeline.</description>
+      <description>An MMA is D += A × B. Hopper writes D into thread registers. Blackwell writes it into Tensor Memory and can run that MMA across two SMs.</description>
     </item>
     <item>
       <title>How Flash Attention Speeds Up — and By How Much</title>
