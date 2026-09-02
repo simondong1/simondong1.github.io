@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How CUDA Graphs Speed Up Decode — and By How Much</title>
+<meta name="description" content="CUDA Graphs replay a recorded launch schedule. On Qwen3.8-27B they cut batch-1 decode from 52 ms to 10 ms. They do not make the math cheaper." />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<link rel="canonical" href="https://simondong1.github.io/cuda-graphs.html" />
+<link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
+<link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
+<meta property="og:title" content="How CUDA Graphs Speed Up Decode — and By How Much" />
+<meta property="og:description" content="CUDA Graphs replay a recorded launch schedule. On Qwen3.8-27B they cut batch-1 decode from 52 ms to 10 ms. They do not make the math cheaper." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/cuda-graphs.html" />
+<meta property="og:site_name" content="Simon Dong" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image" content="https://simondong1.github.io/assets/cuda-graphs-og.png?v=1" />
+<meta property="og:image:secure_url" content="https://simondong1.github.io/assets/cuda-graphs-og.png?v=1" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Eager execution launches every kernel separately; a CUDA Graph replays the same work with one cudaGraphLaunch." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@dongsixiang" />
+<meta name="twitter:creator" content="@dongsixiang" />
+<meta name="twitter:title" content="How CUDA Graphs Speed Up Decode — and By How Much" />
+<meta name="twitter:description" content="CUDA Graphs replay a recorded launch schedule. On Qwen3.8-27B they cut batch-1 decode from 52 ms to 10 ms. They do not make the math cheaper." />
+<meta name="twitter:image" content="https://simondong1.github.io/assets/cuda-graphs-og.png?v=1" />
+<meta name="twitter:image:alt" content="Eager execution launches every kernel separately; a CUDA Graph replays the same work with one cudaGraphLaunch." />
+<meta name="author" content="Simon Dong" />
+<meta name="citation_title" content="How CUDA Graphs Speed Up Decode — and By How Much" />
+<meta name="citation_author" content="Dong, Simon" />
+<meta name="citation_publication_date" content="2026/09/02" />
+<meta name="citation_fulltext_html_url" content="https://simondong1.github.io/cuda-graphs.html" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"How CUDA Graphs Speed Up Decode — and By How Much","description":"CUDA Graphs replay a recorded launch schedule. On Qwen3.8-27B they cut batch-1 decode from 52 ms to 10 ms. They do not make the math cheaper.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-09-02","dateModified":"2026-09-02","mainEntityOfPage":"https://simondong1.github.io/cuda-graphs.html","image":["https://simondong1.github.io/assets/cuda-graphs-og.png?v=1"],"keywords":["CUDA Graphs","LLM inference","SGLang","Qwen3.8","decode","prefill","speculative decoding"]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#fbfbfa;--surface:#fff;--ink:#1f2328;--ink-soft:#475059;--muted:#8b949e;
+    --line:#e8e8e6;--accent:#4f46e5;--accent-soft:#eef0fe;--warm:#e5484d;
+    --warm-soft:#fdecec;--cool:#0ea5e9;--cool-soft:#e7f6fe;--green:#15803d;
+    --green-soft:#edf8ef;--amber:#b45309;--amber-soft:#fff7e6;--maxw:48rem
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;font-size:1.05rem;line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+  header.hero{padding:6rem 0 2.6rem;border-bottom:1px solid var(--line);margin-bottom:2.8rem}
+  .eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:650;margin:0 0 1.1rem}
+  h1.title{font-weight:800;font-size:clamp(2.45rem,5.8vw,4.15rem);line-height:1.06;letter-spacing:-.035em;margin:0 0 1rem}
+  .title-expansion{display:block;margin-top:.42rem;font-size:clamp(1.2rem,2.5vw,1.7rem);line-height:1.2;color:var(--ink-soft);font-weight:650}
+  .subtitle{font-size:1.18rem;color:var(--ink-soft);margin:0 0 1.7rem;line-height:1.5;max-width:42rem}
+  .byline{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-size:.9rem;color:var(--muted)}
+  .byline .who{color:var(--ink);font-weight:600}.byline .dot{color:var(--line)}
+  h2{font-weight:700;font-size:1.62rem;letter-spacing:-.02em;line-height:1.2;margin:3.1rem 0 .85rem;scroll-margin-top:1.5rem}
+  h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}
+  h3{font-weight:700;font-size:1.12rem;letter-spacing:-.015em;margin:2.1rem 0 .7rem}
+  p{margin:.85rem 0}.lede{font-size:1.18rem;line-height:1.55;margin:0 0 1.4rem}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}a:hover{border-color:var(--accent)}
+  strong{font-weight:650}
+  code{font-family:"JetBrains Mono",monospace;font-size:.86em;background:#f0f1f4;color:#c72568;padding:.1em .35em;border-radius:5px;border:1px solid #e7e8ec}
+  pre{background:#0d1117;color:#e6edf3;border-radius:14px;padding:1.15rem 1.3rem;margin:1.35rem 0;overflow-x:auto;font:500 .8rem/1.6 "JetBrains Mono",monospace;border:1px solid #1c2230}
+  pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--cool);border-radius:10px;padding:.9rem 1.15rem;margin:1.4rem 0}
+  .callout.green{border-left-color:var(--green)}.callout.warn{border-left-color:var(--amber)}
+  .callout .label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--cool);display:block;margin-bottom:.3rem}
+  .callout.green .label{color:var(--green)}.callout.warn .label{color:var(--amber)}.callout p{margin:.3rem 0}
+  .terms{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin:1.45rem 0 1.7rem}
+  .term{border:1px solid var(--line);border-radius:11px;background:#fff;padding:.7rem .8rem}
+  .term b{display:block;font:700 .8rem "JetBrains Mono",monospace;color:var(--accent);margin-bottom:.22rem}
+  .term span{display:block;font-size:.82rem;color:var(--ink-soft);line-height:1.42}
+  nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.15rem 1.35rem;margin:0 0 1.8rem}
+  nav.toc .toc-title{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.7rem}
+  nav.toc ol{margin:0;padding:0;list-style:none;font-size:.93rem}
+  nav.toc li{margin:.28rem 0}nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.14rem .45rem;border-radius:6px}
+  nav.toc a:hover,nav.toc a.active{color:var(--accent);background:var(--accent-soft)}nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}
+  @media(min-width:1320px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 48rem)/2 - 16.2rem);width:14.2rem;background:none;border:none;padding:0;margin:0}}
+  .caption{text-align:center;font-size:.8rem;color:var(--muted);margin:.4rem 0 0}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.35rem 0}
+  .panel{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1rem .9rem 1.05rem}
+  .panel h3{margin:0 0 .7rem;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;text-align:center}
+  .panel.bad h3{color:var(--warm)}.panel.good h3{color:var(--green)}
+  .panel.bad{border-color:#f3c0c2;background:#fff8f8}
+  .panel.good{border-color:#cce8d2;background:#f7fbf8}
+  .flow{display:flex;flex-direction:column;align-items:center;gap:.28rem}
+  .box{font-family:"JetBrains Mono",monospace;font-size:.72rem;border-radius:8px;padding:.42rem .55rem;text-align:center;border:1px solid #e7e8ec;background:#f6f7f9;line-height:1.35;width:100%;max-width:16rem}
+  .box.k{background:var(--warm-soft);border-color:#f3c0c2;color:#a32a2e}
+  .box.g{background:var(--accent-soft);border-color:#dfe2fb;color:var(--accent);font-weight:700}
+  .box.cpu{background:#f6f7f9;color:var(--ink-soft)}
+  .arr{color:var(--muted);font-size:.85rem;line-height:1}
+  .krow{display:flex;gap:4px;width:100%;max-width:16rem}
+  .krow i{flex:1;height:1.15rem;border-radius:4px;background:var(--warm-soft);border:1px solid #f3c0c2}
+  .krow.graph i{background:var(--accent);border-color:var(--accent)}
+  .gap{height:.35rem;width:100%;max-width:16rem;border-bottom:1px dashed #d0d4d8}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin:1.2rem 0}
+  .stat{border:1px solid var(--line);border-radius:11px;padding:.75rem .8rem;background:#fff}
+  .stat span{display:block;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+  .stat b{display:block;font:700 1.35rem "JetBrains Mono",monospace;margin-top:.22rem;line-height:1.15}
+  .stat.good b{color:var(--green)}.stat.hot b{color:var(--warm)}
+  .stat small{display:block;color:var(--ink-soft);font-size:.75rem;margin-top:.2rem}
+  .timing{border:1px solid var(--line);border-radius:16px;background:#fff;padding:clamp(.85rem,2vw,1.35rem);margin:1.25rem 0 1.1rem}
+  .timing h3{font-size:1.02rem;margin:0 0 .25rem;text-align:left}
+  .timing svg{display:block;width:100%;height:auto;overflow:visible}
+  .chart-grid{stroke:var(--line);stroke-width:1}
+  .chart-axis{stroke:var(--muted);stroke-width:1}
+  .chart-label{fill:var(--muted);font:12px "JetBrains Mono",monospace}
+  .chart-line{fill:none!important;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .chart-dot{stroke:#fff;stroke-width:2}
+  .chart-eager{stroke:var(--warm);fill:var(--warm)}
+  .chart-graph{stroke:var(--accent);fill:var(--accent)}
+  .chart-both{stroke:var(--green);fill:var(--green)}
+  .chart-mtpe{stroke:#94a3b8;fill:#94a3b8}
+  .chart-mtpg{stroke:var(--cool);fill:var(--cool)}
+  .timing-legend{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:.35rem 1rem;margin:.45rem 0 .2rem;font-size:.78rem;color:var(--ink-soft)}
+  .timing-legend i{display:inline-block;width:.64rem;height:.64rem;margin-right:.32rem;vertical-align:-.03rem;border-radius:50%}
+  .timing-legend .eager{background:var(--warm)}.timing-legend .graph{background:var(--accent)}
+  .timing-legend .both{background:var(--green)}.timing-legend .mtpe{background:#94a3b8}
+  .timing-legend .mtpg{background:var(--cool)}
+  .findings{list-style:none;padding:0;margin:.8rem 0 1.4rem;display:grid;gap:.5rem}
+  .findings li{position:relative;margin:0;padding:.65rem .8rem .65rem 2rem;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:.9rem;line-height:1.48}
+  .findings li::before{content:"→";position:absolute;left:.75rem;color:var(--accent);font-weight:800}
+  .htable{overflow-x:auto;margin:1.25rem 0}
+  table{width:100%;border-collapse:collapse;background:#fff;font-size:.86rem}
+  th,td{text-align:left;padding:.65rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.69rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}td:first-child{font-weight:650}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin:1.2rem 0}
+  .card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:.85rem .9rem}
+  .card b{display:block;margin-bottom:.25rem}
+  .card span{display:block;font-size:.84rem;color:var(--ink-soft);line-height:1.45}
+  .launch{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
+  .launch .count{font:800 2rem/1 "JetBrains Mono",monospace}
+  .launch .count.bad{color:var(--warm)}.launch .count.good{color:var(--green)}
+  .method{font-size:.82rem;color:var(--muted)}
+  footer{border-top:1px solid var(--line);margin-top:3.6rem;padding:2.3rem 0 4rem;font-size:.9rem;color:var(--muted)}
+  footer a{color:var(--ink-soft)}
+  .refs{font-size:.93rem}.refs li{margin:.55rem 0}
+  @media(max-width:640px){
+    header.hero{padding:3.6rem 0 2rem}
+    .pair,.terms,.stats,.cards,.launch{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <p class="eyebrow">Serving · CUDA Graphs</p>
+  <h1 class="title">How CUDA Graphs Speed Up Decode <span class="title-expansion">And by how much</span></h1>
+  <p class="subtitle">They replay a recorded launch schedule. They do not make the math cheaper.</p>
+  <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>September 2026</span><span class="dot">•</span><span>LLM inference</span></div>
+</div></header>
+
+<main class="wrap">
+<p class="lede"><strong>A GPU kernel — one program the GPU runs — can finish faster than the CPU can ask for the next one.</strong> One language-model decode step is not one kernel. It is a long chain of matrix multiplies, normalizations, attention, state updates, sampling, and copies — often hundreds of launches per token.</p>
+
+<p>In ordinary eager execution, the CPU submits those launches one at a time, every token. A CUDA Graph records that sequence once and replays it with a single <code>cudaGraphLaunch</code>. The model's floating-point work does not change. The tax of starting each kernel does.</p>
+
+<p>On one NVIDIA B200 serving 16-bit Brain Float (bfloat16) <code>Qwen/Qwen3.8-27B</code>, full decode graphs cut time per output token from <strong>52.33 ms to 10.06 ms</strong>. One request rose from <strong>18.69 to 90.03 tokens/s</strong> — <strong>4.82×</strong>. With 16 requests in flight the same switch was <strong>4.11×</strong>: 279.64 to 1,150.60 tokens/s. Those are end-to-end serving numbers, not a kernel microbenchmark.</p>
+
+<div class="terms" aria-label="Terms used in this post">
+  <div class="term"><b>CUDA Graph</b><span>A recorded sequence of GPU work. Capture once, then replay the same operations with one launch.</span></div>
+  <div class="term"><b>Prefill / decode</b><span>Prefill is the first forward over the prompt. Decode emits one new token per request and repeats.</span></div>
+  <div class="term"><b>TPOT</b><span>Time per output token — the interval between successive generated tokens after the first.</span></div>
+  <div class="term"><b>Batch bucket</b><span>A captured batch or token count. A live size of 3 replays the size-4 graph and pads the extra row.</span></div>
+  <div class="term"><b>SGLang</b><span>The serving engine used for the measurements. It can graph decode and prefill independently.</span></div>
+  <div class="term"><b>MTP</b><span>Multi-token prediction — a draft head proposes several tokens; the target model verifies them together.</span></div>
+</div>
+
+<div class="callout"><span class="label">Where this mechanism is used</span>
+<p>Every modern serving engine graphs decode: SGLang, vLLM, TensorRT-LLM. They do it because autoregressive decode repeats the same one-token shape hundreds of times. <a href="/flash-attention.html">Flash Attention</a> is a different optimization — it changes the math's memory traffic. CUDA Graphs only cheapen the launch schedule around whatever kernels you already have.</p>
+</div>
+
+<nav class="toc"><div class="toc-title">Contents</div><ol>
+  <li><a href="#s1"><span class="n">1</span>The launch tax</a></li>
+  <li><a href="#s2"><span class="n">2</span>Fixed addresses, changing values</a></li>
+  <li><a href="#s3"><span class="n">3</span>Decode versus prefill</a></li>
+  <li><a href="#s4"><span class="n">4</span>Qwen3.8-27B on one B200</a></li>
+  <li><a href="#s5"><span class="n">5</span>Prefill, and a scheduler trap</a></li>
+  <li><a href="#s6"><span class="n">6</span>1,920 launches become 20</a></li>
+  <li><a href="#s7"><span class="n">7</span>MTP and other techniques</a></li>
+  <li><a href="#s8"><span class="n">8</span>Training, limits, mental model</a></li>
+</ol></nav>
+
+<h2 id="s1"><span class="num">1.</span>The launch tax</h2>
+<p>Consider a simplified transformer layer:</p>
+<pre><code>x = rms_norm(x)
+q, k, v = qkv_projection(x)
+x = attention(q, k, v, kv_cache)
+x = x + residual
+x = mlp(x)
+x = x + residual</code></pre>
+<p>Those six Python lines are not six GPU operations. Each line can invoke several CUDA kernels, and a full model repeats the pattern across dozens of layers. In eager execution the CPU walks that chain on every token:</p>
+
+<div class="pair">
+  <div class="panel bad">
+    <h3>Eager · one launch per kernel</h3>
+    <div class="flow">
+      <div class="box cpu">CPU: launch K1, K2, … Kn</div>
+      <div class="arr">↓ every token</div>
+      <div class="krow"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="gap"></div>
+      <div class="krow"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="box k">GPU: kernels with gaps</div>
+    </div>
+  </div>
+  <div class="panel good">
+    <h3>CUDA Graph · one replay</h3>
+    <div class="flow">
+      <div class="box cpu">CPU: cudaGraphLaunch</div>
+      <div class="arr">↓ every token</div>
+      <div class="krow graph"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="krow graph"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="box g">GPU: recorded sequence, no CPU gaps</div>
+    </div>
+  </div>
+</div>
+<p class="caption">Same kernels, same math. The graph removes CPU launch and dispatch overhead between them.</p>
+
+<p>A CUDA Graph does <em>not</em> fuse kernels, reduce weight traffic, pick a better attention algorithm, or remove communication across GPUs that split one model. Those are jobs for compilers, kernel libraries, quantization, and model architecture. If a step spends most of its time inside one large compute-bound matrix multiply, launch optimization cannot produce a 5× win. If it spends most of its time dispatching thousands of short kernels, it can.</p>
+
+<h2 id="s2"><span class="num">2.</span>Fixed addresses, changing values</h2>
+<p>Traditional CUDA Graph replay assumes the captured execution stays structurally identical: same operations, same tensor shapes, same device addresses, graph-safe control flow, and no forbidden host synchronization during capture. The <em>values</em> stored in those tensors may change. Their addresses and shapes generally may not.</p>
+<p>The serving-engine pattern is therefore: allocate persistent buffers once, capture a forward that reads those fixed addresses, then <code>copy_</code> live request data into the buffers on every step and replay.</p>
+<pre><code>static_ids = torch.empty(max_tokens, device="cuda", dtype=torch.int32)
+static_pos = torch.empty(max_tokens, device="cuda", dtype=torch.int64)
+
+with torch.cuda.graph(graph):
+    static_out = model(static_ids, static_pos)
+
+static_ids[:n].copy_(live_ids)
+static_pos[:n].copy_(live_pos)
+graph.replay()</code></pre>
+<p>SGLang's decode runner follows exactly this design. Live token IDs, positions, request-pool indices, and sequence lengths are copied into persistent buffers. The graph is replayed at a captured bucket size. Padded output rows are sliced away afterward.</p>
+
+<h3>Sequence length is usually a value, not a shape</h3>
+<p>During ordinary decode, each request contributes one new query token. The query-side shape is approximately <code>[batch_size, 1, hidden_size]</code>. The past length grows from 128 to 129 to 130, but it lives as a value in a length tensor and as data in a preallocated cache of past keys and values. A graph can keep the input shape fixed while an attention kernel reads a different runtime cache length on every replay.</p>
+<p>That is why “sequence length changes, so CUDA Graphs cannot be used for decode” is usually wrong. The decisive question is whether changing length changes the captured launch topology — not whether an integer stored in a tensor changes.</p>
+
+<h2 id="s3"><span class="num">3.</span>Decode versus prefill</h2>
+<p>Continuous batching means the live batch can change every iteration: 3 requests, then 5, then 4. Capturing every possible batch size minimizes padded work but costs startup time and resident graph memory. Capturing only powers of two is cheaper to store and may pad a lot.</p>
+<p>This experiment made the policy explicit: decode batches <code>1, 2, 4, 8, 16</code>. A live batch of 3 replays the batch-4 graph. A live batch of 9 replays batch 16.</p>
+
+<div class="cards">
+  <div class="card">
+    <b>Decode is naturally regular</b>
+    <span>One new token per request. The same one-token query shape repeats for hundreds of steps. Weights and cache pools stay resident. Changing length is mostly metadata.</span>
+  </div>
+  <div class="card">
+    <b>Prefill is dynamic in two dimensions</b>
+    <span>Total tokens, request count, per-request lengths, and prefix-cache hits all change. One request of 2,048 tokens is not the same graph as 16 requests of 128 tokens, even though both contain 2,048 tokens.</span>
+  </div>
+</div>
+
+<p>Engines use three broad strategies. A <strong>full graph</strong> captures the entire forward for token-count buckets and a fixed number of request slots — lowest launch count, strictest compatibility, real padding compute. A <strong>piecewise graph</strong> lets <code>torch.compile</code> split the forward into graph-safe regions. A <strong>breakable graph</strong> marks incompatible regions explicitly, ends capture before them, runs them eagerly, and resumes afterward. SGLang's breakable backend is the compiler-free version of that last idea: the boundary tensor keeps a stable address, and the eager region's fresh output is copied into it on replay.</p>
+<p>At small batch, launch overhead is large relative to useful work, so graphing usually wins. As batch or sequence grows, kernels get larger and the relative benefit falls. Poor buckets erase the win by doing too much padded work.</p>
+
+<h2 id="s4"><span class="num">4.</span>Qwen3.8-27B on one B200</h2>
+<p>There is no <code>Qwen3.8-30B</code> checkpoint. The near-30B dense model is <code>Qwen/Qwen3.8-27B</code>. It is a useful CUDA Graph case because the text model is deep and heterogeneous: 64 layers, of which 48 are Gated DeltaNet linear-attention layers and 16 are full attention, hidden size 5,120, vocabulary 248,320, plus one in-checkpoint multi-token-prediction head. Batch-1 decode is a long chain of relatively small operations, not one large matrix multiply per token. For the linear-attention side of that hybrid, see <a href="/linear-attention.html">Linear Attention, From Scratch to Kimi 3</a>.</p>
+
+<div class="callout"><span class="label">Method</span>
+<p>One B200, 183,359 MiB. SGLang <code>0.5.6.post3.dev9219+g779e593bd</code>, PyTorch 2.13.0+cu130, CUDA 13.0. One GPU, no model split. Context cap 32,768. At most 16 requests running. Prefill is cut into 4,096-token chunks. Decode used 128 input tokens, 64 output tokens, exact lengths, greedy sampling, two warmups, and 1, 2, 4, 8, or 16 requests in flight. Prefill used one output token, one request at a time, and 32 trials per length. Only the phase-specific CUDA Graph backend changed.</p>
+</div>
+
+<div class="stats">
+  <div class="stat hot"><span>Eager batch 1</span><b>18.69</b><small>tokens/s · 52.33 ms TPOT</small></div>
+  <div class="stat good"><span>Decode graph batch 1</span><b>90.03</b><small>tokens/s · 10.06 ms TPOT · 4.82×</small></div>
+  <div class="stat good"><span>Both graphs, c=16</span><b>1,201</b><small>tokens/s · 4.30× vs eager</small></div>
+</div>
+
+<div class="timing">
+  <h3>Decode throughput</h3>
+  <p class="method">Output tokens/s · 128 input / 64 output · exact lengths · one B200 · bfloat16 Qwen3.8-27B</p>
+  <div class="timing-legend">
+    <span><i class="eager"></i>Eager</span>
+    <span><i class="graph"></i>Full decode graph</span>
+    <span><i class="both"></i>Decode + breakable prefill</span>
+  </div>
+  <svg id="decode-chart" viewBox="0 0 720 360" role="img" aria-label="Decode throughput versus concurrency"></svg>
+</div>
+<ul class="findings">
+  <li><strong>Decode graphs remove a fixed launch tax.</strong> Eager time per output token stays near 52–55 ms from concurrency 1 to 16. Graph time stays near 10–11 ms. More batch raises system throughput; it barely changes the per-token interval until the launch tax is gone.</li>
+  <li><strong>The win is still 4.1× at concurrency 16.</strong> This hybrid 27B path is launch-heavy even when 16 requests share the GPU. The relative gain has started to fall (4.82× → 4.11×).</li>
+  <li><strong>Adding prefill graphs is a small decode bonus here.</strong> Combined backends reach 93.46 tokens/s at batch 1 and 1,201.21 at concurrency 16. Decode dominates 64 autoregressive steps.</li>
+</ul>
+
+<div class="htable">
+<table>
+  <thead><tr><th>Concurrency</th><th>Eager tok/s</th><th>Decode graph</th><th>Speedup</th><th>Eager TPOT</th><th>Graph TPOT</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>18.69</td><td>90.03</td><td>4.82×</td><td>52.33 ms</td><td>10.06 ms</td></tr>
+    <tr><td>2</td><td>35.91</td><td>170.02</td><td>4.73×</td><td>53.77 ms</td><td>10.32 ms</td></tr>
+    <tr><td>4</td><td>65.85</td><td>320.94</td><td>4.87×</td><td>55.20 ms</td><td>10.49 ms</td></tr>
+    <tr><td>8</td><td>130.95</td><td>618.04</td><td>4.72×</td><td>54.68 ms</td><td>10.72 ms</td></tr>
+    <tr><td>16</td><td>279.64</td><td>1,150.60</td><td>4.11×</td><td>54.03 ms</td><td>11.22 ms</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="caption">End-to-end serving with a fixed number of requests in flight, not a synthetic kernel timer. Graph column is <code>decode=full</code>, <code>prefill=disabled</code>.</p>
+
+<p>At a mixed point — 1,024 input tokens, 128 output tokens, concurrency 16 — decode graphing delivered 711.64 versus 184.46 output tokens/s (<strong>3.86×</strong>). Adding breakable prefill was neutral there (710.00 tokens/s) because decode dominates 128 autoregressive steps while prefill happens once.</p>
+
+<p>The price is capture time and resident memory. Five decode buckets took <strong>4.85 s</strong> and <strong>0.098 GB</strong> in the decode-only arm. Four prefill token buckets (<code>128, 512, 2048, 4096</code>) took <strong>4.44 s</strong> and <strong>1.086 GB</strong>. Combined, SGLang reported 4.77 s / 0.068 GB for decode plus 4.52 s / 1.102 GB for prefill. Model weights were 51.051 GB and the configured cache pool was 40.4 GB in every non-MTP arm.</p>
+
+<h2 id="s5"><span class="num">5.</span>Prefill, and a scheduler trap</h2>
+<p>Prefill should be measured as its own phase. The first combined-backend numbers looked too good at short prompts — about 2.9× — because SGLang's default overlap scheduler puts a throwaway decode on the time-to-first-token path.</p>
+<p>With overlap enabled, the first token is sampled by the prefill forward, but it is not streamed immediately. On the next scheduler iteration the request still looks unfinished, so the engine launches one decode before it processes and streams the queued prefill result. For a one-token benchmark, that decode computes a second token that is discarded. <code>decode=full</code> turns the throwaway into a fast graph replay; <code>decode=disabled</code> runs it eagerly. The combined numbers are real end-to-end behavior. They are not the isolated speedup of breakable prefill.</p>
+
+<div class="timing">
+  <h3>Prefill input throughput</h3>
+  <p class="method">Input tokens/s · one request · one output token · 32 trials per length · overlap scheduler off</p>
+  <div class="timing-legend">
+    <span><i class="eager"></i>Eager</span>
+    <span><i class="graph"></i>Breakable prefill graph</span>
+  </div>
+  <svg id="prefill-chart" viewBox="0 0 720 360" role="img" aria-label="Prefill input throughput versus prompt length"></svg>
+</div>
+<ul class="findings">
+  <li><strong>Short isolated prefill is still launch-sensitive.</strong> Overlap off, breakable graphs move 128 tokens from 1,982 to 4,165 input tokens/s (2.10×) and 512 tokens from 7,979 to 14,187 (1.78×).</li>
+  <li><strong>Long isolated prefill is not.</strong> At 2,048 tokens the same backend regresses to 0.82×. At 4,096 tokens it is 1.00×. Useful matrix and attention work now dominate segment replay and metadata preparation.</li>
+  <li><strong>Default overlap is a different experiment.</strong> With the overlap scheduler left on, both graph backends look 2.92× / 2.83× at 128 / 512 tokens against their matched eager baseline — because a graphed throwaway decode sits on the first-token path. Use the overlap-off series for the prefill-graph claim.</li>
+</ul>
+
+<p>This is why a serving engine should choose graph policy per phase. “Graphs on” is not one universal switch.</p>
+
+<h2 id="s6"><span class="num">6.</span>1,920 launches become 20</h2>
+<p>To isolate the mechanism from SGLang, a 32-layer PyTorch toy — one matrix multiply, one SiLU activation, one residual-add per layer — was captured with NVIDIA Nsight Systems. Twenty eager iterations issued <strong>1,280 <code>cudaLaunchKernel</code> + 640 <code>cuLaunchKernelEx</code> = 1,920</strong> kernel-launch API calls. Twenty graph iterations issued <strong>20 <code>cudaGraphLaunch</code></strong>.</p>
+
+<div class="launch">
+  <div class="panel bad">
+    <h3>Eager · 20 iterations</h3>
+    <div class="count bad">1,920</div>
+    <p>kernel-launch API calls. Host range in Nsight: 21.27 ms.</p>
+  </div>
+  <div class="panel good">
+    <h3>Graph · 20 replays</h3>
+    <div class="count good">20</div>
+    <p><code>cudaGraphLaunch</code> calls. Host range in Nsight: 0.327 ms.</p>
+  </div>
+</div>
+<p class="caption">Nsight Systems API counts. Those timed ranges measure CPU submission, not synchronized GPU completion. Use them for structure, not speed.</p>
+
+<div class="timing">
+  <h3>Toy-model wall time</h3>
+  <p class="method">Unprofiled, GPU-synchronized. 32 layers × (matrix multiply + SiLU + add). Hidden 512.</p>
+  <div class="timing-legend">
+    <span><i class="eager"></i>Eager wall ms</span>
+    <span><i class="graph"></i>Graph wall ms</span>
+  </div>
+  <svg id="micro-chart" viewBox="0 0 720 340" role="img" aria-label="Microbenchmark wall time versus batch"></svg>
+</div>
+<ul class="findings">
+  <li><strong>Unprofiled wall speedup is 3.32× at batch 1</strong> (0.613 → 0.185 ms) and falls to 2.32× at batch 2,048 (0.608 → 0.263 ms).</li>
+  <li><strong>Eager time is pinned near host submission.</strong> It barely moves as batch grows. Graph time rises because useful GPU work grows. That is the launch-bound to compute-bound transition.</li>
+  <li><strong>Do not trust profiled throughput.</strong> CPU+GPU tracing perturbs launch-bound work. Traces are for structure; unprofiled runs are for speed.</li>
+</ul>
+
+<h2 id="s7"><span class="num">7.</span>MTP and other techniques</h2>
+<p>CUDA Graphs are not an isolated knob. They constrain, and are enabled by, the rest of the serving stack.</p>
+
+<h3>Speculative decoding is the measured interaction</h3>
+<p>Qwen3.8's in-checkpoint multi-token prediction head uses SGLang's speculative path (EAGLE): three steps, top-k 1, four draft tokens. The number of tokens actually accepted stayed at <strong>2.81–2.83</strong> in both eager and graphed arms. Speculation has a mostly fixed verification width — one bonus token plus N draft tokens — so an engine can capture separate target-verify, draft-decode, and draft-extend graphs. That also multiplies graph paths.</p>
+
+<div class="timing">
+  <h3>Native MTP × CUDA Graphs</h3>
+  <p class="method">Output tokens/s · same 128/64 decode matrix · accept length 2.81–2.83</p>
+  <div class="timing-legend">
+    <span><i class="eager"></i>Plain eager</span>
+    <span><i class="graph"></i>Plain graph</span>
+    <span><i class="mtpe"></i>MTP eager</span>
+    <span><i class="mtpg"></i>MTP graph</span>
+  </div>
+  <svg id="mtp-chart" viewBox="0 0 720 360" role="img" aria-label="MTP and CUDA Graph decode throughput"></svg>
+</div>
+<ul class="findings">
+  <li><strong>The two optimizations compound at batch 1.</strong> MTP eager is 40.36 tokens/s. MTP plus graphs is 168.39 — 4.17× over MTP eager and <strong>9.01×</strong> over plain eager.</li>
+  <li><strong>They are not monotonically additive.</strong> At concurrency 16, graphed non-MTP (1,150.60) beats graphed MTP (1,024.27) by about 11%. The target model is already well batched; draft overhead outweighs saved target forwards.</li>
+  <li><strong>Speculation multiplies capture cost.</strong> MTP graphs took 6.91 s / 0.199 GB for target verify, 0.91 s / 0.117 GB for draft decode, and 0.90 s / 0.090 GB for draft extend — 8.73 s and 0.406 GB extra.</li>
+</ul>
+
+<h3>How the rest of the stack fits</h3>
+<div class="cards">
+  <div class="card"><b>Continuous batching</b><span>Supplies repeated decode shapes. Membership changes every step, so IDs, positions, and block tables must be staged into static buffers. Padding is real compute.</span></div>
+  <div class="card"><b>Paged attention</b><span>A preallocated cache gives stable addresses. Block tables can change as values. Some backends still need metadata or kernel choice outside the graph.</span></div>
+  <div class="card"><b>Prefix cache</b><span>A hit shortens prefill. The uncached token count becomes irregular and may pick a different bucket, increase padding, or miss the ladder.</span></div>
+  <div class="card"><b>torch.compile</b><span>Compile can fuse kernels; graphs replay the result. Dynamic guards, custom ops, and every compiled shape multiply autotune and capture work. Breakable graphs exist to avoid that compiler tax.</span></div>
+  <div class="card"><b>Tensor / expert parallel</b><span>GPU collectives can be captured after the communicator is created. Expert-parallel mixture-of-experts is harder: routed token counts are data-dependent. Engines often graph static regions and leave routing eager.</span></div>
+  <div class="card"><b>Quantization, LoRA, sampling</b><span>Warm JIT and autotuners before capture. Frequent adapter or weight updates invalidate captured addresses. Grammar masks often stay outside the model graph.</span></div>
+</div>
+<p>Prefill/decode disaggregation makes the phase split explicit: decode workers want a compact batch ladder of full graphs; prefill workers want eager, breakable, or piecewise execution over token buckets.</p>
+
+<h2 id="s8"><span class="num">8.</span>Training, limits, mental model</h2>
+<p>CUDA Graphs are usable in training, but serving decode is the cleaner fit. Decode has no backward pass, no optimizer, a repeating one-token query, persistent model and cache buffers, and hundreds of replays per request.</p>
+<p>With a fixed microbatch and sequence length, a trainer can capture <code>forward → loss → backward → optimizer</code>. Distributed training can also capture collectives with compatible initialization. Training then adds everything graphs dislike: packed sequences, dropout, loss scaling, gradient accumulation, activation checkpointing, host-side scalar reads, and data-dependent mixture-of-experts routing. The usual remedies are fixed-shape buckets, capturable optimizers, and partial capture. Large training kernels are often compute-bound enough that launch overhead is a smaller fraction than in batch-1 decode.</p>
+
+<div class="callout green"><span class="label">Mental model</span>
+<p><strong>CUDA Graphs are most valuable when execution repeats, shapes can be bucketed, and CPU launch overhead is a meaningful fraction of step time.</strong> That describes autoregressive decode unusually well. It describes long, dynamic prefill much less well. It describes a typical training step only after you have already frozen the shapes.</p>
+</div>
+
+<div class="callout warn"><span class="label">What this measurement is not</span>
+<p>One B200, one model, one precision, one GPU with no model split. Synthetic exact lengths, not a ShareGPT or production trace. One repetition per cell, no clock locking, relatively short runs. Prefill numbers include tokenizer, server, and client overhead plus one-token sampling — not a GPU-only forward timer. The phase-isolated prefill rerun disabled overlap; the combined numbers did not. MTP was measured on decode only. SGLang here is a development build, commit <code>779e593bd</code>, not a release tag. Do not read “CUDA Graphs always make inference 5× faster” out of a launch-bound 27B hybrid decode.</p>
+</div>
+
+<h3>References</h3>
+<ol class="refs">
+  <li><a href="https://docs.nvidia.com/dl-cuda-graph/latest/torch-cuda-graph/best-practices.html">NVIDIA — CUDA Graph best practices for PyTorch</a>.</li>
+  <li><a href="https://docs.nvidia.com/dl-cuda-graph/latest/torch-cuda-graph/handling-dynamic-patterns.html">NVIDIA — Handling dynamic patterns with CUDA Graphs</a>.</li>
+  <li><a href="https://pytorch.org/docs/stable/notes/cuda.html#cuda-graphs">PyTorch CUDA semantics — CUDA Graphs</a>.</li>
+  <li><a href="https://www.lmsys.org/blog/2026-08-17-advanced-cuda-graph/">LMSYS — Advanced CUDA Graph techniques in SGLang</a>.</li>
+  <li><a href="https://docs.sglang.io/cookbook/autoregressive/Qwen/Qwen3.8-27B">SGLang — Qwen3.8-27B serving cookbook</a>.</li>
+  <li><a href="https://docs.vllm.ai/en/stable/design/cuda_graphs/">vLLM — CUDA Graph design</a>.</li>
+  <li>Earlier on this site: <a href="/flash-attention.html">Flash Attention</a>, <a href="/linear-attention.html">linear attention</a>, <a href="/hopper-to-blackwell-mma.html">Hopper-to-Blackwell MMA</a>.</li>
+</ol>
+
+<h3>How to cite this post</h3>
+<pre><code>Dong, S. (2026). How CUDA Graphs Speed Up Decode — and By How Much.
+https://simondong1.github.io/cuda-graphs.html</code></pre>
+</main>
+
+<footer><div class="wrap">
+  <p>Written by <a href="https://x.com/dongsixiang"><strong>Simon Dong</strong></a> · September 2026.</p>
+  <p><a href="/">&larr; Back to blog</a></p>
+</div></footer>
+<script>
+(function(){
+  function drawChart(id, xs, series, yMax, ticks, xLabel, yLabel, unit){
+    var svg=document.getElementById(id), NS="http://www.w3.org/2000/svg";
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    var mobile=window.innerWidth<640;
+    var W=mobile?440:720,H=mobile?320:360,L=mobile?54:72,R=mobile?12:24,T=24,B=58,pw=W-L-R,ph=H-T-B;
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
+    function node(tag,attrs,text){
+      var n=document.createElementNS(NS,tag);
+      Object.keys(attrs||{}).forEach(function(k){n.setAttribute(k,attrs[k]);});
+      if(text!==undefined)n.textContent=text;
+      svg.appendChild(n);return n;
+    }
+    function x(i){return L+(xs.length===1?pw/2:i*pw/(xs.length-1));}
+    function y(v){return T+(yMax-v)/yMax*ph;}
+    ticks.forEach(function(v){
+      var yy=y(v);
+      node("line",{x1:L,y1:yy,x2:W-R,y2:yy,class:"chart-grid"});
+      node("text",{x:L-8,y:yy+4,"text-anchor":"end",class:"chart-label"},String(v));
+    });
+    node("line",{x1:L,y1:T,x2:L,y2:H-B,class:"chart-axis"});
+    node("line",{x1:L,y1:H-B,x2:W-R,y2:H-B,class:"chart-axis"});
+    xs.forEach(function(s,i){
+      node("text",{x:x(i),y:H-B+21,"text-anchor":"middle",class:"chart-label"},s);
+    });
+    node("text",{x:16,y:T+ph/2,transform:"rotate(-90 16 "+(T+ph/2)+")","text-anchor":"middle",class:"chart-label"},yLabel);
+    node("text",{x:L+pw/2,y:H-8,"text-anchor":"middle",class:"chart-label"},xLabel);
+    series.forEach(function(s){
+      var points=[];
+      s.values.forEach(function(v,i){if(v!==null)points.push(x(i)+","+y(v));});
+      node("polyline",{points:points.join(" "),class:"chart-line chart-"+s.key});
+      s.values.forEach(function(v,i){
+        if(v===null)return;
+        var c=node("circle",{cx:x(i),cy:y(v),r:4,class:"chart-dot chart-"+s.key});
+        var title=document.createElementNS(NS,"title");
+        title.textContent=s.name+": "+v+" "+unit;
+        c.appendChild(title);
+      });
+    });
+  }
+  function paint(){
+    drawChart("decode-chart",["1","2","4","8","16"],[
+      {key:"eager",name:"Eager",values:[18.69,35.91,65.85,130.95,279.64]},
+      {key:"graph",name:"Full decode graph",values:[90.03,170.02,320.94,618.04,1150.60]},
+      {key:"both",name:"Decode + breakable prefill",values:[93.46,175.94,340.78,605.77,1201.21]}
+    ],1400,[0,200,400,600,800,1000,1200,1400],"Concurrency","Output tok/s","tok/s");
+    drawChart("prefill-chart",["128","512","2048","4096"],[
+      {key:"eager",name:"Eager",values:[1982,7979,24340,34586]},
+      {key:"graph",name:"Breakable prefill graph",values:[4165,14187,19870,34601]}
+    ],38000,[0,8000,16000,24000,32000],"Input length (tokens)","Input tok/s","tok/s");
+    drawChart("micro-chart",["1","64","512","2048"],[
+      {key:"eager",name:"Eager",values:[0.613,0.617,0.615,0.608]},
+      {key:"graph",name:"Graph",values:[0.185,0.195,0.213,0.263]}
+    ],0.7,[0,0.2,0.4,0.6],"Batch","Wall time (ms)","ms");
+    drawChart("mtp-chart",["1","2","4","8","16"],[
+      {key:"eager",name:"Plain eager",values:[18.69,35.91,65.85,130.95,279.64]},
+      {key:"graph",name:"Plain graph",values:[90.03,170.02,320.94,618.04,1150.60]},
+      {key:"mtpe",name:"MTP eager",values:[40.36,73.35,89.85,223.86,424.66]},
+      {key:"mtpg",name:"MTP graph",values:[168.39,264.77,427.33,665.71,1024.27]}
+    ],1400,[0,200,400,600,800,1000,1200,1400],"Concurrency","Output tok/s","tok/s");
+  }
+  paint();
+  window.addEventListener("resize",paint);
+
+  var links=[].slice.call(document.querySelectorAll("nav.toc a"));
+  var byId={};links.forEach(function(a){byId[a.getAttribute("href").slice(1)]=a;});
+  var heads=[].slice.call(document.querySelectorAll("main h2[id]"));
+  if("IntersectionObserver" in window && heads.length){
+    var obs=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(l){l.classList.remove("active");});
+          if(byId[e.target.id])byId[e.target.id].classList.add("active");
+        }
+      });
+    },{rootMargin:"-12% 0px -78% 0px",threshold:0});
+    heads.forEach(function(h){obs.observe(h);});
+  }
+})();
+</script>
+</body>
+</html>

@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simon Dong — Blog</title>
-  <meta name="description" content="Visual technical notes on LLM internals and GPU architecture, including Hopper-to-Blackwell MMA, Flash Attention, Kimi Delta Attention, PPO, MLA, GQA, and RoPE. By Simon Dong, MLE @ Roblox.">
+  <meta name="description" content="Visual technical notes on LLM internals and GPU architecture, including CUDA Graphs, Hopper-to-Blackwell MMA, Flash Attention, Kimi Delta Attention, PPO, MLA, GQA, and RoPE. By Simon Dong, MLE @ Roblox.">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="author" content="Simon Dong">
   <link rel="canonical" href="https://simondong1.github.io/">
   <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml">
   <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt">
   <meta property="og:title" content="Simon Dong — Blog">
-  <meta property="og:description" content="Visual technical notes on Hopper-to-Blackwell MMA, Flash Attention, Kimi Delta Attention, PPO, MLA, GQA, RoPE, and modern language-model systems.">
+  <meta property="og:description" content="Visual technical notes on CUDA Graphs, Hopper-to-Blackwell MMA, Flash Attention, Kimi Delta Attention, PPO, MLA, GQA, RoPE, and modern language-model systems.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://simondong1.github.io/">
   <meta property="og:site_name" content="Simon Dong">
@@ -21,7 +21,7 @@
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Simon Dong — Blog">
-  <meta name="twitter:description" content="Visual technical notes on Hopper-to-Blackwell MMA, Flash Attention, Kimi Delta Attention, PPO, MLA, GQA, RoPE, and modern language-model systems.">
+  <meta name="twitter:description" content="Visual technical notes on CUDA Graphs, Hopper-to-Blackwell MMA, Flash Attention, Kimi Delta Attention, PPO, MLA, GQA, RoPE, and modern language-model systems.">
   <meta name="twitter:image" content="https://simondong1.github.io/assets/ppo-og.png?v=1">
   <meta name="twitter:creator" content="@dongsixiang">
   <script type="application/ld+json">
@@ -53,6 +53,12 @@
         "name": "Simon Dong Blog",
         "author": { "@id": "https://simondong1.github.io/#person" },
         "blogPost": [
+          {
+            "@type": "BlogPosting",
+            "headline": "How CUDA Graphs Speed Up Decode — and By How Much",
+            "url": "https://simondong1.github.io/cuda-graphs.html",
+            "datePublished": "2026-09-02"
+          },
           {
             "@type": "BlogPosting",
             "headline": "From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution",
@@ -140,6 +146,11 @@
     </nav>
 
     <h2 class="section-title">Blog</h2>
+    <a class="post" href="https://simondong1.github.io/cuda-graphs.html">
+      <p class="meta">September 2026 · Serving · CUDA Graphs</p>
+      <h2>How CUDA Graphs Speed Up Decode — and By How Much</h2>
+      <p>They replay a recorded launch schedule. On Qwen3.8-27B that cut batch-1 decode from 52 ms to 10 ms.</p>
+    </a>
     <a class="post" href="https://simondong1.github.io/hopper-to-blackwell-mma.html">
       <p class="meta">September 2026 · GPU Architecture · Tensor Cores</p>
       <h2>From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution</h2>

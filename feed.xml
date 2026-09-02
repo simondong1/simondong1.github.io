@@ -7,6 +7,13 @@
     <language>en-us</language>
     <atom:link href="https://simondong1.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>How CUDA Graphs Speed Up Decode — and By How Much</title>
+      <link>https://simondong1.github.io/cuda-graphs.html</link>
+      <guid isPermaLink="true">https://simondong1.github.io/cuda-graphs.html</guid>
+      <pubDate>Wed, 02 Sep 2026 00:00:00 +0000</pubDate>
+      <description>CUDA Graphs replay a recorded launch schedule. On Qwen3.8-27B they cut batch-1 decode from 52 ms to 10 ms. They do not make the math cheaper.</description>
+    </item>
+    <item>
       <title>From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution</title>
       <link>https://simondong1.github.io/hopper-to-blackwell-mma.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/hopper-to-blackwell-mma.html</guid>
