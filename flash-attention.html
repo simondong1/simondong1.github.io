@@ -150,7 +150,7 @@
   .chart-grid{stroke:var(--line);stroke-width:1}
   .chart-axis{stroke:var(--muted);stroke-width:1}
   .chart-label{fill:var(--muted);font:12px "JetBrains Mono",monospace}
-  .chart-value{font:650 11px "JetBrains Mono",monospace;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+  .chart-line{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .chart-dot{stroke:#fff;stroke-width:2}
   .chart-naive{stroke:var(--warm);fill:var(--warm)}
   .chart-sdpa{stroke:var(--cool);fill:var(--cool)}
@@ -415,7 +415,7 @@
 
 <h2 id="s4"><span class="num">4.</span>Performance</h2>
 
-<p class="lede"><strong>First, the clock.</strong> Lower is faster. Every labeled dot is the mean latency for the same Qwen3.8-27B full-attention shape on one B200.</p>
+<p class="lede"><strong>First, the clock.</strong> Lower is faster. Every dot is the mean latency for the same Qwen3.8-27B full-attention shape on one B200.</p>
 
 <p>We compare four implementations: an eager PyTorch baseline, PyTorch scaled dot-product attention (SDPA), FlashAttention-4, and FlashInfer. FlashInfer is tested in both phases: its fused single-prefill kernel for prefill and its tensor-core single-decode kernel for decode.</p>
 <p>Model dimensions that matter here: hidden size 5,120; 64 layers, of which 16 are full attention; 24 query heads; 4 key/value heads; head dimension 256; six query heads share each key/value head.</p>
@@ -429,7 +429,7 @@
     <span><i class="naive"></i>Naive</span><span><i class="sdpa"></i>PyTorch SDPA</span>
     <span><i class="fa4"></i>FlashAttention-4</span><span><i class="flashinfer"></i>FlashInfer</span>
   </div>
-  <p class="caption">CUDA-event mean latency in milliseconds · logarithmic y-axis · bfloat16 · batch 1 · 24 query heads · 4 key/value heads · head dimension 256.</p>
+  <p class="caption">CUDA-event mean latency in milliseconds · logarithmic y-axis · bfloat16 · batch 1 · 24 query heads · 4 key/value heads · head dimension 256. Hover for the exact value.</p>
 </div>
 
 <div class="callout green"><span class="label">Measured prefill gain</span>
@@ -461,11 +461,19 @@
   <img src="assets/fa4/naive-prefill.png" alt="Nsight Compute summary showing twelve separate eager prefill kernels">
   <p class="caption">The eager baseline is visibly twelve kernels. Score conversion, masking, standalone softmax, output conversion, and grouped-head expansion consume 91.5% of its profiled duration; the two matrix multiplies take only 0.60 ms.</p>
 </figure>
+<ul class="findings">
+  <li><strong>Twelve launches expose the full score matrix.</strong> Conversion, masking, softmax, and layout work become separate global-memory round trips.</li>
+  <li><strong>The matrix multiplies are not the main problem.</strong> They consume only 0.60 ms; everything around them consumes 91.5% of the profiled call.</li>
+</ul>
 
 <figure class="shot">
   <img src="assets/fa4/fused-summary.png" alt="Nsight Compute Summary showing one fused FlashAttention-4 prefill kernel row">
   <p class="caption">The comparison is now literal: the eager call above has twelve result rows; fused FlashAttention-4 has one. Every profiler section below describes this one complete launch.</p>
 </figure>
+<ul class="findings">
+  <li><strong>All three optimized prefill implementations are fused.</strong> SDPA, FlashAttention-4, and FlashInfer each replace the eager call's twelve launches with one.</li>
+  <li><strong>Fusion explains the first gain; the kernel design explains the rest.</strong> FlashAttention-4 is still about 3× faster than the other fused kernels, so the next comparison is instruction and on-chip-memory efficiency.</li>
+</ul>
 
 <p>The profiler shows what changed. At 4k, these rows are FA4 / SDPA:</p>
 <div class="proof" aria-label="Nsight Compute proof for 4k prefill, FlashAttention-4 compared with PyTorch SDPA">
@@ -547,7 +555,7 @@
     <span><i class="naive"></i>Naive</span><span><i class="sdpa"></i>PyTorch SDPA</span><span><i class="fa4"></i>FlashAttention-4</span>
     <span><i class="flashinfer"></i>FlashInfer</span>
   </div>
-  <p class="caption">Each labeled point is the CUDA-event mean latency in milliseconds for one new query token over the existing key/value cache.</p>
+  <p class="caption">Each dot is the CUDA-event mean latency for one new query token over the existing key/value cache. Hover for the exact value.</p>
 </div>
 
 <div class="split-result">
@@ -693,29 +701,29 @@ https://simondong1.github.io/flash-attention.html</code></pre>
     node("text",{x:16,y:T+ph/2,transform:"rotate(-90 16 "+(T+ph/2)+")","text-anchor":"middle",class:"chart-label"},"Latency (ms, log)");
     node("text",{x:L+pw/2,y:H-8,"text-anchor":"middle",class:"chart-label"},xLabel);
     series.forEach(function(s){
+      var points=[];
+      s.values.forEach(function(v,i){if(v!==null)points.push(x(i)+","+y(v));});
+      node("polyline",{points:points.join(" "),class:"chart-line chart-"+s.key});
       s.values.forEach(function(v,i){
         if(v===null)return;
-        var c=node("circle",{cx:x(i),cy:y(v),r:7,class:"chart-dot chart-"+s.key});
+        var c=node("circle",{cx:x(i),cy:y(v),r:4,class:"chart-dot chart-"+s.key});
         var title=document.createElementNS(NS,"title");
         title.textContent=s.name+": "+v+" ms";
         c.appendChild(title);
-        var edge=i===0?"start":i===s.values.length-1?"end":"middle";
-        var dx=i===0?9:i===s.values.length-1?-9:0;
-        node("text",{x:x(i)+dx,y:y(v)+(s.dy||-10),"text-anchor":edge,class:"chart-value chart-"+s.key},v.toFixed(3));
       });
     });
   }
   drawTimingChart("prefill-chart",["1k","4k","8k"],[
-    {key:"naive",name:"Naive",values:[.356,5.291,null],dy:-10},
-    {key:"sdpa",name:"PyTorch SDPA",values:[.069,.639,2.279],dy:-11},
-    {key:"fa4",name:"FlashAttention-4",values:[.052,.190,.599],dy:18},
-    {key:"flashinfer",name:"FlashInfer",values:[.070,.686,2.486],dy:16}
+    {key:"naive",name:"Naive",values:[.356,5.291,null]},
+    {key:"sdpa",name:"PyTorch SDPA",values:[.069,.639,2.279]},
+    {key:"fa4",name:"FlashAttention-4",values:[.052,.190,.599]},
+    {key:"flashinfer",name:"FlashInfer",values:[.070,.686,2.486]}
   ],.04,10,[.05,.1,.5,1,5,10],"Sequence length (tokens)");
   drawTimingChart("decode-chart",["1k","8k","32k"],[
-    {key:"naive",name:"Naive",values:[.098,.245,.862],dy:-10},
-    {key:"sdpa",name:"PyTorch SDPA",values:[.024,.032,.054],dy:-12},
-    {key:"fa4",name:"FlashAttention-4",values:[.052,.084,.307],dy:18},
-    {key:"flashinfer",name:"FlashInfer",values:[.026,.026,.039],dy:16}
+    {key:"naive",name:"Naive",values:[.098,.245,.862]},
+    {key:"sdpa",name:"PyTorch SDPA",values:[.024,.032,.054]},
+    {key:"fa4",name:"FlashAttention-4",values:[.052,.084,.307]},
+    {key:"flashinfer",name:"FlashInfer",values:[.026,.026,.039]}
   ],.02,1,[.02,.05,.1,.2,.5,1],"Key/value cache length (tokens)");
 
   var links=[].slice.call(document.querySelectorAll("nav.toc a"));

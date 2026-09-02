@@ -23,7 +23,9 @@ posts, then fetch the latest remote branch. Preserve concurrent work.
    and measured data.
 3. Build the explanation in prerequisite order: placement, motivation,
    smallest useful example, general rule, real dimensions, implementation,
-   limitations, and final mental model.
+   limitations, and final mental model. Define every hardware, kernel, and
+   matrix term before using its acronym. First-time readers must finish the
+   lede without already knowing MMA, TMEM, TMA, warpgroup, or SM.
 4. Match the existing editorial design. Prefer focused diagrams, MathJax, and
    small interactive visuals over prose walls, profiler dumps, or pseudocode.
 5. Update the canonical HTML plus `index.html`, `feed.xml`, `sitemap.xml`, and
@@ -34,16 +36,23 @@ posts, then fetch the latest remote branch. Preserve concurrent work.
 Before a worked example, tell the reader what is being computed, what the
 example teaches, and whether it is a baseline or the final mechanism.
 
+When the post depends on several GPU or kernel names at once, add a compact
+terms card after the lede. Expand each acronym on first use in the body too.
+
 ## Performance presentation
 
 - Lead with measured points. Use plain chart titles such as “Prefill latency”;
   put timing details in the caption, not the title.
-- Label every benchmark point with its measured value. If points are averages,
-  say so once in the caption. Do not connect discrete points when a line would
-  imply an unmeasured trend.
+- Use small, uncluttered dots by default. Put exact values in hover text and
+  the nearby result prose; do not print numbers on every dot unless the user
+  explicitly requests labels. If points are averages, say so once in the
+  caption. For an ordered sweep such as sequence or cache length, connect
+  points belonging to the same algorithm when the comparison calls for a
+  trend line. Never connect different algorithms or bridge a missing point.
 - Present the baseline first, then compare optimized implementations against
-  it. After each image, add short finding-first bullets: conclusion first,
-  metric evidence second.
+  it. Immediately after every evidence image, add short finding-first bullets:
+  conclusion first, metric evidence second. A caption does not replace those
+  bullets.
 - When explaining fusion, show comparable profiler Summary views: the eager
   baseline's many result rows beside the fused implementation's one row.
   A cropped header or Details page does not demonstrate kernel count.
@@ -65,9 +74,19 @@ example teaches, and whether it is a baseline or the final mechanism.
 - Before publishing, test at a desktop viewport and at 390 px. Assert that
   `document.documentElement.scrollWidth <= window.innerWidth`, every figure's
   bounding box stays inside the content container, all images have non-zero
-  `naturalWidth`, and chart labels do not collide or clip.
+  `naturalWidth`, and any explicitly requested chart labels do not collide or
+  clip.
 - If an image overflows or its text is unreadable, fix the layout or recrop the
   source; do not publish and ask the reader to zoom.
+
+## Improve this guide from corrections
+
+- When the user identifies a repeatable writing, chart, screenshot, layout, or
+  publishing mistake, fix the page and update this skill or `BLOG_STYLE.md` in
+  the same change with a concrete prevention rule.
+- Remove or revise older guidance that conflicts with the latest correction;
+  do not accumulate contradictory rules.
+- Validate the new rule against the page that triggered it before publishing.
 
 ## Publishing is required
 
