@@ -88,8 +88,10 @@ For performance sections:
 Every post needs:
 
 - title, description, canonical URL, author, robots;
-- Open Graph and Twitter metadata;
-- citation metadata and `TechArticle` JSON-LD;
+- Open Graph and Twitter metadata that work as a URL-only X post:
+  `summary_large_image`, a complete title, a complete caption-length
+  description, and an article-specific 1200×630 `og:image`;
+- citation metadata and `TechArticle` JSON-LD, including the same image;
 - publication and modification dates;
 - sticky table of contents;
 - references and “How to cite this post.”

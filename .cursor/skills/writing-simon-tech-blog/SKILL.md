@@ -86,6 +86,39 @@ form is already on the page.
   elapsed cycles, instruction count, memory path, and occupancy are often
   useful; exhaustive profiler dumps are not.
 
+## X / URL-only sharing
+
+Posts are shared on X as a URL with no tweet text. The Open Graph /
+Twitter card is the entire post. Title + description + image must stand
+alone as a complete tweet.
+
+Every article must ship all of the following before publish:
+
+1. `twitter:card` = `summary_large_image`. Never ship `summary` without an
+   article image; a text-only card is a blank tweet.
+2. `og:title` / `twitter:title` that can stand as the whole headline.
+   Keep it under ~70 characters.
+3. `og:description` / `twitter:description` that can stand as the whole
+   caption: one complete thought, result- or hook-first, no “in this
+   post.” Keep it under ~200 characters. This is the tweet body when the
+   user pastes only the URL. Match `meta name="description"` to the same
+   sentence.
+4. An article-specific 1200×630 PNG at `assets/<slug>-og.png`. Do not
+   reuse the homepage image or another post’s card.
+5. Absolute `https://simondong1.github.io/...` URLs for `og:image` and
+   `twitter:image`, plus `og:image:width` 1200, `og:image:height` 630,
+   `og:image:type`, `og:image:alt`, and `twitter:image:alt`. Cache-bust
+   with `?v=N` when the image changes.
+6. The same image URL on the TechArticle JSON-LD `image` field.
+7. The image itself must read at card size (~500×260 on X): one idea,
+   large type, the article hook or mechanism diagram, and
+   `simondong1.github.io · Simon Dong` in the footer. No dense plots,
+   Nsight dumps, or labels that vanish when scaled down.
+
+Before publishing, read title + description + image as a first-time
+scroller. If that trio does not make a complete X post, rewrite the
+metadata or the image.
+
 ## Image and overflow rules
 
 - Screenshots and figures must stay inside the article column by default:
