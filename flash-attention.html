@@ -150,6 +150,7 @@
   .chart-grid{stroke:var(--line);stroke-width:1}
   .chart-axis{stroke:var(--muted);stroke-width:1}
   .chart-label{fill:var(--muted);font:12px "JetBrains Mono",monospace}
+  .chart-value{font:650 11px "JetBrains Mono",monospace;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
   .chart-dot{stroke:#fff;stroke-width:2}
   .chart-naive{stroke:var(--warm);fill:var(--warm)}
   .chart-sdpa{stroke:var(--cool);fill:var(--cool)}
@@ -176,6 +177,12 @@
   .method{font-size:.82rem;color:var(--muted)}
   .split-result{border-left:3px solid var(--green);padding:.05rem 0 .05rem 1rem;margin:1rem 0 1.4rem}
   .split-result p{margin:.35rem 0}
+  figure.shot{margin:1.15rem 0 1.45rem}
+  figure.shot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:#0b0d10}
+  .findings{list-style:none;padding:0;margin:.8rem 0 1.4rem;display:grid;gap:.5rem}
+  .findings li{position:relative;margin:0;padding:.65rem .8rem .65rem 2rem;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:.9rem;line-height:1.48}
+  .findings li::before{content:"→";position:absolute;left:.75rem;color:var(--accent);font-weight:800}
+  h4{font-size:1rem;line-height:1.35;margin:1.8rem 0 .55rem}
 
   .homes{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.2rem 0}
   .home{border:1px solid var(--line);border-radius:14px;padding:1rem .95rem;background:#fff}
@@ -199,6 +206,7 @@
   footer a{color:var(--ink-soft)}
   ul{margin:1rem 0;padding-left:1.2rem}li{margin:.35rem 0}
   @media(max-width:900px){.reuse{grid-template-columns:1fr 1fr}}
+  @media(min-width:901px){figure.shot{width:min(70rem,calc(100vw - 3rem));margin-left:50%;transform:translateX(-50%)}}
   @media(max-width:640px){
     header.hero{padding:3.5rem 0 2rem}
     .pair,.metrics,.state,.homes,.reuse{grid-template-columns:1fr}
@@ -408,25 +416,25 @@
 
 <h2 id="s4"><span class="num">4.</span>Performance</h2>
 
-<p class="lede"><strong>First, the clock.</strong> Lower is faster. Every dot runs the same attention computation for one Qwen3.8-27B softmax layer.</p>
+<p class="lede"><strong>First, the clock.</strong> Lower is faster. Every labeled dot is the mean latency for the same Qwen3.8-27B full-attention shape on one B200.</p>
+
+<p>We compare four implementations: an eager PyTorch baseline, PyTorch scaled dot-product attention (SDPA), FlashAttention-4, and FlashInfer. FlashInfer is tested in both phases: its fused single-prefill kernel for prefill and its tensor-core single-decode kernel for decode.</p>
 
 <div class="timing">
   <div class="timing-panel">
-    <h3>Prefill kernel latency</h3>
+    <h3>Prefill latency · mean of 20 calls</h3>
     <svg id="prefill-chart" viewBox="0 0 720 380" role="img" aria-label="Prefill attention latency in milliseconds by sequence length"></svg>
   </div>
   <div class="timing-legend">
     <span><i class="naive"></i>Naive</span><span><i class="sdpa"></i>PyTorch SDPA</span>
-    <span><i class="fa4"></i>FlashAttention-4</span>
+    <span><i class="fa4"></i>FlashAttention-4</span><span><i class="flashinfer"></i>FlashInfer</span>
   </div>
-  <p class="caption">CUDA-event latency · logarithmic y-axis · one NVIDIA B200 (SM100) · BF16 · batch 1 · 24 query heads · 4 key/value heads · head dimension 256.</p>
+  <p class="caption">CUDA-event mean latency in milliseconds · logarithmic y-axis · bfloat16 · batch 1 · 24 query heads · 4 key/value heads · head dimension 256.</p>
 </div>
 
 <div class="callout green"><span class="label">Measured prefill gain</span>
 <p>At 4k tokens, FlashAttention-4 takes <strong>0.190 ms</strong>: <strong>27.8× faster</strong> than the eager materializing baseline at 5.291 ms, and <strong>3.4× faster</strong> than PyTorch SDPA at 0.639 ms. At 8k, it is 0.599 ms versus 2.279 ms for SDPA — <strong>3.8× faster</strong>.</p>
 </div>
-
-<p class="method">Five warmups are discarded; each dot averages 20 launches. Prefill is causal and square: query length equals key length.</p>
 
 <h3>What gives prefill the speedup?</h3>
 
@@ -449,6 +457,16 @@
   </div>
 </div>
 
+<figure class="shot">
+  <img src="assets/fa4/naive-prefill.png" alt="Nsight Compute summary showing twelve separate eager prefill kernels">
+  <p class="caption">The eager baseline is visibly twelve kernels. Score conversion, masking, standalone softmax, output conversion, and grouped-head expansion consume 91.5% of its profiled duration; the two matrix multiplies take only 0.60 ms.</p>
+</figure>
+
+<figure class="shot">
+  <img src="assets/fa4/fa4-occupancy.png" alt="Nsight Compute page showing one fused FlashAttention-4 prefill kernel">
+  <p class="caption">A fused call is one result row. Every section below it describes that same complete FlashAttention-4 launch: 768 blocks, 384 threads per block, and 361.82 µs under Nsight.</p>
+</figure>
+
 <p>The profiler shows what changed. At 4k, these rows are FA4 / SDPA:</p>
 <div class="proof" aria-label="Nsight Compute proof for 4k prefill, FlashAttention-4 compared with PyTorch SDPA">
   <div class="proof-row"><span>Instructions per cycle</span><strong>1.28 / 1.27</strong><em>same issue rate</em></div>
@@ -456,31 +474,102 @@
   <div class="proof-row"><span>Nsight duration</span><strong>0.36 / 1.08 ms</strong><em>2.98× shorter</em></div>
 </div>
 <p>The issue rate is the same; the amount issued is not. FlashAttention-4's B200 path keeps tensor-core accumulators in <strong>Tensor Memory</strong> and uses asynchronous matrix operations. Its ordinary load/store pipeline is active for 0.43% of elapsed cycles, versus 22.17% for SDPA. Fewer staging instructions produce nearly the same 3× ratio as the measured time.</p>
-<p class="method"><a href="https://developer.nvidia.com/nsight-compute">Nsight Compute</a> replays kernels to collect counters, so its durations are structural evidence. CUDA events above are the wall-clock measurements.</p>
+
+<h3>What the profiler sections show</h3>
+
+<h4>Speed of Light: fewer cycles, not a higher clock</h4>
+<figure class="shot">
+  <img src="assets/fa4/nsight-speed-of-light.png" alt="Nsight Compute GPU Speed of Light section for FlashAttention-4 prefill">
+  <p class="caption">Speed of Light reports each hardware path as a percentage of its peak while the kernel runs.</p>
+</figure>
+<ul class="findings">
+  <li><strong>FlashAttention-4 needs 3.4× fewer GPU cycles:</strong> 347,336 versus 1,195,700 for SDPA and 1,316,638 for FlashInfer.</li>
+  <li><strong>Compute utilization is similar:</strong> 55.49%, 58.91%, and 55.66%. The slower kernels keep comparable compute hardware busy for roughly three times longer.</li>
+  <li><strong>The separation is on-chip movement:</strong> the busiest memory path is 17.60% for FlashAttention-4, 68.77% for SDPA, and 64.02% for FlashInfer. Off-chip DRAM is only 1–3%.</li>
+</ul>
+
+<h4>Compute Workload: one-third the instruction stream</h4>
+<figure class="shot">
+  <img src="assets/fa4/nsight-compute-workload.png" alt="Nsight Compute Compute Workload Analysis for FlashAttention-4 prefill">
+  <p class="caption">The left chart counts cycles occupied; the right counts issued instructions. Tensor Memory keeps dedicated hardware busy with comparatively few instructions.</p>
+</figure>
+<ul class="findings">
+  <li><strong>Instruction count:</strong> 61 million for FlashAttention-4, 186 million for SDPA, and 175 million for FlashInfer.</li>
+  <li><strong>Instruction rate stays close:</strong> 1.28, 1.27, and 1.12 instructions per active cycle. FlashAttention-4 wins by asking the schedulers to do less work.</li>
+  <li><strong>Only FlashAttention-4 uses Tensor Memory:</strong> 55.49% utilization, while its ordinary load/store pipeline is 0.43% versus 22.17% for SDPA and 20.43% for FlashInfer.</li>
+</ul>
+
+<div class="callout green"><span class="label">Why Blackwell-native matters</span>
+<p><strong>Tensor Memory</strong> is a dedicated ~256 KB on-chip store per streaming multiprocessor for fifth-generation tensor cores. A thread can launch a large asynchronous matrix multiply whose accumulators land there instead of being distributed through thread registers. The profile links that path to fewer instructions; an otherwise-identical non-Tensor-Memory kernel would be needed to isolate its exact contribution.</p>
+</div>
+
+<h4>Memory Workload: HBM is not the remaining prefill gap</h4>
+<figure class="shot">
+  <img src="assets/fa4/nsight-memory-workload.png" alt="Nsight Compute Memory Workload Analysis for FlashAttention-4 prefill">
+  <p class="caption">This section separates byte rate, cache hits, request bandwidth, memory-instruction pipes, and spilling.</p>
+</figure>
+<ul class="findings">
+  <li><strong>Measured HBM traffic is similar:</strong> about 79 MB for FlashAttention-4, 84 MB for SDPA, and 83 MB for FlashInfer.</li>
+  <li><strong>Cache routing differs:</strong> FlashAttention-4 hits on 85.91% of measured L1/TEX lookups; SDPA and FlashInfer mostly reach the chip-wide L2 cache, where both hit about 94%.</li>
+  <li><strong>Shared memory is a capacity trade:</strong> FlashAttention-4 reserves 197.5 KB per block versus 98.3 KB for the other fused kernels. Allocation limits residency; it is not a traffic measurement.</li>
+</ul>
+
+<h4>Warp State: longer waits can still win</h4>
+<figure class="shot">
+  <img src="assets/fa4/nsight-warp-state.png" alt="Nsight Compute Warp State Statistics for FlashAttention-4 prefill">
+  <p class="caption">The bars divide the average cycles between issued warp instructions by the reason the next instruction could not issue.</p>
+</figure>
+<ul class="findings">
+  <li><strong>FlashAttention-4 waits longer:</strong> 9.37 cycles per issued instruction versus 6.06 for SDPA and 6.83 for FlashInfer. Fewer, heavier instructions matter more than issuing frequently.</li>
+  <li><strong>Its main costs are long-scoreboard dependencies (3.41 cycles) and block barriers (2.41).</strong> Those are the costs of its large cooperative tiles.</li>
+  <li><strong>SDPA and FlashInfer show more conventional dependency pressure:</strong> fixed-latency waits are 1.93 and 2.09 cycles; short-scoreboard waits are 1.18 and 1.63.</li>
+</ul>
+
+<h4>Launch and Occupancy: prefill has enough blocks</h4>
+<figure class="shot">
+  <img src="assets/fa4/sdpa-occupancy.png" alt="Nsight Compute Occupancy section for PyTorch SDPA prefill">
+  <p class="caption">Occupancy is resident warps as a percentage of the hardware maximum. It is a latency-hiding resource, not a performance score.</p>
+</figure>
+<ul class="findings">
+  <li><strong>All fused prefill kernels supply 5.19 residency waves.</strong> FlashAttention-4 launches 768 large blocks; SDPA and FlashInfer launch 1,536 smaller blocks. None leaves multiprocessors empty.</li>
+  <li><strong>FlashAttention-4 uses one 384-thread block per multiprocessor;</strong> SDPA and FlashInfer use two 128-thread blocks. Achieved occupancy is 18.67%, 12.06%, and 11.97%.</li>
+  <li><strong>Low occupancy is deliberate:</strong> FlashAttention-4 spends almost the full register and shared-memory budget on one larger work unit.</li>
+</ul>
 
 <h3>Decode is a different amount of work</h3>
 
 <div class="timing">
   <div class="timing-panel">
-    <h3>Decode kernel latency</h3>
+    <h3>Decode latency · mean of 20 calls</h3>
     <svg id="decode-chart" viewBox="0 0 720 380" role="img" aria-label="Decode attention latency in milliseconds by key-value cache length"></svg>
   </div>
   <div class="timing-legend">
-    <span><i class="sdpa"></i>PyTorch SDPA</span><span><i class="fa4"></i>FlashAttention-4</span>
+    <span><i class="naive"></i>Naive</span><span><i class="sdpa"></i>PyTorch SDPA</span><span><i class="fa4"></i>FlashAttention-4</span>
     <span><i class="flashinfer"></i>FlashInfer</span>
   </div>
-  <p class="caption">One new query token over the existing key/value cache. Same B200, dtype, batch, heads, and head dimension.</p>
+  <p class="caption">Each labeled point is the CUDA-event mean latency in milliseconds for one new query token over the existing key/value cache.</p>
 </div>
 
 <div class="split-result">
-  <p>At a 32k cache, <strong>FlashInfer takes 0.039 ms</strong>; SDPA takes 0.054 ms; FA4 takes 0.307 ms.</p>
+  <p>At a 32k cache, <strong>FlashInfer takes 0.039 ms</strong>; SDPA takes 0.054 ms; FA4 takes 0.307 ms; the eager baseline takes 0.862 ms.</p>
   <p>The cause is parallelism: FA4 launches <strong>48 blocks for 148 SMs</strong>. FlashInfer splits the cache across <strong>296 blocks</strong>, enough for two waves across the chip. One-token decode is too small for FA4's large prefill-shaped work unit.</p>
 </div>
+
+<figure class="shot">
+  <img src="assets/fa4/fi-decode2.png" alt="Nsight Compute summary showing FlashInfer decode main and merge kernels">
+  <p class="caption">FlashInfer decode is two launches: a 296-block attention kernel (45.63 µs in Nsight) and a 24-block merge (11.17 µs). SDPA uses a 256-block main kernel plus a 6-block combine.</p>
+</figure>
+
+<ul class="findings">
+  <li><strong>FA4 underfills decode:</strong> 48 blocks cover only 48 of 148 streaming multiprocessors and reach 3.93% of HBM throughput.</li>
+  <li><strong>SDPA fixes coverage by splitting the key/value cache:</strong> its main kernel reaches 2.41 TB/s and 36.25% of HBM throughput, then pays for a small combine.</li>
+  <li><strong>FlashInfer makes the split finer and merge cheaper:</strong> 296 main blocks reach 3.02 TB/s and 45.54% of HBM throughput; 24 merge blocks add 11.17 µs.</li>
+  <li><strong>The eager baseline copies before computing:</strong> grouped-head expansion consumes 84.3% of its profiled decode duration.</li>
+</ul>
 
 <div class="callout green"><span class="label">What the measurements say</span>
 <p><strong>Prefill:</strong> FlashAttention wins first by eliminating the score-matrix round-trip, then FA4 gains again from Blackwell Tensor Memory and fewer staging instructions. <strong>Decode:</strong> use a kernel that exposes enough parallel work; the large FA4 prefill kernel underfills the GPU.</p>
 </div>
-<p class="method">These are warm-tensor kernel microbenchmarks, not end-to-end paged-KV serving measurements. Qwen3.8-27B uses this softmax kernel in 16 of 64 layers; the other 48 are Gated DeltaNet.</p>
 
 <h3>References</h3>
 <ul>
@@ -580,7 +669,9 @@ https://simondong1.github.io/flash-attention.html</code></pre>
 
   function drawTimingChart(id, seqs, series, yMin, yMax, ticks, xLabel){
     var svg=document.getElementById(id), NS="http://www.w3.org/2000/svg";
-    var W=720,H=380,L=72,R=24,T=24,B=58,pw=W-L-R,ph=H-T-B;
+    var mobile=window.innerWidth<640;
+    var W=mobile?440:720,H=mobile?340:380,L=mobile?54:72,R=mobile?12:24,T=24,B=58,pw=W-L-R,ph=H-T-B;
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
     function node(tag,attrs,text){
       var n=document.createElementNS(NS,tag);
       Object.keys(attrs||{}).forEach(function(k){n.setAttribute(k,attrs[k]);});
@@ -608,18 +699,23 @@ https://simondong1.github.io/flash-attention.html</code></pre>
         var title=document.createElementNS(NS,"title");
         title.textContent=s.name+": "+v+" ms";
         c.appendChild(title);
+        var edge=i===0?"start":i===s.values.length-1?"end":"middle";
+        var dx=i===0?9:i===s.values.length-1?-9:0;
+        node("text",{x:x(i)+dx,y:y(v)+(s.dy||-10),"text-anchor":edge,class:"chart-value chart-"+s.key},v.toFixed(3));
       });
     });
   }
   drawTimingChart("prefill-chart",["1k","4k","8k"],[
-    {key:"naive",name:"Naive",values:[.356,5.291,null]},
-    {key:"sdpa",name:"PyTorch SDPA",values:[.069,.639,2.279]},
-    {key:"fa4",name:"FlashAttention-4",values:[.052,.190,.599]}
+    {key:"naive",name:"Naive",values:[.356,5.291,null],dy:-10},
+    {key:"sdpa",name:"PyTorch SDPA",values:[.069,.639,2.279],dy:-11},
+    {key:"fa4",name:"FlashAttention-4",values:[.052,.190,.599],dy:18},
+    {key:"flashinfer",name:"FlashInfer",values:[.070,.686,2.486],dy:16}
   ],.04,10,[.05,.1,.5,1,5,10],"Sequence length (tokens)");
   drawTimingChart("decode-chart",["1k","8k","32k"],[
-    {key:"sdpa",name:"PyTorch SDPA",values:[.024,.032,.054]},
-    {key:"fa4",name:"FlashAttention-4",values:[.052,.084,.307]},
-    {key:"flashinfer",name:"FlashInfer",values:[.026,.026,.039]}
+    {key:"naive",name:"Naive",values:[.098,.245,.862],dy:-10},
+    {key:"sdpa",name:"PyTorch SDPA",values:[.024,.032,.054],dy:-12},
+    {key:"fa4",name:"FlashAttention-4",values:[.052,.084,.307],dy:18},
+    {key:"flashinfer",name:"FlashInfer",values:[.026,.026,.039],dy:16}
   ],.02,1,[.02,.05,.1,.2,.5,1],"Key/value cache length (tokens)");
 
   var links=[].slice.call(document.querySelectorAll("nav.toc a"));
