@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution</title>
+<meta name="description" content="How NVIDIA moved Tensor Core accumulators from Hopper's registers into Blackwell's new 256 KB Tensor Memory, with exact MMA dimensions and an attention-tile walkthrough." />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<link rel="canonical" href="https://simondong1.github.io/hopper-to-blackwell-mma.html" />
+<link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
+<link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
+<meta property="og:title" content="From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution" />
+<meta property="og:description" content="Why Blackwell gave Tensor Cores their own 256 KB memory — and what changes from WGMMA to tcgen05.mma." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/hopper-to-blackwell-mma.html" />
+<meta property="og:site_name" content="Simon Dong" />
+<meta property="og:locale" content="en_US" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:site" content="@dongsixiang" />
+<meta name="twitter:creator" content="@dongsixiang" />
+<meta name="twitter:title" content="From WGMMA to TMEM" />
+<meta name="twitter:description" content="Hopper keeps MMA accumulators in registers. Blackwell moves them into a new Tensor Memory. Here is the exact data path." />
+<meta name="author" content="Simon Dong" />
+<meta name="citation_title" content="From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution" />
+<meta name="citation_author" content="Dong, Simon" />
+<meta name="citation_publication_date" content="2026/09/02" />
+<meta name="citation_fulltext_html_url" content="https://simondong1.github.io/hopper-to-blackwell-mma.html" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution","description":"How NVIDIA moved Tensor Core accumulators from Hopper's registers into Blackwell's new 256 KB Tensor Memory, with exact MMA dimensions and an attention-tile walkthrough.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-09-02","dateModified":"2026-09-02","mainEntityOfPage":"https://simondong1.github.io/hopper-to-blackwell-mma.html","keywords":["NVIDIA Hopper","NVIDIA Blackwell","WGMMA","TMEM","Tensor Memory","tcgen05","FlashAttention-3","FlashAttention-4"]}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["\\[","\\]"]]},svg:{fontCache:"global"}};</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root{
+    --bg:#fbfbfa;--surface:#fff;--ink:#1f2328;--ink-soft:#475059;--muted:#8b949e;
+    --line:#e8e8e6;--accent:#4f46e5;--accent-soft:#eef0fe;--warm:#e5484d;
+    --warm-soft:#fdecec;--cool:#0ea5e9;--cool-soft:#e7f6fe;--green:#15803d;
+    --green-soft:#edf8ef;--amber:#b45309;--amber-soft:#fff7e6;--maxw:48rem
+  }
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;font-size:1.05rem;line-height:1.68;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+  header.hero{padding:6rem 0 2.8rem;border-bottom:1px solid var(--line);margin-bottom:3rem}
+  .eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:650;margin:0 0 1.1rem}
+  h1.title{font-weight:800;font-size:clamp(2.45rem,5.8vw,4.15rem);line-height:1.06;letter-spacing:-.038em;margin:0 0 1rem}
+  .title-expansion{display:block;margin-top:.45rem;font-size:clamp(1.2rem,2.5vw,1.7rem);line-height:1.2;color:var(--ink-soft);font-weight:650}
+  .subtitle{font-size:1.2rem;color:var(--ink-soft);margin:0 0 1.8rem;line-height:1.52;max-width:43rem}
+  .byline{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-size:.9rem;color:var(--muted)}
+  .byline .who{color:var(--ink);font-weight:600}.byline .dot{color:var(--line)}
+  h2{font-weight:700;font-size:1.68rem;letter-spacing:-.02em;line-height:1.2;margin:3.35rem 0 .95rem;scroll-margin-top:1.5rem}
+  h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}
+  h3{font-weight:700;font-size:1.12rem;letter-spacing:-.01em;margin:2rem 0 .65rem}
+  p{margin:.95rem 0}.lede{font-size:1.2rem;line-height:1.58;margin:0 0 1.6rem}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}a:hover{border-color:var(--accent)}
+  strong{font-weight:650}
+  code{font-family:"JetBrains Mono",monospace;font-size:.86em;background:#f0f1f4;color:#c72568;padding:.1em .35em;border-radius:5px;border:1px solid #e7e8ec}
+  pre{background:#0d1117;color:#e6edf3;border-radius:14px;padding:1.15rem 1.3rem;margin:1.35rem 0;overflow-x:auto;font:500 .8rem/1.6 "JetBrains Mono",monospace;border:1px solid #1c2230}
+  pre code{background:none;border:none;color:inherit;padding:0;font-size:inherit}
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--cool);border-radius:10px;padding:1rem 1.2rem;margin:1.5rem 0}
+  .callout.green{border-left-color:var(--green)}.callout.warn{border-left-color:var(--amber)}
+  .callout .label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--cool);display:block;margin-bottom:.3rem}
+  .callout.green .label{color:var(--green)}.callout.warn .label{color:var(--amber)}.callout p{margin:.35rem 0}
+  nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.4rem;margin:0 0 2rem}
+  nav.toc .toc-title{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.7rem}
+  nav.toc ol{margin:0;padding:0;list-style:none;font-size:.93rem}
+  nav.toc li{margin:.28rem 0}nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.14rem .45rem;border-radius:6px}
+  nav.toc a:hover,nav.toc a.active{color:var(--accent);background:var(--accent-soft)}nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}
+  @media(min-width:1320px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 48rem)/2 - 16.2rem);width:14.2rem;background:none;border:none;padding:0;margin:0}}
+  .lineage{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin:1.45rem 0}
+  .gen{position:relative;border:1px solid var(--line);border-radius:13px;background:#fff;padding:.85rem .75rem;text-align:center}
+  .gen:not(:last-child):after{content:"→";position:absolute;right:-.53rem;top:42%;z-index:2;color:var(--muted);font-weight:800}
+  .gen .arch{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700}
+  .gen .inst{display:block;font-family:"JetBrains Mono",monospace;font-size:.85rem;font-weight:700;margin:.35rem 0;color:var(--accent)}
+  .gen .home{display:block;font-size:.78rem;color:var(--ink-soft)}
+  .eqcard{border:1px solid #dfe2fb;background:var(--accent-soft);border-radius:14px;padding:1rem 1.15rem;margin:1.35rem 0;text-align:center}
+  .eqcard .caption{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700;margin-bottom:.45rem}
+  .eqcard .shape{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--ink-soft);margin:.5rem 0 0}
+  mjx-container[display="true"]{margin:.6rem 0 !important;overflow-x:auto}
+  .anatomy{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin:1.2rem 0}
+  .axis{border:1px solid var(--line);background:#fff;border-radius:12px;padding:.85rem;text-align:center}
+  .axis b{display:block;font:700 1.6rem "JetBrains Mono",monospace;color:var(--accent);line-height:1.1}
+  .axis span{display:block;color:var(--ink-soft);font-size:.8rem;margin-top:.35rem}
+  .walk{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1rem;margin:1.35rem 0}
+  .walkrow{display:grid;grid-template-columns:9rem 1fr;gap:.7rem;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--line)}
+  .walkrow:last-child{border:none}.walkrow .lab{font-size:.76rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:var(--muted);text-align:right}
+  .mem{font-family:"JetBrains Mono",monospace;font-size:.76rem;border-radius:8px;padding:.55rem .65rem;border:1px solid #e7e8ec;background:#f6f7f9}
+  .mem.sm{background:var(--cool-soft);border-color:#bfe6f7;color:#0b6a8c}.mem.rf{background:var(--warm-soft);border-color:#f3c0c2;color:#a32a2e}
+  .mem.tm{background:var(--green-soft);border-color:#cce8d2;color:#12652f}.mem.inst{background:var(--accent-soft);border-color:#dfe2fb;color:var(--accent)}
+  .calc{border:1px solid var(--line);border-radius:15px;background:#fff;padding:1.15rem 1.2rem;margin:1.4rem 0}
+  .controls{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}.controls label{font-size:.83rem;font-weight:650;color:var(--ink-soft)}
+  .controls input{flex:1;min-width:13rem}.controls output{font:700 1rem "JetBrains Mono",monospace;color:var(--accent);min-width:3rem;text-align:right}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-top:1rem}
+  .stat{border:1px solid var(--line);border-radius:11px;padding:.75rem .8rem;background:#fafafa}
+  .stat span{display:block;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+  .stat b{display:block;font:700 1.35rem "JetBrains Mono",monospace;margin-top:.22rem}.stat.hot b{color:var(--warm)}.stat.good b{color:var(--green)}
+  .caption{text-align:center;font-size:.8rem;color:var(--muted);margin:.45rem 0 0}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1.35rem 0}
+  .panel{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1rem}
+  .panel h3{font-size:.76rem;letter-spacing:.1em;text-transform:uppercase;text-align:center;margin:0 0 .75rem}
+  .panel.hopper{border-color:#f3c0c2;background:#fffafa}.panel.blackwell{border-color:#cce8d2;background:#f9fcfa}
+  .panel.hopper h3{color:var(--warm)}.panel.blackwell h3{color:var(--green)}
+  .flow{display:flex;flex-direction:column;align-items:center;gap:.3rem}.arrow{color:var(--muted);font-size:.76rem;text-align:center}
+  .box{width:100%;border:1px solid var(--line);border-radius:8px;padding:.5rem;text-align:center;background:#fff;font:500 .72rem/1.4 "JetBrains Mono",monospace}
+  .box.smem{background:var(--cool-soft);border-color:#bfe6f7;color:#0b6a8c}.box.rmem{background:var(--warm-soft);border-color:#f3c0c2;color:#a32a2e}
+  .box.tmem{background:var(--green-soft);border-color:#cce8d2;color:#12652f}.box.op{background:var(--accent-soft);border-color:#dfe2fb;color:var(--accent)}
+  .budget{display:grid;grid-template-columns:7.5rem 1fr 3.3rem;gap:.55rem;align-items:center;margin:.5rem 0}
+  .budget .name{font-size:.78rem;color:var(--ink-soft);text-align:right}.track{height:1.55rem;background:#f0f1f4;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .fill{height:100%;background:var(--warm);opacity:.84}.fill.orange{background:#f59e0b}.fill.blue{background:var(--cool)}.fill.green{background:var(--green)}
+  .budget .val{font:600 .75rem "JetBrains Mono",monospace;color:var(--ink-soft)}
+  .htable{overflow-x:auto;margin:1.25rem 0}
+  table{width:100%;border-collapse:collapse;background:#fff;font-size:.86rem}
+  th,td{text-align:left;padding:.65rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.69rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}td:first-child{font-weight:650}
+  .refs{font-size:.93rem}.refs li{margin:.55rem 0}
+  footer{border-top:1px solid var(--line);margin-top:3.8rem;padding:2.4rem 0 4rem;font-size:.9rem;color:var(--muted)}footer a{color:var(--ink-soft)}
+  @media(max-width:640px){
+    header.hero{padding:3.6rem 0 2rem}.lineage,.pair,.stats{grid-template-columns:1fr}.gen:after{display:none}
+    .walkrow{grid-template-columns:1fr}.walkrow .lab{text-align:left}.anatomy{grid-template-columns:1fr}
+    .budget{grid-template-columns:6.4rem 1fr 3rem}.budget .name{font-size:.7rem}
+  }
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <p class="eyebrow">GPU Architecture · Tensor Cores</p>
+  <h1 class="title">From WGMMA to TMEM <span class="title-expansion">Hopper-to-Blackwell MMA evolution</span></h1>
+  <p class="subtitle">Hopper made matrix multiplication asynchronous, but its result still occupied thread registers. Blackwell adds a separate 256 KB memory to each SM and moves the accumulator there.</p>
+  <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>September 2026</span><span class="dot">•</span><span>GPU Architecture</span></div>
+</div></header>
+
+<main class="wrap">
+<p class="lede"><strong>The important Blackwell change is not simply “a faster matrix instruction.”</strong> It is a new home for the result. Hopper's Tensor Cores write every MMA accumulator into the register file. Blackwell's Tensor Cores write it into Tensor Memory, a new on-chip SRAM attached to the Tensor Core path.</p>
+
+<div class="callout"><span class="label">Where this mechanism is used</span>
+<p>Datacenter Blackwell kernels such as <a href="https://arxiv.org/abs/2603.05451">FlashAttention-4</a> and SM100 CUTLASS GEMMs use <code>tcgen05.mma</code> and TMEM. Their Hopper predecessors use <code>wgmma.mma_async</code>. For the attention algorithm itself, start with <a href="/flash-attention.html">How Flash Attention Speeds Up</a>; this post focuses only on the hardware handoff underneath it.</p>
+</div>
+
+<nav class="toc"><div class="toc-title">Contents</div><ol>
+  <li><a href="#s1"><span class="n">1</span>The one-line evolution</a></li>
+  <li><a href="#s2"><span class="n">2</span>Read an MMA shape</a></li>
+  <li><a href="#s3"><span class="n">3</span>Hopper's exact data path</a></li>
+  <li><a href="#s4"><span class="n">4</span>The register-pressure problem</a></li>
+  <li><a href="#s5"><span class="n">5</span>Blackwell's TMEM path</a></li>
+  <li><a href="#s6"><span class="n">6</span>One attention tile</a></li>
+  <li><a href="#s7"><span class="n">7</span>Threads and occupancy</a></li>
+  <li><a href="#s8"><span class="n">8</span>Limits and mental model</a></li>
+</ol></nav>
+
+<h2 id="s1"><span class="num">1.</span>The one-line evolution</h2>
+<div class="lineage">
+  <div class="gen"><span class="arch">Ampere · SM80</span><span class="inst">mma.sync</span><span class="home">32 threads<br/>inputs and output in registers</span></div>
+  <div class="gen"><span class="arch">Hopper · SM90</span><span class="inst">wgmma.mma_async</span><span class="home">128 threads<br/>SMEM inputs, register output</span></div>
+  <div class="gen"><span class="arch">Blackwell · SM100</span><span class="inst">tcgen05.mma</span><span class="home">one issuing thread<br/>SMEM/TMEM inputs, TMEM output</span></div>
+</div>
+<p>Hopper removed most operand staging from registers. A Tensor Memory Accelerator (TMA) copies tiles from HBM into shared memory, and WGMMA reads them there. But the accumulator—the running matrix result—still lands in registers distributed across 128 threads.</p>
+<p>Blackwell finishes that separation. The Tensor Core reads its operands from shared memory or TMEM and updates an accumulator in TMEM. The CUDA threads no longer have to own the matrix while the multiplication is running.</p>
+<div class="callout warn"><span class="label">TMEM is not TMA</span>
+<p><strong>TMA</strong> is Hopper's asynchronous copy engine: HBM ↔ shared memory. <strong>TMEM</strong> is Blackwell's 256 KB accumulator SRAM. B200 has both.</p>
+</div>
+
+<h2 id="s2"><span class="num">2.</span>Read an MMA shape</h2>
+<p>Before following the memory, read one Hopper instruction:</p>
+<div class="eqcard">
+  <div class="caption">One BF16 Hopper WGMMA</div>
+  <p class="shape"><strong>wgmma.mma_async.m64n128k16.f32.bf16.bf16</strong></p>
+  \[
+  D_{64\times128}\mathrel{+}=
+  A_{64\times16}B_{16\times128}
+  \]
+</div>
+<div class="anatomy">
+  <div class="axis"><b>64</b><span><strong>M</strong>: output rows</span></div>
+  <div class="axis"><b>128</b><span><strong>N</strong>: output columns</span></div>
+  <div class="axis"><b>16</b><span><strong>K</strong>: reduction depth per issue</span></div>
+</div>
+<p>The instruction produces—or updates—the entire 64×128 output tile. The <strong>16 is not an output dimension</strong>. It says each issue contributes 16 terms to every dot product.</p>
+<p>If the head dimension is 256, the kernel issues the instruction \(256/16=16\) times. Every issue consumes the next 16-wide slices of A and B and accumulates into the same 64×128 D tile.</p>
+
+<div class="calc">
+  <div class="controls">
+    <label for="head-dim">BF16 reduction depth K</label>
+    <input id="head-dim" type="range" min="16" max="256" step="16" value="256" />
+    <output id="head-out">256</output>
+  </div>
+  <div class="stats">
+    <div class="stat"><span>K consumed / issue</span><b>16</b></div>
+    <div class="stat"><span>WGMMA issues</span><b id="issue-out">16</b></div>
+    <div class="stat"><span>Output shape</span><b>64×128</b></div>
+  </div>
+  <p class="caption">Changing K changes the number of accumulation issues. It does not change M×N.</p>
+</div>
+
+<h2 id="s3"><span class="num">3.</span>Hopper's exact data path</h2>
+<p><strong>What are we computing?</strong> This baseline is one ordinary matrix multiplication, not attention yet. It shows where A, B, and D live during a WGMMA.</p>
+<div class="walk">
+  <div class="walkrow"><div class="lab">1 · Load</div><div class="mem sm">TMA: A and B move from HBM → shared memory</div></div>
+  <div class="walkrow"><div class="lab">2 · Describe</div><div class="mem inst">two 64-bit descriptors tell WGMMA each SMEM tile's address and layout</div></div>
+  <div class="walkrow"><div class="lab">3 · Issue</div><div class="mem inst">all 128 threads in one warpgroup execute wgmma.mma_async</div></div>
+  <div class="walkrow"><div class="lab">4 · Read</div><div class="mem sm">A comes from SMEM or registers; B must come from SMEM</div></div>
+  <div class="walkrow"><div class="lab">5 · Accumulate</div><div class="mem rf">D is distributed across the 128 threads' private registers</div></div>
+</div>
+<p>For FP32 accumulation, a 64×128 D tile contains 8,192 values:</p>
+\[
+\frac{64\times128\text{ FP32 values}}{128\text{ threads}}
+=64\text{ registers per thread}.
+\]
+<p>Logically D is one matrix. Physically each thread owns 64 scattered elements. The complete tile exists only when the 128 register fragments are considered together.</p>
+
+<div class="calc">
+  <div class="controls">
+    <label for="wgmma-n">Hopper WGMMA N</label>
+    <input id="wgmma-n" type="range" min="8" max="256" step="8" value="128" />
+    <output id="n-out">128</output>
+  </div>
+  <div class="stats">
+    <div class="stat"><span>Accumulator</span><b id="tile-out">32 KB</b></div>
+    <div class="stat hot"><span>Registers / thread</span><b id="reg-out">64</b></div>
+    <div class="stat"><span>Thread owners</span><b>128</b></div>
+  </div>
+  <p class="caption">FP32 D for an m64nNk16 WGMMA. This is only the accumulator—not addresses, softmax state, or another pipeline stage.</p>
+</div>
+
+<h2 id="s4"><span class="num">4.</span>The register-pressure problem</h2>
+<p>Now use the real FlashAttention-3 forward tile. One Hopper consumer warpgroup handles 64 query rows and 128 key rows at a time, with head dimension 256:</p>
+\[
+S=QK^\top,\qquad P=\operatorname{softmax}(S),\qquad O\mathrel{+}=PV.
+\]
+<div class="eqcard">
+  <div class="caption">The two matrix multiplies, with dimensions</div>
+  <p class="shape">Q [64×256] &nbsp;@&nbsp; Kᵀ [256×128] &nbsp;=&nbsp; S [64×128]</p>
+  <p class="shape">P [64×128] &nbsp;@&nbsp; V [128×256] &nbsp;=&nbsp; O [64×256]</p>
+</div>
+<p>Here <strong>S</strong> is a 64×128 score tile, <strong>P</strong> is the same tile after softmax, and <strong>O</strong> is the 64×256 output accumulator. “RF” means the SM's register file: 64K 32-bit registers divided among resident threads.</p>
+
+<div class="budget"><div class="name">S · FP32</div><div class="track"><div class="fill" style="width:25%"></div></div><div class="val">64 reg</div></div>
+<div class="budget"><div class="name">P · BF16</div><div class="track"><div class="fill orange" style="width:12.5%"></div></div><div class="val">32 reg</div></div>
+<div class="budget"><div class="name">O · FP32</div><div class="track"><div class="fill blue" style="width:50%"></div></div><div class="val">128 reg</div></div>
+<div class="budget"><div class="name">Thread limit</div><div class="track"><div class="fill green" style="width:99.6%"></div></div><div class="val">255</div></div>
+<p class="caption">Per-thread payload for Q-block 64, K-block 128, head dimension 256. BF16 values pack two per 32-bit register.</p>
+
+<h3>The important correction: Hopper does not have to copy P to SMEM</h3>
+<p>WGMMA has two forms. <strong>SS</strong> reads A and B from shared memory. <strong>RS</strong> reads A from registers and B from shared memory. FlashAttention-3 uses the RS form for \(PV\): softmax produces P in registers, and the next WGMMA consumes P directly as operand A. V remains in shared memory as operand B.</p>
+<div class="callout green"><span class="label">No mandatory P → SMEM round-trip</span>
+<p>The optimized Hopper path is <strong>S in registers → softmax in registers → P remains in registers → RS-WGMMA reads P</strong>. Earlier descriptions that always send P to shared memory are reference implementations, not the optimized FA3 mechanism.</p>
+</div>
+
+<p>The problem is simultaneous ownership. While RS-WGMMA reads P, its O accumulator must also remain in registers. For this 256-wide head, that is approximately \(32+128=160\) payload registers per thread. The two-stage FA3 pipeline also keeps the next 64×128 FP32 score tile, \(S_{\text{next}}\), ready while the current \(PV\) runs—another 64 registers:</p>
+\[
+P\ (32)+O\ (128)+S_{\text{next}}\ (64)=224
+\quad\text{registers per thread, before overhead.}
+\]
+<p>Only 31 registers remain below the architectural 255-register limit for row maxima, sums, scale factors, pointers, descriptors, predicates, and temporary values. Larger tiles or deeper pipelines collide with that ceiling. The FA3 paper explicitly calls out the extra \(S_{\text{next}}\) buffer as the cost that limits pipeline depth.</p>
+<p>Hopper works around this rather than simply “spilling”: use a smaller 64×128 score tile, carefully overlap only selected stages, and call <code>setmaxnreg</code> so TMA producer warps surrender registers to the MMA/softmax consumer warpgroup. Good kernels avoid local-memory spills, but the register budget still constrains their schedule.</p>
+
+<h2 id="s5"><span class="num">5.</span>Blackwell's TMEM path</h2>
+<p>Datacenter Blackwell adds <strong>256 KB of physical SRAM to each SM</strong>. It is separate from the existing 256 KB register file and the L1/shared-memory pool. NVIDIA calls it Tensor Memory.</p>
+<div class="eqcard">
+  <div class="caption">TMEM organization per SM</div>
+  \[
+  128\text{ lanes}\times512\text{ columns}\times4\text{ bytes}
+  =256\text{ KB}
+  \]
+  <p class="shape">software-managed · allocated in columns · accessible only through tcgen05 instructions</p>
+</div>
+<p>Blackwell's replacement for WGMMA is <code>tcgen05.mma</code>, also called UMMA in CUTLASS. Its operand contract is:</p>
+<div class="htable"><table>
+  <thead><tr><th>Tile</th><th>Hopper WGMMA</th><th>Blackwell tcgen05.mma</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>registers or SMEM</td><td>TMEM or SMEM</td></tr>
+    <tr><td>B</td><td>SMEM</td><td>SMEM</td></tr>
+    <tr><td>C / D accumulator</td><td>registers</td><td>TMEM</td></tr>
+    <tr><td>Issuer</td><td>128-thread warpgroup</td><td>one thread for a CTA or CTA pair</td></tr>
+    <tr><td>Largest BF16 1-CTA atom</td><td>64×256×16</td><td>128×256×16</td></tr>
+  </tbody>
+</table></div>
+<p>The Tensor Core writes D directly into TMEM. No CUDA thread owns a D fragment during the MMA. Later, a warp explicitly uses <code>tcgen05.ld</code> to bring a needed slice into registers for ordinary arithmetic or the final store.</p>
+<p>This is real new silicon, not a renamed part of shared memory. Ordinary instructions such as <code>ld.shared</code>, <code>ldmatrix</code>, and <code>cp.async</code> cannot address TMEM. Kernels allocate columns with <code>tcgen05.alloc</code>, use them, and release them with <code>tcgen05.dealloc</code>.</p>
+
+<h2 id="s6"><span class="num">6.</span>One attention tile, side by side</h2>
+<p><strong>What is being computed?</strong> Both columns perform the same \(QK^\top\), online softmax, and \(PV\) update. The comparison shows only where the intermediate matrices live. Hopper's 64×128 score tile is the real FA3 scale; Blackwell's 128×128 score tile is the real FA4 scale.</p>
+<div class="pair">
+  <div class="panel hopper">
+    <h3>Hopper · FA3-style</h3>
+    <div class="flow">
+      <div class="box smem">Q, K, V<br/>TMA → SMEM</div>
+      <div class="arrow">↓ SS-WGMMA · 128 threads</div>
+      <div class="box rmem">S 64×128 FP32<br/>64 regs / thread</div>
+      <div class="arrow">↓ softmax in registers</div>
+      <div class="box rmem">P 64×128 BF16<br/>32 regs / thread</div>
+      <div class="arrow">↓ RS-WGMMA reads P · V from SMEM</div>
+      <div class="box rmem">O 64×256 FP32<br/>128 regs / thread</div>
+      <div class="arrow">↓ epilogue</div>
+      <div class="box">HBM output</div>
+    </div>
+  </div>
+  <div class="panel blackwell">
+    <h3>Blackwell · FA4-style</h3>
+    <div class="flow">
+      <div class="box smem">Q, K, V<br/>TMA → SMEM</div>
+      <div class="arrow">↓ tcgen05.mma · one thread issues</div>
+      <div class="box tmem">S 128×128 FP32<br/>64 KB in TMEM</div>
+      <div class="arrow">↓ tcgen05.ld · one row / thread</div>
+      <div class="box rmem">softmax working row<br/>128 FP32 registers</div>
+      <div class="arrow">↓ P stored to TMEM in stages</div>
+      <div class="box tmem">P in TMEM + V in SMEM<br/>tcgen05.mma</div>
+      <div class="arrow">↓</div>
+      <div class="box tmem">O accumulator<br/>stays in TMEM</div>
+    </div>
+  </div>
+</div>
+<p>Blackwell does not eliminate register use. Softmax is ordinary scalar/vector arithmetic, so FA4 loads one 128-element score row from TMEM into each participating thread's registers. It computes the maximum, exponentials, and row sum there.</p>
+<p>The difference is lifetime. FA4 writes P back to TMEM in stages, then the \(PV\) MMA reads P from TMEM while O accumulates in TMEM. The 128×128 S tile and the O tile do not occupy every softmax thread's private register budget for the whole pipeline.</p>
+<div class="callout warn"><span class="label">TMEM moves the bottleneck; it does not remove all movement</span>
+<p><code>tcgen05.ld</code> and <code>tcgen05.st</code> still move softmax rows between TMEM and registers. On B200 the exponential unit can become slower than the enlarged MMA path, which is why FA4 also changes softmax scheduling and partially emulates exponentials.</p>
+</div>
+
+<h2 id="s7"><span class="num">7.</span>How many threads are on one SM?</h2>
+<p>Both H100 (SM90) and B200 (SM100) can hold at most <strong>64 resident warps = 2,048 resident threads per SM</strong>. This is a capacity limit, not the number of threads that execute one matrix instruction.</p>
+<div class="htable"><table>
+  <thead><tr><th>Level</th><th>Hopper H100</th><th>Blackwell B200</th></tr></thead>
+  <tbody>
+    <tr><td>Warp</td><td>32 threads</td><td>32 threads</td></tr>
+    <tr><td>MMA issue group</td><td>4 warps = 128 threads</td><td>1 thread issues for a CTA / CTA pair</td></tr>
+    <tr><td>Maximum resident</td><td>64 warps = 2,048 threads / SM</td><td>64 warps = 2,048 threads / SM</td></tr>
+    <tr><td>Register file</td><td>65,536 × 32-bit registers / SM</td><td>65,536 × 32-bit registers / SM</td></tr>
+    <tr><td>Per-thread limit</td><td>255 registers</td><td>255 registers</td></tr>
+    <tr><td>New Tensor Memory</td><td>none</td><td>256 KB / SM</td></tr>
+  </tbody>
+</table></div>
+<p>A kernel often keeps far fewer than 2,048 threads resident because registers and shared memory run out first. For example, 256 threads at 240 registers each consume 61,440 of the SM's 65,536 registers. There is no room for another similarly sized block even though 1,792 theoretical thread slots remain.</p>
+\[
+\text{resident threads from registers}
+\leq
+\left\lfloor\frac{65{,}536}{\text{registers per thread}}\right\rfloor,
+\]
+<p>subject to warp, block, allocation-granularity, shared-memory, and cluster limits. This is why “2,048 threads per SM” and “one 128-thread warpgroup issues WGMMA” are both true—and why optimized attention often reports low occupancy without spilling.</p>
+
+<h2 id="s8"><span class="num">8.</span>Limits and the final mental model</h2>
+<ul>
+  <li><strong>TMEM is datacenter-Blackwell-specific.</strong> The <code>tcgen05</code> path described here targets SM100/SM100a, such as B200 and GB200. Consumer Blackwell SM120 does not expose this TMEM path.</li>
+  <li><strong>TMEM is not general scratch space.</strong> CUDA ALU instructions cannot compute directly on it. Results must be loaded to registers for softmax, activation functions, conversion, or arbitrary elementwise work.</li>
+  <li><strong>Low occupancy can remain.</strong> A Blackwell kernel may still use almost all available shared memory or many registers for its non-MMA stages. TMEM removes accumulator pressure; it does not make other resources infinite.</li>
+  <li><strong>TMEM alone is not a benchmark result.</strong> FA4 combines TMEM with larger MMA tiles, different pipelining, staged P stores, two-CTA modes, and a redesigned softmax. Isolating the gain from one feature requires a controlled kernel comparison.</li>
+</ul>
+<div class="callout green"><span class="label">Mental model</span>
+<p><strong>Ampere:</strong> threads carry operands and results. <strong>Hopper:</strong> shared memory feeds an asynchronous 128-thread MMA, but threads still carry the result. <strong>Blackwell:</strong> one thread dispatches the MMA and the Tensor Core carries its own result in TMEM. NVIDIA added 256 KB per SM because the matrix engine had outgrown the register file as its long-lived accumulator store.</p>
+</div>
+
+<h3>References</h3>
+<ol class="refs">
+  <li><a href="https://docs.nvidia.com/cuda/parallel-thread-execution/#asynchronous-warpgroup-level-matrix-multiply-accumulate-instructions-wgmma-mma">NVIDIA PTX ISA — <code>wgmma.mma_async</code></a>.</li>
+  <li><a href="https://docs.nvidia.com/cuda/parallel-thread-execution/#tcgen05-mma">NVIDIA PTX ISA — <code>tcgen05.mma</code></a>.</li>
+  <li><a href="https://docs.nvidia.com/cuda/hopper-tuning-guide/">NVIDIA Hopper Tuning Guide</a> — occupancy, registers, and shared-memory limits.</li>
+  <li><a href="https://docs.nvidia.com/cuda/blackwell-tuning-guide/">NVIDIA Blackwell Tuning Guide</a> — SM100 occupancy and memory limits.</li>
+  <li><a href="https://arxiv.org/abs/2407.08608">Shah et al., FlashAttention-3</a> — WGMMA/softmax pipelining and register pressure.</li>
+  <li><a href="https://arxiv.org/abs/2603.05451">Shah et al., FlashAttention-4</a> — TMEM pipeline, 128×128 tiles, and staged P transfer.</li>
+  <li><a href="https://docs.nvidia.com/cutlass/latest/media/docs/cpp/blackwell_functionality.html">NVIDIA CUTLASS — Blackwell SM100 GEMMs</a>.</li>
+  <li><a href="https://developer.nvidia.com/blog/inside-nvidia-blackwell-ultra-the-chip-powering-the-ai-factory-era/">NVIDIA Technical Blog — Blackwell Ultra SM and TMEM</a>.</li>
+</ol>
+
+<h3>How to cite this post</h3>
+<pre><code>Dong, S. (2026). From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution.
+https://simondong1.github.io/hopper-to-blackwell-mma.html</code></pre>
+</main>
+
+<footer><div class="wrap">
+  <p>Written by <a href="https://x.com/dongsixiang"><strong>Simon Dong</strong></a> · September 2026.</p>
+  <p><a href="/">&larr; Back to blog</a></p>
+</div></footer>
+<script>
+(function(){
+  var hd=document.getElementById("head-dim");
+  function renderHead(){
+    var k=+hd.value;
+    document.getElementById("head-out").textContent=k;
+    document.getElementById("issue-out").textContent=k/16;
+  }
+  hd.addEventListener("input",renderHead);renderHead();
+
+  var ns=document.getElementById("wgmma-n");
+  function renderN(){
+    var n=+ns.value, bytes=64*n*4, regs=n/2;
+    document.getElementById("n-out").textContent=n;
+    document.getElementById("tile-out").textContent=(bytes/1024)+" KB";
+    document.getElementById("reg-out").textContent=regs;
+  }
+  ns.addEventListener("input",renderN);renderN();
+
+  var links=[].slice.call(document.querySelectorAll("nav.toc a"));
+  var byId={};links.forEach(function(a){byId[a.getAttribute("href").slice(1)]=a;});
+  var heads=[].slice.call(document.querySelectorAll("main h2[id]"));
+  if("IntersectionObserver" in window){
+    var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove("active");});if(byId[e.target.id])byId[e.target.id].classList.add("active");}});},{rootMargin:"-12% 0px -78% 0px",threshold:0});
+    heads.forEach(function(h){obs.observe(h);});
+  }
+})();
+</script>
+</body>
+</html>

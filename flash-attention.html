@@ -26,7 +26,7 @@
 <meta name="citation_publication_date" content="2026/08/31" />
 <meta name="citation_fulltext_html_url" content="https://simondong1.github.io/flash-attention.html" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"TechArticle","headline":"How Flash Attention Speeds Up — and By How Much","description":"How Flash Attention speeds up: keep scores in registers so the GPU stops waiting on HBM. And how much that save is.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-08-31","dateModified":"2026-09-01","mainEntityOfPage":"https://simondong1.github.io/flash-attention.html","keywords":["Flash Attention","HBM","online softmax","Qwen3"]}
+{"@context":"https://schema.org","@type":"TechArticle","headline":"How Flash Attention Speeds Up — and By How Much","description":"How Flash Attention speeds up: keep scores in registers so the GPU stops waiting on HBM. And how much that save is.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-08-31","dateModified":"2026-09-02","mainEntityOfPage":"https://simondong1.github.io/flash-attention.html","keywords":["Flash Attention","HBM","online softmax","Qwen3"]}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -473,7 +473,7 @@
   <div class="proof-row"><span>Executed instructions</span><strong>61M / 186M</strong><em>3.06× fewer</em></div>
   <div class="proof-row"><span>Nsight duration</span><strong>0.36 / 1.08 ms</strong><em>2.98× shorter</em></div>
 </div>
-<p>The issue rate is the same; the amount issued is not. FlashAttention-4's B200 path keeps tensor-core accumulators in <strong>Tensor Memory</strong> and uses asynchronous matrix operations. Its ordinary load/store pipeline is active for 0.43% of elapsed cycles, versus 22.17% for SDPA. Fewer staging instructions produce nearly the same 3× ratio as the measured time.</p>
+<p>The issue rate is the same; the amount issued is not. FlashAttention-4's B200 path keeps tensor-core accumulators in <a href="/hopper-to-blackwell-mma.html"><strong>Tensor Memory</strong></a> and uses asynchronous matrix operations. Its ordinary load/store pipeline is active for 0.43% of elapsed cycles, versus 22.17% for SDPA. Fewer staging instructions produce nearly the same 3× ratio as the measured time.</p>
 
 <h3>What the profiler sections show</h3>
 
@@ -500,7 +500,7 @@
 </ul>
 
 <div class="callout green"><span class="label">Why Blackwell-native matters</span>
-<p><strong>Tensor Memory</strong> is a dedicated ~256 KB on-chip store per streaming multiprocessor for fifth-generation tensor cores. A thread can launch a large asynchronous matrix multiply whose accumulators land there instead of being distributed through thread registers. The profile links that path to fewer instructions; an otherwise-identical non-Tensor-Memory kernel would be needed to isolate its exact contribution.</p>
+<p><a href="/hopper-to-blackwell-mma.html"><strong>Tensor Memory</strong></a> is a dedicated ~256 KB on-chip store per streaming multiprocessor for fifth-generation tensor cores. A thread can launch a large asynchronous matrix multiply whose accumulators land there instead of being distributed through thread registers. The profile links that path to fewer instructions; an otherwise-identical non-Tensor-Memory kernel would be needed to isolate its exact contribution.</p>
 </div>
 
 <h4>Memory Workload: HBM is not the remaining prefill gap</h4>

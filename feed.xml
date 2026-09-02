@@ -7,6 +7,13 @@
     <language>en-us</language>
     <atom:link href="https://simondong1.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution</title>
+      <link>https://simondong1.github.io/hopper-to-blackwell-mma.html</link>
+      <guid isPermaLink="true">https://simondong1.github.io/hopper-to-blackwell-mma.html</guid>
+      <pubDate>Wed, 02 Sep 2026 00:00:00 +0000</pubDate>
+      <description>How NVIDIA moved Tensor Core accumulators from Hopper's registers into Blackwell's new 256 KB Tensor Memory, with exact MMA dimensions and an attention-tile walkthrough.</description>
+    </item>
+    <item>
       <title>How Flash Attention Speeds Up — and By How Much</title>
       <link>https://simondong1.github.io/flash-attention.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/flash-attention.html</guid>
