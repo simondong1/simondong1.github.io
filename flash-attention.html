@@ -177,8 +177,8 @@
   .method{font-size:.82rem;color:var(--muted)}
   .split-result{border-left:3px solid var(--green);padding:.05rem 0 .05rem 1rem;margin:1rem 0 1.4rem}
   .split-result p{margin:.35rem 0}
-  figure.shot{margin:1.15rem 0 1.45rem}
-  figure.shot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:#0b0d10}
+  figure.shot{width:100%;max-width:100%;margin:1.15rem 0 1.45rem;overflow:hidden}
+  figure.shot img{display:block;width:100%;max-width:100%;height:auto;border:1px solid var(--line);border-radius:12px;background:#0b0d10}
   .findings{list-style:none;padding:0;margin:.8rem 0 1.4rem;display:grid;gap:.5rem}
   .findings li{position:relative;margin:0;padding:.65rem .8rem .65rem 2rem;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:.9rem;line-height:1.48}
   .findings li::before{content:"→";position:absolute;left:.75rem;color:var(--accent);font-weight:800}
@@ -206,7 +206,6 @@
   footer a{color:var(--ink-soft)}
   ul{margin:1rem 0;padding-left:1.2rem}li{margin:.35rem 0}
   @media(max-width:900px){.reuse{grid-template-columns:1fr 1fr}}
-  @media(min-width:901px){figure.shot{width:min(70rem,calc(100vw - 3rem));margin-left:50%;transform:translateX(-50%)}}
   @media(max-width:640px){
     header.hero{padding:3.5rem 0 2rem}
     .pair,.metrics,.state,.homes,.reuse{grid-template-columns:1fr}
@@ -419,6 +418,7 @@
 <p class="lede"><strong>First, the clock.</strong> Lower is faster. Every labeled dot is the mean latency for the same Qwen3.8-27B full-attention shape on one B200.</p>
 
 <p>We compare four implementations: an eager PyTorch baseline, PyTorch scaled dot-product attention (SDPA), FlashAttention-4, and FlashInfer. FlashInfer is tested in both phases: its fused single-prefill kernel for prefill and its tensor-core single-decode kernel for decode.</p>
+<p>Model dimensions that matter here: hidden size 5,120; 64 layers, of which 16 are full attention; 24 query heads; 4 key/value heads; head dimension 256; six query heads share each key/value head.</p>
 
 <div class="timing">
   <div class="timing-panel">
@@ -463,8 +463,8 @@
 </figure>
 
 <figure class="shot">
-  <img src="assets/fa4/fa4-occupancy.png" alt="Nsight Compute page showing one fused FlashAttention-4 prefill kernel">
-  <p class="caption">A fused call is one result row. Every section below it describes that same complete FlashAttention-4 launch: 768 blocks, 384 threads per block, and 361.82 µs under Nsight.</p>
+  <img src="assets/fa4/fused-summary.png" alt="Nsight Compute Summary showing one fused FlashAttention-4 prefill kernel row">
+  <p class="caption">The comparison is now literal: the eager call above has twelve result rows; fused FlashAttention-4 has one. Every profiler section below describes this one complete launch.</p>
 </figure>
 
 <p>The profiler shows what changed. At 4k, these rows are FA4 / SDPA:</p>
