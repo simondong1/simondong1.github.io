@@ -7,7 +7,12 @@
   time.
 - Use the smallest useful concrete example before the general formula.
 - Introduce symbols, dimensions, and terminology only when they enter the
-  walkthrough.
+  walkthrough. Expand every hardware or kernel acronym on first use. Do not
+  assume the reader already knows MMA, TMEM, TMA, SM, warpgroup, CTA,
+  occupancy, or similar jargon.
+- When a post depends on several GPU or kernel names at once, add a compact
+  terms card after the lede. Define only the terms the next section needs;
+  introduce the rest when they enter the walkthrough.
 - Convert learning questions into a smooth tutorial, not a Q&A transcript.
 - End with a compact mental model, primary references, and citation text.
 
@@ -30,6 +35,14 @@ contrast it with the current mechanism, and link the existing article.
 - Lead with the outcome, then show the evidence.
 - Define conventional math symbols immediately. Avoid invented shorthand and
   dense inline algebra.
+- A first-time reader must finish the lede without already knowing the
+  hardware names. Write “matrix multiply-accumulate (MMA)” before using MMA;
+  write “streaming multiprocessor (SM)” before using SM. After the expansion,
+  the short form is fine.
+- Every blog update requires a first-time-reader proofread. Identify stumbles
+  (undefined terms, names used before they are taught, packed sentences)
+  and fix them before publishing. Name tiles in prose before the first
+  equation that uses them.
 - Distinguish mechanism, checkpoint parameterization, model architecture, and
   runtime algorithm.
 - Distinguish theoretical optimized layouts from readable reference

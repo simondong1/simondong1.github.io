@@ -4,13 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution</title>
-<meta name="description" content="How NVIDIA moved Tensor Core accumulators from Hopper's registers into Blackwell's new 256 KB Tensor Memory, with exact MMA dimensions and an attention-tile walkthrough." />
+<meta name="description" content="What an MMA is, why Hopper still parked the result in thread registers, and how Blackwell's new 256 KB Tensor Memory changes the attention pipeline." />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href="https://simondong1.github.io/hopper-to-blackwell-mma.html" />
 <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
 <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
 <meta property="og:title" content="From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution" />
-<meta property="og:description" content="Why Blackwell gave Tensor Cores their own 256 KB memory — and what changes from WGMMA to tcgen05.mma." />
+<meta property="og:description" content="An MMA is D += A × B. Hopper writes D into thread registers. Blackwell writes it into a new 256 KB Tensor Memory." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://simondong1.github.io/hopper-to-blackwell-mma.html" />
 <meta property="og:site_name" content="Simon Dong" />
@@ -19,14 +19,14 @@
 <meta name="twitter:site" content="@dongsixiang" />
 <meta name="twitter:creator" content="@dongsixiang" />
 <meta name="twitter:title" content="From WGMMA to TMEM" />
-<meta name="twitter:description" content="Hopper keeps MMA accumulators in registers. Blackwell moves them into a new Tensor Memory. Here is the exact data path." />
+<meta name="twitter:description" content="An MMA is D += A × B. Hopper writes D into thread registers. Blackwell writes it into Tensor Memory." />
 <meta name="author" content="Simon Dong" />
 <meta name="citation_title" content="From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution" />
 <meta name="citation_author" content="Dong, Simon" />
 <meta name="citation_publication_date" content="2026/09/02" />
 <meta name="citation_fulltext_html_url" content="https://simondong1.github.io/hopper-to-blackwell-mma.html" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"TechArticle","headline":"From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution","description":"How NVIDIA moved Tensor Core accumulators from Hopper's registers into Blackwell's new 256 KB Tensor Memory, with exact MMA dimensions and an attention-tile walkthrough.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-09-02","dateModified":"2026-09-02","mainEntityOfPage":"https://simondong1.github.io/hopper-to-blackwell-mma.html","keywords":["NVIDIA Hopper","NVIDIA Blackwell","WGMMA","TMEM","Tensor Memory","tcgen05","FlashAttention-3","FlashAttention-4"]}
+{"@context":"https://schema.org","@type":"TechArticle","headline":"From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution","description":"What an MMA is, why Hopper still parked the result in thread registers, and how Blackwell's new 256 KB Tensor Memory changes the attention pipeline.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-09-02","dateModified":"2026-09-02","mainEntityOfPage":"https://simondong1.github.io/hopper-to-blackwell-mma.html","keywords":["NVIDIA Hopper","NVIDIA Blackwell","WGMMA","TMEM","Tensor Memory","MMA","tcgen05","FlashAttention-3","FlashAttention-4"]}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -63,6 +63,10 @@
   .callout.green{border-left-color:var(--green)}.callout.warn{border-left-color:var(--amber)}
   .callout .label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--cool);display:block;margin-bottom:.3rem}
   .callout.green .label{color:var(--green)}.callout.warn .label{color:var(--amber)}.callout p{margin:.35rem 0}
+  .terms{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin:1.45rem 0 1.7rem}
+  .term{border:1px solid var(--line);border-radius:11px;background:#fff;padding:.7rem .8rem}
+  .term b{display:block;font:700 .8rem "JetBrains Mono",monospace;color:var(--accent);margin-bottom:.22rem}
+  .term span{display:block;font-size:.82rem;color:var(--ink-soft);line-height:1.42}
   nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.4rem;margin:0 0 2rem}
   nav.toc .toc-title{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.7rem}
   nav.toc ol{margin:0;padding:0;list-style:none;font-size:.93rem}
@@ -117,7 +121,7 @@
   .refs{font-size:.93rem}.refs li{margin:.55rem 0}
   footer{border-top:1px solid var(--line);margin-top:3.8rem;padding:2.4rem 0 4rem;font-size:.9rem;color:var(--muted)}footer a{color:var(--ink-soft)}
   @media(max-width:640px){
-    header.hero{padding:3.6rem 0 2rem}.lineage,.pair,.stats{grid-template-columns:1fr}.gen:after{display:none}
+    header.hero{padding:3.6rem 0 2rem}.lineage,.pair,.stats,.terms{grid-template-columns:1fr}.gen:after{display:none}
     .walkrow{grid-template-columns:1fr}.walkrow .lab{text-align:left}.anatomy{grid-template-columns:1fr}
     .budget{grid-template-columns:6.4rem 1fr 3rem}.budget .name{font-size:.7rem}
   }
@@ -127,22 +131,33 @@
 <header class="hero"><div class="wrap">
   <p class="eyebrow">GPU Architecture · Tensor Cores</p>
   <h1 class="title">From WGMMA to TMEM <span class="title-expansion">Hopper-to-Blackwell MMA evolution</span></h1>
-  <p class="subtitle">Hopper made matrix multiplication asynchronous, but its result still occupied thread registers. Blackwell adds a separate 256 KB memory to each SM and moves the accumulator there.</p>
+  <p class="subtitle">Hopper made matrix multiplication asynchronous, but threads still held the running result. Blackwell adds 256 KB of Tensor Memory so the Tensor Core can keep that result itself.</p>
   <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>September 2026</span><span class="dot">•</span><span>GPU Architecture</span></div>
 </div></header>
 
 <main class="wrap">
-<p class="lede"><strong>The important Blackwell change is not simply “a faster matrix instruction.”</strong> It is a new home for the result. Hopper's Tensor Cores write every MMA accumulator into the register file. Blackwell's Tensor Cores write it into Tensor Memory, a new on-chip SRAM attached to the Tensor Core path.</p>
+<p class="lede"><strong>An MMA — matrix multiply-accumulate — is the instruction that computes \(D = A \times B + D\).</strong> Tensor Cores are the hardware units that run it. The important Blackwell change is not simply a faster MMA. It is a new home for \(D\). Hopper writes every running result into the register file, the private storage of CUDA threads. Blackwell writes it into Tensor Memory, a new 256 KB on-chip SRAM on each streaming multiprocessor (SM), the GPU's compute tile.</p>
+
+<div class="terms" aria-label="Terms used in this post">
+  <div class="term"><b>MMA</b><span>Matrix multiply-accumulate: \(D \mathrel{+}= AB\). One hardware instruction multiplies two tiles and adds them into \(D\).</span></div>
+  <div class="term"><b>SM</b><span>Streaming multiprocessor — one GPU compute tile. An H100 or B200 chip contains many SMs.</span></div>
+  <div class="term"><b>Register file</b><span>Private per-thread storage. Each thread can hold at most 255 32-bit registers.</span></div>
+  <div class="term"><b>Shared memory (SMEM)</b><span>On-chip scratchpad visible to one thread block. Hopper already feeds MMA inputs from here.</span></div>
+  <div class="term"><b>HBM / TMA</b><span>HBM is the GPU's DRAM. TMA is the copy engine that moves tiles HBM ↔ SMEM.</span></div>
+  <div class="term"><b>TMEM</b><span>Blackwell's new 256 KB SRAM for MMA results. It is not TMA and not shared memory.</span></div>
+  <div class="term"><b>WGMMA</b><span>Hopper's warpgroup MMA. A warp is 32 threads; a warpgroup is 4 warps = 128 threads issuing together.</span></div>
+  <div class="term"><b>tcgen05.mma</b><span>Blackwell's replacement for WGMMA. One thread issues it; \(D\) lands in TMEM.</span></div>
+</div>
 
 <div class="callout"><span class="label">Where this mechanism is used</span>
-<p>Datacenter Blackwell kernels such as <a href="https://arxiv.org/abs/2603.05451">FlashAttention-4</a> and SM100 CUTLASS GEMMs use <code>tcgen05.mma</code> and TMEM. Their Hopper predecessors use <code>wgmma.mma_async</code>. For the attention algorithm itself, start with <a href="/flash-attention.html">How Flash Attention Speeds Up</a>; this post focuses only on the hardware handoff underneath it.</p>
+<p>Datacenter Blackwell kernels such as <a href="https://arxiv.org/abs/2603.05451">FlashAttention-4</a> use <code>tcgen05.mma</code> and TMEM. So do matrix multiplies from CUTLASS, NVIDIA's linear-algebra library, on SM100 (Blackwell's architecture number). Their Hopper predecessors use <code>wgmma.mma_async</code>. For the attention algorithm itself, start with <a href="/flash-attention.html">How Flash Attention Speeds Up</a>; this post is only the hardware handoff underneath it.</p>
 </div>
 
 <nav class="toc"><div class="toc-title">Contents</div><ol>
   <li><a href="#s1"><span class="n">1</span>The one-line evolution</a></li>
   <li><a href="#s2"><span class="n">2</span>Read an MMA shape</a></li>
-  <li><a href="#s3"><span class="n">3</span>Hopper's exact data path</a></li>
-  <li><a href="#s4"><span class="n">4</span>The register-pressure problem</a></li>
+  <li><a href="#s3"><span class="n">3</span>Hopper's data path</a></li>
+  <li><a href="#s4"><span class="n">4</span>Why registers run out</a></li>
   <li><a href="#s5"><span class="n">5</span>Blackwell's TMEM path</a></li>
   <li><a href="#s6"><span class="n">6</span>One attention tile</a></li>
   <li><a href="#s7"><span class="n">7</span>Threads and occupancy</a></li>
@@ -151,18 +166,19 @@
 
 <h2 id="s1"><span class="num">1.</span>The one-line evolution</h2>
 <div class="lineage">
-  <div class="gen"><span class="arch">Ampere · SM80</span><span class="inst">mma.sync</span><span class="home">32 threads<br/>inputs and output in registers</span></div>
-  <div class="gen"><span class="arch">Hopper · SM90</span><span class="inst">wgmma.mma_async</span><span class="home">128 threads<br/>SMEM inputs, register output</span></div>
-  <div class="gen"><span class="arch">Blackwell · SM100</span><span class="inst">tcgen05.mma</span><span class="home">one issuing thread<br/>SMEM/TMEM inputs, TMEM output</span></div>
+  <div class="gen"><span class="arch">Ampere · SM80</span><span class="inst">mma.sync</span><span class="home">32 threads<br/>A, B, and D in registers</span></div>
+  <div class="gen"><span class="arch">Hopper · SM90</span><span class="inst">wgmma.mma_async</span><span class="home">128 threads<br/>A, B from SMEM · D in registers</span></div>
+  <div class="gen"><span class="arch">Blackwell · SM100</span><span class="inst">tcgen05.mma</span><span class="home">one issuing thread<br/>A, B from SMEM/TMEM · D in TMEM</span></div>
 </div>
-<p>Hopper removed most operand staging from registers. A Tensor Memory Accelerator (TMA) copies tiles from HBM into shared memory, and WGMMA reads them there. But the accumulator—the running matrix result—still lands in registers distributed across 128 threads.</p>
-<p>Blackwell finishes that separation. The Tensor Core reads its operands from shared memory or TMEM and updates an accumulator in TMEM. The CUDA threads no longer have to own the matrix while the multiplication is running.</p>
+<p>Ampere, Hopper, and Blackwell are successive NVIDIA GPU generations. SM80, SM90, and SM100 are their architecture numbers. Ampere's <code>mma.sync</code> is a warp-level instruction: 32 threads carry both the inputs \(A,B\) and the result \(D\) in registers.</p>
+<p>Hopper stopped keeping most of \(A\) and \(B\) in registers. A Tensor Memory Accelerator (TMA) copies tiles from HBM into shared memory, and WGMMA reads them there. But the <strong>accumulator</strong> — the running matrix \(D\) — still lands in registers split across 128 threads.</p>
+<p>Blackwell moves \(D\) out of registers too. The Tensor Core reads \(A\) and \(B\) from shared memory or TMEM and updates \(D\) in TMEM. CUDA threads no longer have to own the matrix while the multiply is running.</p>
 <div class="callout warn"><span class="label">TMEM is not TMA</span>
-<p><strong>TMA</strong> is Hopper's asynchronous copy engine: HBM ↔ shared memory. <strong>TMEM</strong> is Blackwell's 256 KB accumulator SRAM. B200 has both.</p>
+<p><strong>TMA</strong> is the copy engine: HBM ↔ shared memory. It exists on Hopper and Blackwell. <strong>TMEM</strong> is Blackwell's new 256 KB SRAM for MMA results. A B200 has both. The names are easy to mix up; they are different hardware.</p>
 </div>
 
 <h2 id="s2"><span class="num">2.</span>Read an MMA shape</h2>
-<p>Before following the memory, read one Hopper instruction:</p>
+<p>Before following the memory, read one Hopper MMA. The long name encodes the tile and the math. BF16 is a 16-bit floating-point format. The tail <code>.f32.bf16.bf16</code> means: multiply BF16 × BF16, add into FP32. <code>.sync.aligned</code> means the 128 threads start together.</p>
 <div class="eqcard">
   <div class="caption">One BF16 Hopper WGMMA</div>
   <p class="shape"><strong>wgmma.mma_async.sync.aligned.m64n128k16.f32.bf16.bf16</strong></p>
@@ -174,14 +190,14 @@
 <div class="anatomy">
   <div class="axis"><b>64</b><span><strong>M</strong>: output rows</span></div>
   <div class="axis"><b>128</b><span><strong>N</strong>: output columns</span></div>
-  <div class="axis"><b>16</b><span><strong>K</strong>: reduction depth per issue</span></div>
+  <div class="axis"><b>16</b><span><strong>K</strong>: inner width covered per issue</span></div>
 </div>
-<p>The instruction produces—or updates—the entire 64×128 output tile. The <strong>16 is not an output dimension</strong>. It says each issue contributes 16 terms to every dot product.</p>
-<p>If the head dimension is 256, the kernel issues the instruction \(256/16=16\) times. Every issue consumes the next 16-wide slices of A and B and accumulates into the same 64×128 D tile.</p>
+<p>The instruction produces — or updates — the entire 64×128 output tile. <strong>The 16 is not an output dimension.</strong> Each <em>issue</em> is one execution of the instruction. It contributes 16 terms to every dot product in \(D\), then the next issue adds the next 16.</p>
+<p>If the inner dimension is 256 — later, that will be the attention head width — the kernel issues the instruction \(256/16=16\) times. Every issue consumes the next 16-wide slices of \(A\) and \(B\) and adds them into the same 64×128 \(D\).</p>
 
 <div class="calc">
   <div class="controls">
-    <label for="head-dim">BF16 reduction depth K</label>
+    <label for="head-dim">Inner dimension K (BF16)</label>
     <input id="head-dim" type="range" min="16" max="256" step="16" value="256" />
     <output id="head-out">256</output>
   </div>
@@ -190,24 +206,24 @@
     <div class="stat"><span>WGMMA issues</span><b id="issue-out">16</b></div>
     <div class="stat"><span>Output shape</span><b>64×128</b></div>
   </div>
-  <p class="caption">Changing K changes the number of accumulation issues. It does not change M×N.</p>
+  <p class="caption">Changing K changes how many times the instruction must run. It does not change the output shape M×N.</p>
 </div>
 
-<h2 id="s3"><span class="num">3.</span>Hopper's exact data path</h2>
-<p><strong>What are we computing?</strong> This baseline is one ordinary matrix multiplication, not attention yet. It shows where A, B, and D live during a WGMMA.</p>
+<h2 id="s3"><span class="num">3.</span>Hopper's data path</h2>
+<p><strong>What are we computing?</strong> One ordinary matrix multiply, not attention yet. The point is only where \(A\), \(B\), and \(D\) live while a WGMMA runs.</p>
 <div class="walk">
-  <div class="walkrow"><div class="lab">1 · Load</div><div class="mem sm">TMA: A and B move from HBM → shared memory</div></div>
-  <div class="walkrow"><div class="lab">2 · Describe</div><div class="mem inst">two 64-bit descriptors tell WGMMA each SMEM tile's address and layout</div></div>
+  <div class="walkrow"><div class="lab">1 · Load</div><div class="mem sm">TMA copies A and B from HBM into shared memory</div></div>
+  <div class="walkrow"><div class="lab">2 · Describe</div><div class="mem inst">two 64-bit descriptors name each SMEM tile's address and layout</div></div>
   <div class="walkrow"><div class="lab">3 · Issue</div><div class="mem inst">all 128 threads in one warpgroup execute wgmma.mma_async</div></div>
   <div class="walkrow"><div class="lab">4 · Read</div><div class="mem sm">A comes from SMEM or registers; B must come from SMEM</div></div>
-  <div class="walkrow"><div class="lab">5 · Accumulate</div><div class="mem rf">D is distributed across the 128 threads' private registers</div></div>
+  <div class="walkrow"><div class="lab">5 · Accumulate</div><div class="mem rf">D is split across the 128 threads' private registers</div></div>
 </div>
-<p>For FP32 accumulation, a 64×128 D tile contains 8,192 values:</p>
+<p>For 32-bit (FP32) accumulation, a 64×128 \(D\) contains 8,192 values:</p>
 \[
 \frac{64\times128\text{ FP32 values}}{128\text{ threads}}
 =64\text{ registers per thread}.
 \]
-<p>Logically D is one matrix. Physically each thread owns 64 scattered elements. The complete tile exists only when the 128 register fragments are considered together.</p>
+<p>Logically \(D\) is one matrix. Physically each thread owns 64 scattered elements. The complete tile exists only when those 128 slices are considered together.</p>
 
 <div class="calc">
   <div class="controls">
@@ -220,11 +236,13 @@
     <div class="stat hot"><span>Registers / thread</span><b id="reg-out">64</b></div>
     <div class="stat"><span>Thread owners</span><b>128</b></div>
   </div>
-  <p class="caption">FP32 D for an m64nNk16 WGMMA. This is only the accumulator—not addresses, softmax state, or another pipeline stage.</p>
+  <p class="caption">FP32 \(D\) for an m64nNk16 WGMMA. This count is only the accumulator — not addresses, softmax state, or another pipeline stage.</p>
 </div>
 
-<h2 id="s4"><span class="num">4.</span>The register-pressure problem</h2>
-<p>Now use one concrete <strong>FA3-style configuration</strong>: one Hopper consumer warpgroup, query block \(B_r=64\), key block \(B_c=128\), and head dimension \(d=256\). FA3 parameterizes these tile sizes; they vary by kernel configuration.</p>
+<h2 id="s4"><span class="num">4.</span>Why registers run out</h2>
+<p>Now apply the same MMA to attention. FlashAttention-3 (FA3) is the Hopper attention kernel. One example: 64 query rows, 128 key columns, head width 256. FA3 picks these tile sizes per kernel; they are not fixed.</p>
+<p>The 128 threads that run MMA and softmax are the <strong>consumer warpgroup</strong>. Separate <strong>producer warps</strong> only copy data with TMA.</p>
+<p><strong>S</strong> is the score matrix \(QK^\top\). <strong>P</strong> is that same tile after softmax. <strong>O</strong> is the output \(PV\).</p>
 \[
 \begin{aligned}
 S&=QK^\top,\\
@@ -237,54 +255,56 @@ O&\mathrel{+}=PV.
   <p class="shape">Q [64×256] &nbsp;@&nbsp; Kᵀ [256×128] &nbsp;=&nbsp; S [64×128]</p>
   <p class="shape">P [64×128] &nbsp;@&nbsp; V [128×256] &nbsp;=&nbsp; O [64×256]</p>
 </div>
-<p>Here <strong>S</strong> is a 64×128 score tile, <strong>P</strong> is the same tile after softmax, and <strong>O</strong> is the 64×256 output accumulator. “RF” means the SM's register file: 64K 32-bit registers divided among resident threads.</p>
 
 <div class="budget"><div class="name">S · FP32</div><div class="track"><div class="fill" style="width:25%"></div></div><div class="val">64 reg</div></div>
 <div class="budget"><div class="name">P · BF16</div><div class="track"><div class="fill orange" style="width:12.5%"></div></div><div class="val">32 reg</div></div>
 <div class="budget"><div class="name">O · FP32</div><div class="track"><div class="fill blue" style="width:50%"></div></div><div class="val">128 reg</div></div>
 <div class="budget"><div class="name">Thread limit</div><div class="track"><div class="fill green" style="width:99.6%"></div></div><div class="val">255</div></div>
-<p class="caption">Logical per-thread payload for this illustrative 64×128, d=256 mapping. BF16 values pack two per 32-bit register.</p>
+<p class="caption">Each bar is that tile alone against the 255-register cap — they are not all live at once. BF16 packs two values in one 32-bit register.</p>
 
-<h3>The important correction: Hopper does not have to copy P to SMEM</h3>
-<p>WGMMA has two forms. <strong>SS</strong> reads A and B from shared memory. <strong>RS</strong> reads A from registers and B from shared memory. FlashAttention-3 uses the RS form for \(PV\): softmax produces P in registers, and the next WGMMA consumes P directly as operand A. V remains in shared memory as operand B.</p>
+<h3>Hopper does not have to copy P to shared memory</h3>
+<p>WGMMA has two forms, named by where \(A\) and \(B\) come from. <strong>SS</strong> (shared-shared) reads both from shared memory. <strong>RS</strong> (register-shared) reads \(A\) from registers and \(B\) from shared memory. FlashAttention-3 uses the RS form for \(PV\): softmax writes \(P\) into registers, and that same WGMMA reads those registers as input \(A\) while writing \(O\). \(V\) stays in shared memory as input \(B\).</p>
 <div class="callout green"><span class="label">No mandatory P → SMEM round-trip</span>
-<p>The optimized Hopper path is <strong>S in registers → softmax in registers → P remains in registers → RS-WGMMA reads P</strong>. Earlier descriptions that always send P to shared memory are reference implementations, not the optimized FA3 mechanism.</p>
+<p>The optimized Hopper path is <strong>S in registers → softmax in registers → P stays in registers → RS-WGMMA reads P</strong>. Descriptions that always send \(P\) to shared memory are reference implementations, not the optimized FA3 path.</p>
 </div>
 
-<p>The problem is simultaneous ownership. While RS-WGMMA reads P, its O accumulator must also remain in registers. Under this illustrative mapping, that is \(32+128=160\) logical payload registers per thread. The two-stage FA3 pipeline also keeps the next 64×128 FP32 score tile, \(S_{\text{next}}\), ready while the current \(PV\) runs—another 64 logical registers:</p>
+<p>The problem is owning two matrices at the same time. While that RS-WGMMA reads \(P\), its \(O\) result must also live in registers. In this example that is \(32+128=160\) payload registers per thread. FA3's two-stage pipeline also keeps the next score tile, \(S_{\text{next}}\), ready while the current \(PV\) runs — another 64 registers:</p>
 \[
 P\ (32)+O\ (128)+S_{\text{next}}\ (64)=224
 \quad\text{logical payload registers per thread.}
 \]
-<p>This leaves at most 31 registers below the architectural 255-register limit in the simplified accounting. It is a <strong>lower-bound liveness calculation, not the compiled kernel's register count</strong>: actual allocation depends on chosen tile sizes, consumer-warpgroup count, compiler scheduling, and whether all fragments are live at exactly the same instruction. Row maxima, sums, pointers, descriptors, predicates, and temporary values still need space. The FA3 paper explicitly identifies the extra \(S_{\text{next}}\) buffer as the register cost that limits deeper pipelining.</p>
-<p>Hopper works around this rather than simply “spilling”: tune \(B_r\) and \(B_c\), overlap only selected stages, choose the number of consumer warpgroups, and call <code>setmaxnreg</code> so TMA producer warps surrender registers to the MMA/softmax consumers. Good kernels avoid local-memory spills, but the register budget still constrains their schedule. For example, the FA3 paper's SASS study includes a 64×192 \(QK^\top\) WGMMA and a 64×128 \(PV\) WGMMA—not one universal tile for every configuration.</p>
+<p>That leaves at most 31 registers under the 255-register cap in this simplified count. It is a <strong>lower bound on how many values must be live together, not the compiled kernel's register count</strong>. Real allocation depends on tile sizes, how many consumer warpgroups run, compiler scheduling, and whether every slice is live in the same instruction. Row maxima, sums, pointers, descriptors, and temporaries still need space. The FA3 paper names the extra \(S_{\text{next}}\) buffer as the register cost that limits deeper pipelining.</p>
+<p>Hopper works around this rather than simply spilling to slower memory: shrink the query or key tile, overlap only some stages, pick the number of consumer warpgroups, and call <code>setmaxnreg</code> so TMA producer warps give registers to the MMA/softmax consumers. Good kernels avoid those spills, but the register budget still constrains the schedule. The FA3 paper's machine-code study includes a 64×192 \(QK^\top\) WGMMA and a 64×128 \(PV\) WGMMA — not one universal tile.</p>
 
 <h2 id="s5"><span class="num">5.</span>Blackwell's TMEM path</h2>
-<p>Datacenter Blackwell adds <strong>256 KB of physical SRAM to each SM</strong>. It is separate from the existing 256 KB register file and the L1/shared-memory pool. NVIDIA calls it Tensor Memory.</p>
+<p>Datacenter Blackwell adds <strong>256 KB of physical SRAM to each SM</strong>. It is new silicon, separate from the existing 256 KB register file and the L1/shared-memory pool. NVIDIA calls it Tensor Memory.</p>
+<p>Think of TMEM as a 128-row by 512-column spreadsheet of 4-byte cells. Software carves out a rectangle of columns, uses it, and later gives it back. Ordinary shared-memory loads cannot see it.</p>
 <div class="eqcard">
   <div class="caption">TMEM organization per SM</div>
   \[
   128\text{ lanes}\times512\text{ columns}\times4\text{ bytes}
   =256\text{ KB}
   \]
-  <p class="shape">software-managed · 32-column allocation units · accessible only through tcgen05 instructions</p>
+  <p class="shape">lanes = rows · software-managed · 32-column allocation units · tcgen05 only</p>
 </div>
-<p>Blackwell's replacement for WGMMA is <code>tcgen05.mma</code>, also called UMMA in CUTLASS. Its operand contract is:</p>
+<p>A <strong>CTA</strong> is a CUDA thread block — the same “thread block” from the shared-memory definition. The scheduler places one CTA on an SM. A CTA pair is two blocks that cooperate.</p>
+<p>Blackwell's replacement for WGMMA is <code>tcgen05.mma</code>. CUTLASS, NVIDIA's matrix-multiply library, also calls it UMMA. In the MMA equation \(D = AB + C\), \(C\) is the running result going in and \(D\) is the result after this instruction. They often occupy the same storage, so people write C/D. Where the tiles live:</p>
 <div class="htable"><table>
-  <thead><tr><th>Tile</th><th>Hopper WGMMA</th><th>Blackwell tcgen05.mma</th></tr></thead>
+  <thead><tr><th></th><th>Hopper WGMMA</th><th>Blackwell tcgen05.mma</th></tr></thead>
   <tbody>
     <tr><td>A</td><td>registers or SMEM</td><td>TMEM or SMEM</td></tr>
     <tr><td>B</td><td>SMEM</td><td>SMEM</td></tr>
-    <tr><td>C / D accumulator</td><td>registers</td><td>TMEM</td></tr>
-    <tr><td>Issuer</td><td>128-thread warpgroup</td><td>one thread for a CTA or CTA pair</td></tr>
-    <tr><td>Largest BF16 1-CTA atom</td><td>64×256×16</td><td>128×256×16</td></tr>
+    <tr><td>C / D, the running result</td><td>registers</td><td>TMEM</td></tr>
+    <tr><td>Who issues the instruction</td><td>128-thread warpgroup</td><td>one thread for a CTA or CTA pair</td></tr>
+    <tr><td>Largest BF16 tile in one instruction</td><td>64×256×16</td><td>128×256×16</td></tr>
   </tbody>
 </table></div>
-<p>The Tensor Core writes D directly into TMEM. No CUDA thread owns a D fragment during the MMA. Later, a warp explicitly uses <code>tcgen05.ld</code> to bring a needed slice into registers for ordinary arithmetic or the final store.</p>
-<p>This is real new silicon, not a renamed part of shared memory. Ordinary instructions such as <code>ld.shared</code>, <code>ldmatrix</code>, and <code>cp.async</code> cannot address TMEM. On SM100, each CTA sees 128 lanes × 512 columns of 32-bit cells. One warp performs <code>tcgen05.alloc</code>; allocation uses 32-column units and a power-of-two column count. Every allocation must later be released with <code>tcgen05.dealloc</code>.</p>
+<p>The “largest tile” row is the biggest \(M \times N \times K\) one instruction can cover. People also call that the MMA atom.</p>
+<p>The Tensor Core writes \(D\) directly into TMEM. No CUDA thread owns a slice of \(D\) while the MMA runs. Later, a warp uses <code>tcgen05.ld</code> to pull a needed slice into registers for ordinary arithmetic or the final store to HBM.</p>
+<p>Ordinary instructions such as <code>ld.shared</code>, <code>ldmatrix</code>, and <code>cp.async</code> cannot address TMEM. On SM100, each CTA sees 128 lanes × 512 columns of 32-bit cells. One warp performs <code>tcgen05.alloc</code>; allocation uses 32-column units and a power-of-two column count. Every allocation must later be released with <code>tcgen05.dealloc</code>.</p>
 
 <h2 id="s6"><span class="num">6.</span>One attention tile, side by side</h2>
-<p><strong>What is being computed?</strong> Both columns perform the same \(QK^\top\), online softmax, and \(PV\) update. The comparison shows only where the intermediate matrices live. The Hopper column continues the illustrative \(B_r=64,B_c=128,d=256\) configuration above; FA3 supports other tiles. The Blackwell column follows FA4's 128×128 score accumulator.</p>
+<p><strong>What is being computed?</strong> Both columns run the same \(QK^\top\), softmax, and \(PV\) update. The comparison shows only where the intermediate matrices live. The Hopper column continues the 64×128, head-256 example; FA3 supports other tiles. The Blackwell column follows FlashAttention-4's 128×128 score tile.</p>
 <div class="pair">
   <div class="panel hopper">
     <h3>Hopper · FA3-style</h3>
@@ -296,7 +316,7 @@ P\ (32)+O\ (128)+S_{\text{next}}\ (64)=224
       <div class="box rmem">P 64×128 BF16<br/>32 regs / thread</div>
       <div class="arrow">↓ RS-WGMMA reads P · V from SMEM</div>
       <div class="box rmem">O 64×256 FP32<br/>128 regs / thread</div>
-      <div class="arrow">↓ epilogue</div>
+      <div class="arrow">↓ final store</div>
       <div class="box">HBM output</div>
     </div>
   </div>
@@ -306,7 +326,7 @@ P\ (32)+O\ (128)+S_{\text{next}}\ (64)=224
       <div class="box smem">Q, K, V<br/>TMA → SMEM</div>
       <div class="arrow">↓ tcgen05.mma · one thread issues</div>
       <div class="box tmem">S 128×128 FP32<br/>64 KB in TMEM</div>
-      <div class="arrow">↓ tcgen05.ld · warp-collective TMEM → RF</div>
+      <div class="arrow">↓ tcgen05.ld · warp loads TMEM → registers</div>
       <div class="box rmem">one logical row / softmax thread<br/>128 FP32 + up to 64 packed BF16 regs</div>
       <div class="arrow">↓ P stored to TMEM in stages</div>
       <div class="box tmem">P in TMEM + V in SMEM<br/>tcgen05.mma</div>
@@ -315,42 +335,42 @@ P\ (32)+O\ (128)+S_{\text{next}}\ (64)=224
     </div>
   </div>
 </div>
-<p>Blackwell does not eliminate register use. Softmax is ordinary scalar/vector arithmetic, so FA4 logically assigns one 128-element score row to each softmax thread. The physical <code>tcgen05.ld</code> and <code>tcgen05.st</code> operations are warp-collective, and each warp accesses one quarter of its CTA's TMEM view. A softmax thread may hold 128 FP32 score values plus up to 64 registers of packed BF16 output, alongside temporary state.</p>
-<p>The difference is lifetime. FA4 stores the first three quarters of P to TMEM and launches the corresponding MMAs, then handles the final quarter separately. The \(PV\) MMA reads P from TMEM while O accumulates in TMEM. The 128×128 S tile and the O tile therefore do not occupy every softmax thread's private register budget for the whole pipeline.</p>
+<p>Blackwell does not remove registers. Softmax is ordinary per-element arithmetic, so FA4 still gives each softmax thread one 128-element score row. The physical <code>tcgen05.ld</code> and <code>tcgen05.st</code> operations are warp-collective: all 32 threads of a warp execute the load or store together, and each warp sees one quarter of its CTA's TMEM. A softmax thread may hold 128 FP32 scores plus up to 64 registers of packed BF16 output, plus temporaries.</p>
+<p>The difference is lifetime. FA4 stores the first three quarters of \(P\) to TMEM and launches those MMAs, then handles the last quarter separately. The \(PV\) MMA reads \(P\) from TMEM while \(O\) accumulates in TMEM. The 128×128 \(S\) tile and the \(O\) tile therefore do not sit in every softmax thread's private registers for the whole pipeline.</p>
 <div class="callout warn"><span class="label">TMEM moves the bottleneck; it does not remove all movement</span>
-<p><code>tcgen05.ld</code> and <code>tcgen05.st</code> still move softmax rows between TMEM and registers. On B200 the exponential unit can become slower than the enlarged MMA path, which is why FA4 also changes softmax scheduling and partially emulates exponentials.</p>
+<p><code>tcgen05.ld</code> and <code>tcgen05.st</code> still copy softmax rows between TMEM and registers. Softmax needs \(e^x\). On B200 that exponential hardware can become slower than the larger MMA path, which is why FA4 also reschedules softmax and partly emulates \(e^x\).</p>
 </div>
 
 <h2 id="s7"><span class="num">7.</span>How many threads are on one SM?</h2>
-<p>Both H100 (SM90) and B200 (SM100) can hold at most <strong>64 resident warps = 2,048 resident threads per SM</strong>. This is a capacity limit, not the number of threads that execute one matrix instruction.</p>
+<p>Both H100 (SM90) and B200 (SM100) can hold at most <strong>64 resident warps = 2,048 resident threads per SM</strong>. Resident means “currently living on that SM,” not “issued this MMA.” Occupancy is how full that capacity is. A kernel can report low occupancy and still be fast if it is using registers or shared memory instead of filling every thread slot.</p>
 <div class="htable"><table>
   <thead><tr><th>Level</th><th>Hopper H100</th><th>Blackwell B200</th></tr></thead>
   <tbody>
     <tr><td>Warp</td><td>32 threads</td><td>32 threads</td></tr>
-    <tr><td>MMA issue group</td><td>4 warps = 128 threads</td><td>1 thread issues for a CTA / CTA pair</td></tr>
+    <tr><td>Who issues one MMA</td><td>4 warps = 128 threads</td><td>1 thread issues for a CTA / CTA pair</td></tr>
     <tr><td>Maximum resident</td><td>64 warps = 2,048 threads / SM</td><td>64 warps = 2,048 threads / SM</td></tr>
     <tr><td>Register file</td><td>65,536 × 32-bit registers / SM</td><td>65,536 × 32-bit registers / SM</td></tr>
     <tr><td>Per-thread limit</td><td>255 registers</td><td>255 registers</td></tr>
     <tr><td>New Tensor Memory</td><td>none</td><td>256 KB / SM</td></tr>
   </tbody>
 </table></div>
-<p>A kernel often keeps far fewer than 2,048 threads resident because registers and shared memory run out first. For example, 256 threads at 240 registers each consume 61,440 of the SM's 65,536 registers. There is no room for another similarly sized block even though 1,792 theoretical thread slots remain.</p>
+<p>A kernel often keeps far fewer than 2,048 threads resident because registers and shared memory run out first. For example, 256 threads at 240 registers each consume 61,440 of the SM's 65,536 registers. There is no room for another block of the same size, even though 1,792 theoretical thread slots remain.</p>
 \[
 \text{resident threads from registers}
 \leq
 \left\lfloor\frac{65{,}536}{\text{registers per thread}}\right\rfloor,
 \]
-<p>subject to warp, block, allocation-granularity, shared-memory, and cluster limits. This is why “2,048 threads per SM” and “one 128-thread warpgroup issues WGMMA” are both true—and why optimized attention often reports low occupancy without spilling.</p>
+<p>Warps, thread-block size, shared memory, and how registers are rounded also cap occupancy. That is why “2,048 threads per SM” and “one 128-thread warpgroup issues WGMMA” are both true — and why an optimized attention kernel can report low occupancy without spilling to slower memory.</p>
 
 <h2 id="s8"><span class="num">8.</span>Limits and the final mental model</h2>
 <ul>
-  <li><strong>TMEM is datacenter-Blackwell-specific.</strong> The <code>tcgen05</code> path described here targets SM100/SM100a, such as B200 and GB200. Consumer Blackwell SM120 does not expose this TMEM path.</li>
-  <li><strong>TMEM is not general scratch space.</strong> CUDA ALU instructions cannot compute directly on it. Results must be loaded to registers for softmax, activation functions, conversion, or arbitrary elementwise work.</li>
-  <li><strong>Low occupancy can remain.</strong> A Blackwell kernel may still use almost all available shared memory or many registers for its non-MMA stages. TMEM removes accumulator pressure; it does not make other resources infinite.</li>
-  <li><strong>TMEM alone is not a benchmark result.</strong> FA4 combines TMEM with larger MMA tiles, different pipelining, staged P stores, two-CTA modes, and a redesigned softmax. Isolating the gain from one feature requires a controlled kernel comparison.</li>
+  <li><strong>TMEM is datacenter-Blackwell-specific.</strong> The <code>tcgen05</code> path here targets SM100/SM100a, such as B200 and GB200. Consumer Blackwell SM120 does not expose this TMEM path.</li>
+  <li><strong>TMEM is not general scratch space.</strong> Ordinary CUDA arithmetic cannot run on it. Softmax, activations, conversions, and other elementwise work still load values into registers first.</li>
+  <li><strong>Low occupancy can remain.</strong> A Blackwell kernel may still fill shared memory or use many registers for non-MMA stages. TMEM removes accumulator pressure; it does not make other resources infinite.</li>
+  <li><strong>TMEM alone is not a benchmark result.</strong> FA4 combines TMEM with larger MMA tiles, different pipelining, staged \(P\) stores, two-CTA modes, and a redesigned softmax. Isolating the gain from one feature needs a controlled kernel comparison.</li>
 </ul>
 <div class="callout green"><span class="label">Mental model</span>
-<p><strong>Ampere:</strong> threads carry operands and results. <strong>Hopper:</strong> shared memory feeds an asynchronous 128-thread MMA, but threads still carry the result. <strong>Blackwell:</strong> one thread dispatches the MMA and the Tensor Core carries its own result in TMEM. The new 256 KB store relieves accumulator register pressure and enables larger, more asynchronous MMA pipelines.</p>
+<p><strong>Ampere:</strong> threads carry the inputs and the result. <strong>Hopper:</strong> shared memory feeds an asynchronous 128-thread MMA, but threads still carry the result. <strong>Blackwell:</strong> one thread dispatches the MMA, and the Tensor Core keeps its own result in TMEM. The new 256 KB store takes the accumulator out of the register file and lets MMA tiles get larger and more asynchronous.</p>
 </div>
 
 <h3>References</h3>

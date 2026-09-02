@@ -118,11 +118,13 @@ form is already on the page.
 
 After every completed blog or site change:
 
-1. Run the relevant validation and visual checks.
-2. Fetch the remote branch again and integrate new work safely.
-3. Commit all files belonging to the change with a descriptive message.
-4. Push to the GitHub Pages branch.
-5. Poll the live canonical URL with a cache-busting query until the new content
+1. Finish the required first-time-reader proofread and fix every identified
+   stumble.
+2. Run the relevant validation and visual checks.
+3. Fetch the remote branch again and integrate new work safely.
+4. Commit all files belonging to the change with a descriptive message.
+5. Push to the GitHub Pages branch.
+6. Poll the live canonical URL with a cache-busting query until the new content
    is visible, then report the live link.
 
 Do not leave completed work only in a local checkout. Skip publication only
