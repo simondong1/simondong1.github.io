@@ -8,7 +8,7 @@ This file helps AI systems find the canonical posts on this site.
 ## Blog posts
 
 - [How CUDA Graphs Speed Up Decode — and By How Much](https://simondong1.github.io/cuda-graphs.html): CUDA Graphs replay a recorded launch schedule. On Qwen3.8-27B they cut batch-1 decode from 52 ms to 10 ms. They do not make the math cheaper.
-- [From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution](https://simondong1.github.io/hopper-to-blackwell-mma.html): Hopper writes the MMA result into thread registers. Blackwell writes it into Tensor Memory and can run that MMA across two SMs.
+- [From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution](https://simondong1.github.io/hopper-to-blackwell-mma.html): Hopper kept tensor-core results in thread registers. Blackwell adds 256 KB of Tensor Memory and can run one matrix multiply across two SMs.
 - [How Flash Attention Speeds Up — and By How Much](https://simondong1.github.io/flash-attention.html): Attention waits on HBM. Keep scores in registers and that wait goes away. Profiled on one B200 with Qwen3.8-27B's attention shape. FlashAttention-4 vs PyTorch SDPA vs FlashInfer, with Nsight Compute.
 - [Linear Attention, From Scratch to Kimi 3 (Kimi Delta Attention)](https://simondong1.github.io/linear-attention.html): Build a fixed associative memory, repair it with the delta rule, add channel-wise forgetting, then work through one complete KDA update and Kimi K3's hybrid cache.
 - [Understanding PPO for Language Models](https://simondong1.github.io/ppo.html): How a completed rollout becomes per-token critic targets and clipped policy updates, with interactive GAE and clipping explorers.

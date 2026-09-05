@@ -4,13 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution</title>
-<meta name="description" content="An MMA is D += A × B. Hopper writes D into thread registers. Blackwell writes it into Tensor Memory and can run that MMA across two SMs." />
+<meta name="description" content="Hopper kept tensor-core results in thread registers. Blackwell adds 256 KB of Tensor Memory and can run one matrix multiply across two SMs." />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href="https://simondong1.github.io/hopper-to-blackwell-mma.html" />
 <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
 <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
 <meta property="og:title" content="From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution" />
-<meta property="og:description" content="An MMA is D += A × B. Hopper writes D into thread registers. Blackwell writes it into Tensor Memory and can run that MMA across two SMs." />
+<meta property="og:description" content="Hopper kept tensor-core results in thread registers. Blackwell adds 256 KB of Tensor Memory and can run one matrix multiply across two SMs." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://simondong1.github.io/hopper-to-blackwell-mma.html" />
 <meta property="og:site_name" content="Simon Dong" />
@@ -24,8 +24,8 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:site" content="@dongsixiang" />
 <meta name="twitter:creator" content="@dongsixiang" />
-<meta name="twitter:title" content="From WGMMA to TMEM" />
-<meta name="twitter:description" content="An MMA is D += A × B. Hopper writes D into thread registers. Blackwell writes it into Tensor Memory and can run that MMA across two SMs." />
+<meta name="twitter:title" content="From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution" />
+<meta name="twitter:description" content="Hopper kept tensor-core results in thread registers. Blackwell adds 256 KB of Tensor Memory and can run one matrix multiply across two SMs." />
 <meta name="twitter:image" content="https://simondong1.github.io/assets/hopper-to-blackwell-mma-og.png?v=1" />
 <meta name="twitter:image:alt" content="Hopper parks the MMA result in registers; Blackwell parks it in Tensor Memory and can run one MMA on two SMs." />
 <meta name="author" content="Simon Dong" />
@@ -34,7 +34,7 @@
 <meta name="citation_publication_date" content="2026/09/02" />
 <meta name="citation_fulltext_html_url" content="https://simondong1.github.io/hopper-to-blackwell-mma.html" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"TechArticle","headline":"From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution","description":"An MMA is D += A × B. Hopper writes D into thread registers. Blackwell writes it into Tensor Memory and can run that MMA across two SMs.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-09-02","dateModified":"2026-09-02","mainEntityOfPage":"https://simondong1.github.io/hopper-to-blackwell-mma.html","image":["https://simondong1.github.io/assets/hopper-to-blackwell-mma-og.png?v=1"],"keywords":["NVIDIA Hopper","NVIDIA Blackwell","WGMMA","TMEM","Tensor Memory","MMA","tcgen05","2-CTA","thread-block cluster","FlashAttention-3","FlashAttention-4"]}
+{"@context":"https://schema.org","@type":"TechArticle","headline":"From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution","description":"Hopper kept tensor-core results in thread registers. Blackwell adds 256 KB of Tensor Memory and can run one matrix multiply across two SMs.","author":{"@type":"Person","name":"Simon Dong","url":"https://x.com/dongsixiang","sameAs":["https://x.com/dongsixiang"]},"datePublished":"2026-09-02","dateModified":"2026-09-04","mainEntityOfPage":"https://simondong1.github.io/hopper-to-blackwell-mma.html","image":["https://simondong1.github.io/assets/hopper-to-blackwell-mma-og.png?v=1"],"keywords":["NVIDIA Hopper","NVIDIA Blackwell","WGMMA","TMEM","Tensor Memory","MMA","tcgen05","2-CTA","thread-block cluster","FlashAttention-3","FlashAttention-4"]}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -156,7 +156,7 @@
 <header class="hero"><div class="wrap">
   <p class="eyebrow">GPU Architecture · Tensor Cores</p>
   <h1 class="title">From WGMMA to TMEM <span class="title-expansion">Hopper-to-Blackwell MMA evolution</span></h1>
-  <p class="subtitle">Hopper made matrix multiplication asynchronous, but threads still held the running result. Blackwell adds 256 KB of Tensor Memory so the Tensor Core can keep that result itself.</p>
+  <p class="subtitle">Hopper made matrix multiplication asynchronous, but threads still held the running result. Blackwell adds 256 KB of Tensor Memory and can pair two SMs for one larger MMA.</p>
   <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><span>September 2026</span><span class="dot">•</span><span>GPU Architecture</span></div>
 </div></header>
 
@@ -314,7 +314,7 @@ P\ (32)+O\ (128)+S_{\text{next}}\ (64)=224
   \]
   <p class="shape">lanes = rows · software-managed · 32-column allocation units · tcgen05 only</p>
 </div>
-<p>A <strong>CTA</strong> is a CUDA thread block — the same “thread block” from the shared-memory definition. The scheduler places one CTA on an SM. A CTA pair is two blocks that cooperate; <a href="#s7">section 7</a> is the 2-CTA MMA.</p>
+<p>A <strong>CTA</strong> is a CUDA thread block — the same “thread block” from the shared-memory definition. The scheduler places one CTA on an SM. Blackwell can also pair two CTAs so one MMA uses both SMs.</p>
 <p>Blackwell's replacement for WGMMA is <code>tcgen05.mma</code>. CUTLASS, NVIDIA's matrix-multiply library, also calls it UMMA. In the MMA equation \(D = AB + C\), \(C\) is the running result going in and \(D\) is the result after this instruction. They often occupy the same storage, so people write C/D. Where the tiles live:</p>
 <div class="htable"><table>
   <thead><tr><th></th><th>Hopper WGMMA</th><th>Blackwell tcgen05.mma</th></tr></thead>
@@ -437,15 +437,15 @@ P\ (32)+O\ (128)+S_{\text{next}}\ (64)=224
 <p><strong>What was timed?</strong> The same BF16 matrix multiply \(C = AB\), not attention. CUTLASS's Python dense-GEMM example, with TMA store and FP32 accumulation. One representative tile per mode — not an autotuned sweep. 8 warmup iterations, then the mean of 30 timed launches. Cache left warm.</p>
 <p>A 1-CTA MMA cannot use \(M = 256\). The 2-CTA path can. The comparison is that 256×128 tile against the 1-CTA tiles a single SM can issue.</p>
 <div class="bars" aria-label="4096 cubed GEMM latency">
-  <div class="barrow"><div class="name">1-CTA 128×128</div><div class="bartrack"><div class="barfill" style="width:100%;background:#e5484d;opacity:.84"></div></div><div class="val">117.7 µs</div></div>
-  <div class="barrow"><div class="name">1-CTA 128×256</div><div class="bartrack"><div class="barfill" style="width:91%;background:#f59e0b;opacity:.84"></div></div><div class="val">129.0 µs</div></div>
-  <div class="barrow"><div class="name">2-CTA 256×128</div><div class="bartrack"><div class="barfill" style="width:84%;background:#15803d;opacity:.84"></div></div><div class="val">98.5 µs</div></div>
+  <div class="barrow"><div class="name">1-CTA 128×128</div><div class="bartrack"><div class="barfill" style="width:91.3%;background:#e5484d;opacity:.84"></div></div><div class="val">117.7 µs</div></div>
+  <div class="barrow"><div class="name">1-CTA 128×256</div><div class="bartrack"><div class="barfill" style="width:100%;background:#f59e0b;opacity:.84"></div></div><div class="val">129.0 µs</div></div>
+  <div class="barrow"><div class="name">2-CTA 256×128</div><div class="bartrack"><div class="barfill" style="width:76.4%;background:#15803d;opacity:.84"></div></div><div class="val">98.5 µs</div></div>
 </div>
 <p class="caption">4096×4096×4096 BF16 on one B200. Shorter bar is faster. 2-CTA is 1.20× the 128×128 1-CTA kernel.</p>
 <ul>
   <li><strong>2-CTA is 1.20× faster</strong> than 1-CTA 128×128 on 4096³: 98.5 µs vs 117.7 µs (1396 vs 1168 TFLOP/s).</li>
-  <li><strong>Widening N is not a substitute.</strong> 1-CTA 128×256, the same output area as 256×128, was slower on this size: 129.0 µs.</li>
-  <li><strong>The ratio holds at 8192³, a bit smaller:</strong> 888.5 µs vs 1024.9 µs, or 1.15×. Widening the 1-CTA tile to 128×256 closed part of that gap (937.5 µs) and still lost to 2-CTA.</li>
+  <li><strong>For this 4096³ configuration, widening N did not replace 2-CTA.</strong> The 1-CTA 128×256 tile has the same output area as 256×128 but took 129.0 µs.</li>
+  <li><strong>The selected 2-CTA configuration also won at 8192³:</strong> 888.5 µs vs 1024.9 µs for 1-CTA 128×128, or 1.15×. The 1-CTA 128×256 configuration narrowed the gap at 937.5 µs.</li>
 </ul>
 <p>Both 1-CTA and 2-CTA kernels passed the CUTLASS reference check on 256×256×512. This is a kernel microbenchmark, not FlashAttention-4. FA4 uses the same 2-CTA MMA inside a larger pipeline; isolating TMEM, softmax, and 2-CTA from each other needs a controlled kernel comparison.</p>
 
@@ -476,7 +476,7 @@ P\ (32)+O\ (128)+S_{\text{next}}\ (64)=224
   <li><strong>TMEM is not general scratch space.</strong> Ordinary CUDA arithmetic cannot run on it. Softmax, activations, conversions, and other elementwise work still load values into registers first.</li>
   <li><strong>Low occupancy can remain.</strong> A Blackwell kernel may still fill shared memory or use many registers for non-MMA stages. TMEM removes accumulator pressure; it does not make other resources infinite.</li>
   <li><strong>2-CTA MMA is not “Hopper clusters, but faster.”</strong> Hopper clusters already enable DSMEM. Blackwell adds a tensor-core instruction whose operands live on two SMs. The CTA group size, 1 or 2, must stay fixed for TMEM and tensor-core ops in that kernel.</li>
-  <li><strong>TMEM or 2-CTA alone is not a benchmark result.</strong> FA4 combines TMEM with larger MMA tiles, staged \(P\) stores, two-CTA mode, and a redesigned softmax. The GEMM numbers in section 7 isolate 2-CTA for one CUTLASS tile pair. They are not FA4's end-to-end speedup.</li>
+  <li><strong>TMEM or 2-CTA alone is not an FA4 benchmark result.</strong> FA4 combines TMEM with larger MMA tiles, staged \(P\) stores, two-CTA mode, and a redesigned softmax. Section 7 compares complete CUTLASS kernel configurations whose CTA mode and tile shape both differ; it does not isolate one instruction's contribution or measure FA4 end to end.</li>
 </ul>
 <div class="callout green"><span class="label">Mental model</span>
 <p><strong>Ampere:</strong> threads carry the inputs and the result. <strong>Hopper:</strong> shared memory feeds an asynchronous 128-thread MMA, but threads still carry the result. Clusters exist, but the MMA stays on one SM. <strong>Blackwell:</strong> one thread dispatches the MMA, the Tensor Core keeps \(D\) in TMEM, and a CTA pair on one GPC can share that MMA so each block stages only half of \(B\).</p>
