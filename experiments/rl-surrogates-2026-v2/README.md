@@ -119,3 +119,45 @@ truncation. The cap and grader remain identical across all algorithms.
 Estimated main-queue runtime is about seven hours, bounded by the remaining
 eight-hour budget after pilots. Exact commands and code hashes are captured
 before execution; failure stops the queue for inspection.
+
+## Live monitoring
+
+`wandb_sync.py` backfills completed jobs and follows running jobs every 20
+seconds. It runs separately from training, so adding W&B does not change the
+frozen experiment or restart a trainer. Each job has a stable W&B run ID;
+dataset, surrogate, seed, model, data manifest and source hashes are recorded
+in its configuration. `--include-pilots` also imports pilots with separate
+tags, including the GSM grader failure marked as excluded learning evidence.
+
+Install `wandb==0.30.0` and `tensorboard==2.20.0` in a separate environment,
+authenticate to the intended W&B server, then run:
+
+```sh
+python wandb_sync.py --root /tmp/rl-surrogate-2026-v2 \
+  --base-url "$WANDB_BASE_URL" --entity "$WANDB_ENTITY" \
+  --project rl-surrogates-2026 --include-pilots
+```
+
+Credentials are read from `WANDB_API_KEY` or that server's `~/.netrc` entry.
+The uploader waits for credentials and retries network failures. A local
+journal supports resuming interrupted uploads. `wandb-status.json` contains
+run links and upload status; training status remains in `study-status.json`.
+
+| W&B metric group | Horizontal axis | What to inspect |
+|---|---|---|
+| `evaluation/*` | Completed optimizer updates | Held-out accuracy and truncation |
+| `train/*` | Completed optimizer updates | Gradient norm, ratio bins, clipping, KL, engine mismatch |
+| `sampling/*` | Policy updates before collecting the responses | Reward, zero-variance groups, response length, truncation |
+| `rollout/*`, `perf/*` | Native zero-based collection index | Entropy, phase times, throughput |
+| `hardware/*` | Seconds since training started | Memory, utilization and power on GPUs 3 and 7 |
+
+Original `eval/*` series retain Miles' native rollout index; use
+`evaluation/accuracy` for comparisons over optimizer updates. Collection
+records are written before training and are not treated as completed updates.
+Surrogate loss magnitudes are not directly comparable across algorithms.
+
+Completed jobs also upload a compressed artifact containing exact commands,
+raw TensorBoard events, per-response reward/evaluation records, GPU telemetry,
+console logs and source snapshots. Model checkpoints and training tensor dumps
+stay local. W&B's automatic host/GPU monitoring is disabled in the uploader;
+the logged GPU measurements come from the training queue.
