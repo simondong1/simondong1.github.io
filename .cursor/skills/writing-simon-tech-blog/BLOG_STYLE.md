@@ -32,6 +32,19 @@ contrast it with the current mechanism, and link the existing article.
 ## Writing
 
 - Use concise, serious language and short paragraphs.
+- Keep the primary reading path concise. Start with a short standfirst and at
+  most three takeaways; use descriptive headings, compact examples, and
+  comparison tables to break up technical explanations.
+- Link an earlier post for prerequisites instead of repeating its tutorial.
+  Explain each mechanism once. Combine overlapping algorithm maps and avoid
+  repeating the same result in an introduction, table, and conclusion.
+- Keep most paragraphs to one point and two or three sentences. Move full
+  derivations, per-seed tables, and audit details into labeled disclosures or
+  companion artifacts; keep limitations that change the result's meaning
+  visible beside the results. A disclosure is not a substitute for editing.
+- Before publication, review both the visible reading path and expanded
+  details. Check that each transition follows from the preceding example,
+  and that formatting makes the post scannable on a 390 px screen.
 - Lead with the outcome, then show the evidence.
 - Define conventional math symbols immediately. Avoid invented shorthand and
   dense inline algebra.
