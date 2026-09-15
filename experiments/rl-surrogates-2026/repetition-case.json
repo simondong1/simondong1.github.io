@@ -1,0 +1,16 @@
+{
+  "selection": "First incorrect example in recorded evaluation order at the GLM-5 seed-42 256-update checkpoint, inspected after observing the score drop. Illustrative only.",
+  "uid": "fbb8fa98134fd90a6cac597f6fa8afbd355650db9b73bd13b66b954f97903fff",
+  "run": "countdown-glm5-s42",
+  "updates": 256,
+  "reward": 0.0,
+  "status": "TRUNCATED",
+  "response_tokens": 1024,
+  "response_excerpt": "To find a way to combine {47, 2, 13, 98} using only +, -, *, / and parentheses to get 17:\n\nTry combinations:\n98 - ? = ? \n98 / ? = ? \n13 + ? = ? \n47 - ? = ? \n\nTry (98 + ?) / ? = ? \n(98 + ?) = ? \n(98 - ?) = ? \n\nTry (47 + ?) = ? \n(98 + 47) = 145, 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ? 145/ ? = ?",
+  "excerpt_note": "First 650 characters; the full response continued repeating to the cap.",
+  "same_task_rewards_at_256_updates": {
+    "countdown-ppo-s42": 0.0,
+    "countdown-dppo-s42": 0.0,
+    "countdown-glm5-s42": 0.0
+  }
+}

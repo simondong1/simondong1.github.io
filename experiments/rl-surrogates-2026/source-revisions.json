@@ -1,0 +1,18 @@
+{
+  "verl-project/verl": {
+    "sha": "90714c2a2b7b3d187c92cc0ef72dfc4952a3ec8f",
+    "date": "2026-09-15T02:20:19Z"
+  },
+  "NovaSky-AI/SkyRL": {
+    "sha": "58891b2f0e84240da5cc1b3b76f0b91c62b0aef9",
+    "date": "2026-09-14T22:00:33Z"
+  },
+  "radixark/miles": {
+    "sha": "2ef603a8ca44410beaad8c1dda5bf85f2a9d2533",
+    "date": "2026-09-15T03:28:41Z"
+  },
+  "Mercor-Intelligence/ApexAgents-SkyRL-Recipe": {
+    "sha": "8e7702f03b7464a36ab800a624fd911de0968a87",
+    "date": "2026-09-01T18:55:48Z"
+  }
+}

@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RL Surrogate Losses in 2026: What Changes the Gradient?</title>
+<meta name="description" content="PPO, DAPO, CISPO, GLM-5, SAPO, DPPO, and GSPO explained through the gradient each token receives, with controlled full-parameter training in Miles." />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+<link rel="canonical" href="https://simondong1.github.io/rl-surrogates-2026.html" />
+<link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
+<link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
+<meta property="og:title" content="RL Surrogate Losses in 2026: What Changes the Gradient?" />
+<meta property="og:description" content="PPO, DAPO, CISPO, GLM-5, SAPO, DPPO, and GSPO explained through the gradient each token receives, with controlled full-parameter training in Miles." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://simondong1.github.io/rl-surrogates-2026.html" />
+<meta property="og:site_name" content="Simon Dong" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image" content="https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=1" />
+<meta property="og:image:secure_url" content="https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=1" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="One policy gradient, different rules: clip the update, cap its weight, reject it, or soften it." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@dongsixiang" />
+<meta name="twitter:creator" content="@dongsixiang" />
+<meta name="twitter:title" content="RL Surrogate Losses in 2026: What Changes the Gradient?" />
+<meta name="twitter:description" content="PPO, DAPO, CISPO, GLM-5, SAPO, DPPO, and GSPO explained through the gradient each token receives, with controlled full-parameter training in Miles." />
+<meta name="twitter:image" content="https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=1" />
+<meta name="twitter:image:alt" content="One policy gradient, different rules: clip the update, cap its weight, reject it, or soften it." />
+<meta name="author" content="Simon Dong" />
+<meta name="citation_title" content="RL Surrogate Losses in 2026: What Changes the Gradient?" />
+<meta name="citation_author" content="Dong, Simon" />
+<meta name="citation_publication_date" content="2026/09/15" />
+<meta name="citation_fulltext_html_url" content="https://simondong1.github.io/rl-surrogates-2026.html" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "RL Surrogate Losses in 2026: What Changes the Gradient?",
+  "description": "PPO, DAPO, CISPO, GLM-5, SAPO, DPPO, and GSPO explained through the gradient each token receives, with controlled full-parameter training in Miles.",
+  "author": {
+    "@type": "Person",
+    "name": "Simon Dong",
+    "url": "https://x.com/dongsixiang"
+  },
+  "datePublished": "2026-09-15",
+  "dateModified": "2026-09-15",
+  "mainEntityOfPage": "https://simondong1.github.io/rl-surrogates-2026.html",
+  "image": [
+    "https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=1"
+  ],
+  "keywords": [
+    "reinforcement learning",
+    "PPO",
+    "GRPO",
+    "DAPO",
+    "CISPO",
+    "DPPO",
+    "GSPO",
+    "SAPO",
+    "Miles"
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+  MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root{
+    --bg:#fbfbfa;--surface:#fff;--ink:#1f2328;--ink-soft:#475059;--muted:#8b949e;
+    --line:#e8e8e6;--accent:#4f46e5;--accent-soft:#eef0fe;--warm:#e5484d;
+    --warm-soft:#fdecec;--cool:#0ea5e9;--cool-soft:#e7f6fe;--good:#16865c;
+    --good-soft:#e9f7f1;--amber:#d97706;--amber-soft:#fff7e8;
+    --code-bg:#0d1117;--code-ink:#e6edf3;--code-dim:#8b949e;--maxw:46rem
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:1.05rem;line-height:1.68;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:var(--accent-soft)}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem}
+  header.hero{padding:6rem 0 2.8rem;border-bottom:1px solid var(--line);margin-bottom:3.4rem}
+  .eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 1.1rem}
+  h1.title{font-weight:800;font-size:clamp(2.4rem,5.6vw,4rem);line-height:1.08;letter-spacing:-.03em;margin:0 0 1rem}
+  .title-expansion{display:block;margin-top:.35rem;font-size:clamp(1.15rem,2.4vw,1.65rem);line-height:1.2;color:var(--ink-soft);font-weight:650}
+  .subtitle{font-size:1.22rem;color:var(--ink-soft);margin:0 0 1.9rem;line-height:1.55;max-width:42rem}
+  .byline{display:flex;flex-wrap:wrap;gap:.5rem .9rem;align-items:center;font-size:.9rem;color:var(--muted)}
+  .byline .who{color:var(--ink);font-weight:600}.byline .dot{color:var(--line)}
+  h2{font-weight:700;font-size:1.7rem;letter-spacing:-.02em;line-height:1.2;margin:3.4rem 0 1rem;scroll-margin-top:1.5rem}
+  h2 .num{color:var(--accent);font-weight:700;margin-right:.45rem}
+  h3{font-weight:600;font-size:1.18rem;margin:2.15rem 0 .65rem;scroll-margin-top:1.5rem}
+  h3 .phase{display:inline-block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-right:.55rem;vertical-align:middle}
+  p{margin:1.05rem 0}.lede{font-size:1.22rem;line-height:1.62;letter-spacing:-.01em;margin:0 0 1.8rem}.lede strong{font-weight:650}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}a:hover{border-color:var(--accent)}
+  strong{font-weight:600}em{font-style:italic}ul,ol{margin:1.1rem 0;padding-left:1.3rem}li{margin:.45rem 0}
+  code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em;background:#f0f1f4;color:#cf2a6b;padding:.12em .4em;border-radius:5px;border:1px solid #e7e8ec}
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:1.3rem 1.4rem;margin:1.6rem 0;overflow-x:auto;font-size:.82rem;line-height:1.62;box-shadow:0 10px 30px -18px rgba(13,17,23,.55);border:1px solid #1c2230}
+  pre code{background:none;border:none;color:inherit;padding:0;font-size:.95rem}.cmt{color:var(--code-dim)}
+  .callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:1.1rem 1.3rem;margin:1.8rem 0;font-size:1rem;line-height:1.6}
+  .callout.note{border-left-color:var(--cool)}.callout.warn{border-left-color:var(--amber)}
+  .callout .label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--accent);display:block;margin-bottom:.35rem}
+  .callout.note .label{color:var(--cool)}.callout.warn .label{color:var(--amber)}.callout p{margin:.4rem 0}
+  .reading-list{display:grid;gap:.55rem;margin:.8rem 0 0}.reading-list a{display:block;border:1px solid var(--line);background:#fff;border-radius:10px;padding:.62rem .75rem;color:var(--ink-soft)}
+  .reading-list a:hover{color:var(--accent);border-color:#dfe2fb;background:var(--accent-soft)}
+  nav.toc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.5rem;margin:0 0 2rem}
+  nav.toc .toc-title{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:.8rem}
+  nav.toc ol{margin:0;padding:0;list-style:none;columns:2;column-gap:2rem;font-size:.93rem}
+  nav.toc li{margin:.3rem 0;break-inside:avoid}nav.toc a{display:block;color:var(--ink-soft);border:none;padding:.16rem .5rem;border-radius:6px;line-height:1.4}
+  nav.toc a:hover,nav.toc a.active{color:var(--accent);background:var(--accent-soft)}nav.toc .n{color:var(--accent);font-weight:600;margin-right:.4rem}
+  @media(min-width:1300px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 46rem)/2 - 16rem);width:14rem;max-height:calc(100vh - 7rem);overflow-y:auto;background:none;border:none;border-radius:0;padding:0;margin:0}nav.toc ol{columns:1;font-size:.82rem}}
+  .chips{display:flex;gap:.45rem;flex-wrap:wrap;margin:.8rem 0}.chip{font-size:.82rem;border:1px solid #dfe2fb;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:.28rem .65rem;font-weight:600}
+  .roadmap{display:grid;grid-template-columns:repeat(5,1fr);gap:.55rem;margin:1.6rem 0}
+  .roadmap .r{border:1px solid var(--line);border-radius:12px;background:#fff;padding:.75rem .7rem;min-width:0}
+  .roadmap .rn{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700}
+  .roadmap .rt{display:block;font-size:.9rem;font-weight:650;margin:.2rem 0}.roadmap .rs{display:block;color:var(--muted);font-size:.74rem;line-height:1.35}
+  .flows{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.7rem 0}.flow{border:1px solid var(--line);border-radius:14px;padding:1rem .9rem;background:#fff}
+  .flow h4{margin:.1rem 0 .8rem;font-size:.95rem;text-align:center}.flow .tag{display:block;text-align:center;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.7rem}
+  .node{border-radius:9px;padding:.55rem .5rem;font-family:"JetBrains Mono",monospace;font-size:.72rem;text-align:center;margin:.35rem 0;border:1px solid #e7e8ec;background:#f6f7f9;line-height:1.4}
+  .node.acc{background:var(--accent-soft);border-color:#dfe2fb;color:#3730a3}.node.cool{background:var(--cool-soft);border-color:#bfe6f7;color:#0b6a8c}.node.good{background:var(--good-soft);border-color:#bfe8d7;color:#106544}.node.warm{background:var(--warm-soft);border-color:#f3c0c2;color:#a32a2e}
+  .adown{text-align:center;color:var(--muted);font-size:.9rem;margin:.1rem 0}
+  table.ptable{width:100%;border-collapse:collapse;margin:1.3rem 0;font-size:.9rem}
+  table.ptable th,table.ptable td{text-align:left;padding:.55rem .65rem;border-bottom:1px solid var(--line);vertical-align:top}
+  table.ptable th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;white-space:nowrap}
+  table.ptable td:first-child{font-weight:600}.wrapscroll{overflow-x:auto}
+  .eqbox{border:1px solid #dfe2fb;background:var(--accent-soft);border-radius:12px;padding:1rem 1.15rem;margin:1.4rem 0;line-height:1.7;text-align:center;overflow-x:auto}
+  .step{border:1px solid var(--line);border-radius:14px;background:#fff;padding:1.15rem 1.25rem;margin:1.4rem 0}
+  .step .stitle{display:flex;align-items:baseline;gap:.6rem;margin:0 0 .55rem;flex-wrap:wrap}.step .sn{font-family:"JetBrains Mono",monospace;font-size:.78rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:.15rem .45rem}
+  .step .st{font-weight:650;font-size:1.02rem}.step p{margin:.55rem 0 0;font-size:.98rem}.step .why{margin-top:.7rem;padding-top:.7rem;border-top:1px dashed var(--line);font-size:.92rem;color:var(--ink-soft)}
+  .credit{display:grid;grid-template-columns:4.2rem repeat(4,1fr);gap:.35rem;margin:1.4rem 0;font-size:.78rem}
+  .credit>div{border:1px solid var(--line);border-radius:7px;padding:.42rem .25rem;text-align:center;background:#fff}
+  .credit .head{color:var(--muted);font-weight:700;background:#f6f7f9}.credit .row{font-weight:700;background:#f6f7f9;color:var(--ink-soft)}
+  .credit .used{background:var(--accent-soft);border-color:#dfe2fb;color:#3730a3;font-family:"JetBrains Mono",monospace}.credit .empty{border-color:transparent;background:transparent}
+  .panel{border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.2rem;margin:1.6rem 0;background:#fff;box-shadow:0 18px 42px -34px rgba(13,17,23,.35)}
+  .panel-title{font-size:1rem;font-weight:700;margin:0 0 .2rem}.panel-sub{font-size:.87rem;color:var(--muted);margin:0 0 1rem}
+  .controls{display:flex;flex-wrap:wrap;gap:1rem 1.35rem;align-items:end;margin-bottom:1rem;font-size:.88rem}
+  .controls label{display:flex;flex-direction:column;gap:.3rem;font-weight:600;color:var(--ink-soft)}.controls select,.controls input{font:inherit}.controls select{padding:.38rem .5rem;border:1px solid #d8dee4;border-radius:7px;background:#fff;color:var(--ink)}.controls input[type=range]{width:155px;accent-color:var(--accent)}
+  .readout{font-size:.94rem;line-height:1.55;background:var(--accent-soft);border:1px solid #dfe2fb;border-radius:10px;padding:.7rem .9rem;margin-top:.9rem}.readout b{color:var(--accent)}
+  .decay-bars{display:grid;gap:.5rem;margin:1rem 0}.decay-row{display:grid;grid-template-columns:3.2rem 1fr 3.8rem;gap:.65rem;align-items:center;font-size:.78rem}
+  .decay-label{font-family:"JetBrains Mono",monospace;color:var(--ink-soft)}.decay-track{height:18px;background:#f0f1f4;border-radius:999px;overflow:hidden}.decay-fill{height:100%;background:linear-gradient(90deg,var(--accent),#818cf8);border-radius:999px;min-width:1px;transition:width .16s ease}.decay-val{font-family:"JetBrains Mono",monospace;text-align:right;color:var(--muted)}
+  .mini-note{font-size:.82rem;color:var(--muted);line-height:1.5;margin:.65rem 0 0}
+  .clip-layout{display:grid;grid-template-columns:1.05fr .95fr;gap:1rem;align-items:start}.clip-plot{border:1px solid var(--line);border-radius:12px;background:#fff;padding:.4rem}
+  .clip-plot svg{display:block;width:100%;height:auto}.axis{stroke:#c9cdd2;stroke-width:1}.gridline{stroke:#ececea;stroke-width:1}.clip-band{fill:#eef0fe}.raw-line{fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:5 4}.selected-line{fill:none;stroke:var(--accent);stroke-width:3}.clip-dot{fill:var(--warm);stroke:#fff;stroke-width:2}.clip-bound{stroke:#a5b4fc;stroke-width:1.5;stroke-dasharray:3 3}.svg-label{font:11px "Inter",sans-serif;fill:#6b7280}.svg-small{font:9px "Inter",sans-serif;fill:#8b949e}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}.metric{border:1px solid var(--line);border-radius:10px;padding:.65rem .7rem}.metric span{display:block;font-size:.67rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}.metric b{display:block;font-family:"JetBrains Mono",monospace;font-size:1rem;margin-top:.16rem}.metric.active{background:var(--accent-soft);border-color:#dfe2fb}
+  .legend{display:flex;gap:1rem;flex-wrap:wrap;font-size:.79rem;color:var(--ink-soft);margin:.65rem 0}.legend span{display:inline-flex;align-items:center;gap:.38rem}.swatch{width:.85rem;height:.18rem;display:inline-block;background:var(--accent)}.swatch.raw{background:var(--muted);height:0;border-top:2px dashed var(--muted)}
+  .model-roles{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin:1.2rem 0}.role{border:1px solid var(--line);background:#fff;border-radius:11px;padding:.75rem .8rem}.role b{display:block;font-size:.92rem}.role small{display:block;color:var(--muted);line-height:1.45;margin-top:.2rem}
+  .formula-label{display:inline-block;font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;color:var(--accent);font-weight:700;margin-bottom:.25rem}
+  mjx-container[display="true"]{margin:1.35rem 0!important;overflow-x:auto;overflow-y:hidden}
+  footer{border-top:1px solid var(--line);margin-top:4rem;padding:2.5rem 0 4rem;font-size:.9rem;color:var(--muted)}footer a{color:var(--ink-soft)}
+  @media(max-width:900px){.flows,.clip-layout{grid-template-columns:1fr}.roadmap{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:640px){body{font-size:1.06rem}header.hero{padding:3.5rem 0 2rem}nav.toc ol{columns:1}h2{font-size:1.45rem}.roadmap{grid-template-columns:1fr 1fr}.model-roles,.metrics{grid-template-columns:1fr}.credit{grid-template-columns:3.5rem repeat(4,minmax(3.3rem,1fr));font-size:.68rem}.credit>div{padding:.35rem .1rem}.panel{padding:1rem .8rem}.controls{align-items:stretch}.controls input[type=range]{width:100%}.decay-row{grid-template-columns:2.8rem 1fr 3.2rem}}
+
+figure{margin:1.5rem 0;max-width:100%}figure svg,figure img{width:100%;max-width:100%;height:auto;display:block}figcaption{font-size:.83rem;color:var(--ink-soft);margin:.6rem 0}
+.table-scroll{width:100%;max-width:100%;overflow-x:auto}.table-scroll table{min-width:540px}.example{border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;background:#fff;margin:1.4rem 0}.example p:first-child{margin-top:0}.example p:last-child{margin-bottom:0}
+.formula{overflow-x:auto;padding:.4rem 0;max-width:100%}.alg-map{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1.5rem 0}.alg-map div{padding:.8rem 1rem;border:1px solid var(--line);border-radius:10px;background:#fff}.alg-map b{display:block}.alg-map small{color:var(--ink-soft);line-height:1.45;display:block;margin-top:.25rem}.sources li{font-size:.91rem;overflow-wrap:anywhere}.chart-legend{display:flex;flex-wrap:wrap;gap:.5rem 1rem;font-size:.8rem}.chart-legend span::before{content:"";display:inline-block;width:10px;height:10px;background:var(--series);border-radius:50%;margin-right:.4rem}.controls input[type=number]{width:100px;padding:.35rem;border:1px solid var(--line);border-radius:6px}.controls{align-items:center}.controls label{min-width:110px}.plot-note{font-size:.85rem;color:var(--ink-soft)}.compact-summary{background:var(--accent-soft);border:1px solid #dfe2fb;border-radius:12px;padding:1rem 1.2rem}
+@media(max-width:640px){.alg-map{grid-template-columns:1fr}h1.title{font-size:2.5rem}.example{padding:.9rem}.controls{gap:.6rem}.formula{font-size:.86rem}}
+
+.controls button{font:inherit;font-size:.8rem;padding:.5rem .7rem;border:1px solid #dfe2fb;border-radius:7px;background:var(--accent-soft);color:var(--accent);cursor:pointer}.controls button:hover{background:#dde1fc}.controls button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}#gradient-explorer .table-scroll table{min-width:400px}
+@media(max-width:640px){#gradient-plot .svg-label{font-size:13px}.controls button{font-size:.8rem}.controls label:last-child{flex:1 1 100%}}
+.table-scroll table.settings-table{min-width:0}.settings-table td:first-child{width:29%}
+@media(max-width:640px){.settings-table{font-size:.85rem}.settings-table th,.settings-table td{padding:.55rem .4rem}.settings-table td:first-child{width:31%}}
+.table-scroll table.results-table{min-width:0}.results-table td:not(:first-child){white-space:nowrap}.results-table th{white-space:normal}
+details{margin:1.4rem 0;padding:1rem 1.1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface)}summary{cursor:pointer;font-weight:600;color:var(--accent);line-height:1.5}details[open]>summary{margin-bottom:1rem}
+@media(max-width:640px){.results-table{font-size:.82rem}.results-table td,.results-table th{padding:.5rem .3rem}details{padding:.8rem}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+<p class="eyebrow">RL for LLMs · Part 2</p>
+<h1 class="title">RL Surrogate Losses in 2026<span class="title-expansion">What changes the gradient?</span></h1>
+<p class="subtitle">A common language for PPO, DAPO, CISPO, GLM-5, SAPO, DPPO, and GSPO—and a controlled training comparison in Miles.</p>
+<div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span class="dot">•</span><time datetime="2026-09-15">September 15, 2026</time><span class="dot">•</span><span>RL for language models</span></div>
+</div></header>
+<main class="wrap">
+<nav class="toc" aria-label="Table of contents"><div class="toc-title">On this page</div><ol>
+<li><a href="#foundation">1. From reward to gradient</a></li>
+<li><a href="#map">2. The algorithm map</a></li>
+<li><a href="#ppo">3. PPO and DAPO</a></li>
+<li><a href="#weights">4. CISPO and GLM-5</a></li>
+<li><a href="#dppo">5. DPPO: probability mass</a></li>
+<li><a href="#sapo">6. SAPO: a soft gate</a></li>
+<li><a href="#gspo">7. GSPO: a sequence ratio</a></li>
+<li><a href="#explorer">8. Compare the gradients</a></li>
+<li><a href="#aggregation">9. What gets equal weight?</a></li>
+<li><a href="#practice">10. Public practice in 2026</a></li>
+<li><a href="#experiments">11. Full-parameter experiments</a></li>
+<li><a href="#references">References and reproduction</a></li>
+</ol></nav>
+<p class="lede">Several modern reinforcement learning algorithms give a retained token <strong>exactly the same policy gradient</strong>. The difference is often which tokens retain that gradient, how strongly they are weighted, and whether the decision belongs to a token or a whole response.</p>
+<p>That makes the list of algorithm names less intimidating. Start with one sampled token. Ask whether its probability should rise or fall. Then inspect the multiplier on that update. This post builds that view from a small example, compares the major publicly documented families, and tests three surrogates with the same model, data, and training setup.</p>
+<p>The starting point was <a href="https://www.mercor.com/blog/training-frontier-knowledge-work-agents-a-397b-rl-training-guide-with-skyrl/">Mercor’s SkyRL training guide</a>, especially its comparison of DPPO and the GLM-5 asynchronous surrogate. Those names describe more than a generic “clip.” Their rules disagree on which updates to keep.</p>
+
+<section id="foundation"><h2><span class="num">1</span>From reward to gradient</h2>
+<p>In language-model reinforcement learning (RL), the model is a <em>policy</em>: a probability distribution over the next token, given the prompt and preceding tokens. It samples a response, a grader assigns a reward, and training adjusts the probabilities of the sampled tokens. A completed response is a <em>rollout</em>.</p>
+<p>For the detailed actor–critic version, see <a href="ppo.html">Understanding PPO for Language Models</a>. Here we need only two pieces: an <strong>advantage</strong>, which says how much better a response was than a baseline, and a <strong>surrogate objective</strong>, the differentiable expression used to update the policy from already sampled data.</p>
+<div class="example"><p><strong>One prompt, four answers.</strong> Suppose four sampled solutions receive rewards <code>[1, 0, 1, 0]</code>. Their average reward is 0.5. Subtracting this baseline gives <code>[+0.5, −0.5, +0.5, −0.5]</code>. Dividing by the population standard deviation, also 0.5, gives advantages <code>[+1, −1, +1, −1]</code>.</p><p>The two successful responses push their sampled token probabilities upward. The other two push theirs downward. This does not say that every token in a successful response caused the success; it is a coarse assignment of credit from an outcome reward.</p></div>
+<p><strong>Group Relative Policy Optimization (GRPO)</strong> obtains that baseline from several responses to the same prompt, avoiding a learned value model. Let the group contain \(G\) responses, with reward \(R_i\) for response \(i\). A common group-normalized advantage is:</p>
+<div class="formula">\[ A_i=\frac{R_i-\overline R}{\operatorname{std}(R_1,\ldots,R_G)+\epsilon}. \]</div>
+<p>Here \(\epsilon\) is a small numerical stabilizer. Different recipes use sample or population standard deviations, remove standard-deviation normalization, or whiten advantages again across a batch. These are meaningful choices. The example above uses population standard deviation for easy arithmetic.</p>
+<p>If all four rewards are identical, this group provides no relative learning signal. That explains why a small overfitting test often starts with tasks showing nonzero reward variance. It tests whether the training loop can amplify a signal that is already observable. It is not a proof of a permanent RL ceiling: exploration, partial rewards, curricula, and transfer from other tasks can change which successes become reachable. But an always-zero binary grader gives this estimator nothing useful for that group today.</p>
+<h3>The trainer still needs a forward pass</h3>
+<p>The rollout engine can save token IDs and their log probabilities. Those saved numbers are detached data. They do not contain the derivative of the probability with respect to the model’s billions of parameters.</p>
+<p>The trainer feeds each recorded response back through the model with its original prompt. It scores the recorded next token at every response position, in parallel using a causal mask, then backpropagates the surrogate. It is not generating a second response. The neural-network computation is still next-token prediction; reward determines how to weight the recorded tokens’ log probabilities, rather than providing a correct target answer at every position. Only response-token losses are normally included; prompt tokens still participate in the computation that produces those probabilities.</p>
+<p>Even a one-token answer requires the prompt-dependent derivative. If several one-token rollouts share exactly the same prompt, an implementation could share that prompt forward and score several sampled alternatives. Once responses branch, their later token probabilities depend on different prefixes.</p>
+<h3>One token, one coefficient</h3>
+<p>Fix a sampled token and its preceding context. Write \(q\) for its probability under the rollout policy and \(p=\pi_\theta(a\mid s)\) for its probability under the current trainer. Here \(a\) is the sampled token, \(s\) is the prompt plus preceding tokens, and \(\theta\) denotes the trainable parameters. Their ratio is \(r=p/q\). Hold the saved \(q\) and advantage \(A\) fixed during differentiation.</p>
+<div class="formula">\[ j_{\rm raw}=rA,\qquad \nabla_\theta j_{\rm raw}=Ar\,\nabla_\theta\log p. \]</div>
+<p>This is the local, importance-weighted policy-gradient surrogate. The ratio adjusts the contribution of an action sampled under an older policy. A token-local ratio does not fully correct every change in the distribution of visited prefixes; these practical objectives are deliberately surrogates.</p>
+<p>Throughout the post, \(j\) is <strong>maximized</strong>. Training code minimizes the loss \(-j\). We compare the coefficient \(c\) in \(\nabla_\theta j=c\,\nabla_\theta\log p\). That coefficient makes different-looking formulas directly comparable. It is not the norm of the full parameter gradient, nor a promise that the optimizer changes a probability by exactly that amount.</p>
+</section>
+
+<section id="map"><h2><span class="num">2</span>The algorithm map</h2>
+<p>“Which RL loss?” usually bundles several separate decisions. Keeping them separate prevents a loss ablation from silently becoming a new training recipe.</p>
+<div class="alg-map"><div><b>1 · Advantage</b><small>How do rewards become signed credit? A critic, a group baseline, or a leave-one-out baseline?</small></div><div><b>2 · Ratio</b><small>Which policy is the denominator? Is the ratio for one token or a normalized whole response?</small></div><div><b>3 · Gate or weight</b><small>Do we stop, cap, reject, or smoothly attenuate an update?</small></div><div><b>4 · Aggregation</b><small>Do tokens, responses, or prompt groups receive equal weight?</small></div></div>
+<p>This is the useful public landscape entering and during 2026. “Mainstream” here means prominent in public model reports, experiments, or major training libraries; it does not establish an undisclosed industry-wide market share.</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Family</th><th>Main change</th><th>Problem it targets</th></tr></thead><tbody>
+<tr><td>PPO / original GRPO</td><td>Sign-aware ratio clipping; GRPO changes advantage estimation</td><td>Repeated updates moving too far from sampled data</td></tr>
+<tr><td>DAPO</td><td>Asymmetric ratio clipping, within a broader recipe</td><td>Restricted positive updates and poor learning from long responses</td></tr>
+<tr><td>CISPO</td><td>Cap a detached importance weight</td><td>Losing useful token gradients at a hard clip boundary</td></tr>
+<tr><td>GLM-5 async</td><td>Reject token ratios outside a two-sided interval</td><td>Extreme mismatch in asynchronous agent training</td></tr>
+<tr><td>DPPO</td><td>Gate using estimated distribution divergence</td><td>Ratio thresholds treating rare and common tokens very differently</td></tr>
+<tr><td>SAPO</td><td>Smoothly attenuate token gradients</td><td>Abrupt hard-gate decisions and unstable updates</td></tr>
+<tr><td>GSPO</td><td>A length-normalized sequence ratio</td><td>Noisy token-level ratio decisions, especially in models with routed expert blocks</td></tr>
+</tbody></table></div>
+<p>These are not seven mutually exclusive end-to-end stacks. You can use a GRPO advantage with several of these surrogates. Reward shaping, reference-policy penalties, truncation handling, sample filtering, rollout concurrency, and stale-sample admission are additional choices.</p>
+</section>
+
+<section id="ppo"><h2><span class="num">3</span>PPO and DAPO: stop pushing farther</h2>
+<p>Proximal Policy Optimization (PPO) tries to prevent repeated optimization of a rollout batch from producing overly large policy changes. Its familiar clipping is <strong>directional</strong>: stop reinforcing a move that has already gone far enough in the advantage’s preferred direction.</p>
+<div class="example"><p><strong>Baseline example.</strong> A rewarded token had \(q=0.20\). The trainer now assigns \(p=0.30\), so \(r=1.5\). With \(A=+1\) and a permitted upper ratio of 1.2, PPO gives this token zero local gradient. It has already increased enough relative to this anchor.</p><p>Change only the advantage to \(A=-1\). Now its probability should decrease. PPO keeps the corrective gradient: \(c=-1.5\). Being outside the interval alone does not cause rejection.</p></div>
+<p>Let the lower and upper ratio bounds be \(l=1-\epsilon_\ell\) and \(u=1+\epsilon_h\). Clipping a number means limiting it to this interval. PPO’s token objective is:</p>
+<div class="formula">\[ j_{\rm PPO}=\min\!\left(rA,\operatorname{clip}(r,l,u)A\right). \]</div>
+<p>Away from exact boundaries, its gradient coefficient is:</p>
+<div class="formula">\[ c_{\rm PPO}=\begin{cases}0,&amp;A&gt;0\text{ and }r&gt;u,\\0,&amp;A&lt;0\text{ and }r&lt;l,\\Ar,&amp;\text{otherwise}.\end{cases} \]</div>
+<p>The <code>min</code> matters. Merely clipping \(r\) before multiplying by \(A\) would eliminate corrective gradients on both sides. Also, the clipped objective can have a nonzero scalar value even where its derivative is zero.</p>
+<h3>DAPO widens the positive side</h3>
+<p>Decoupled Clip and Dynamic Sampling Policy Optimization (DAPO) argues that a narrow upper ratio bound can suppress exploration: low-probability tokens hit that bound after a small absolute increase. Its <em>clip-higher</em> component makes the upper allowance larger than the lower allowance.</p>
+<div class="example"><p>Take \(q=0.20\), \(p=0.25\), \(r=1.25\), and \(A=+1\). Symmetric PPO with bounds \([0.8,1.2]\) stops the update. DAPO-style bounds \([0.8,1.28]\) retain \(c=1.25\). The mathematical form is the same; the upper threshold changed.</p></div>
+<p>The full DAPO recipe also includes dynamic sampling to replace uninformative groups, token-level loss aggregation, and overlong-response handling. Calling a run “DAPO” after changing only the upper clip bound reproduces that component, not the entire paper.</p>
+<p>These clipping rules influence updates; they do not enforce a hard constraint on the final policy. Other tokens share the same parameters, and optimizer momentum can move a token’s probability even when its own local contribution is gated off.</p>
+<details><summary>A common implementation variant: dual-clip PPO</summary>
+<p>Dual-clip PPO adds a bound for unusually large negative-advantage terms. It is implemented in both verl and SkyRL. Choose a constant \(\kappa&gt;1\), separate from the ordinary ratio bounds:</p>
+<div class="formula">\[ j_{\rm dual}=\begin{cases}\max(j_{\rm PPO},\kappa A),&amp;A&lt;0,\\j_{\rm PPO},&amp;A\geq0.\end{cases} \]</div>
+<p>For example, let \(q=0.1\), \(p=0.4\), \(A=-1\), and \(\kappa=3\). Ordinary PPO keeps the corrective coefficient \(-4\). Dual-clip PPO selects the constant objective value \(-3\), giving zero local gradient. This is another rejection boundary, not a detached weight capped at 3. Our experiment and explorer use ordinary PPO without this extra branch.</p>
+</details>
+</section>
+
+<section id="weights"><h2><span class="num">4</span>CISPO and GLM-5: cap versus reject</h2>
+<p>Another way to write a retained policy gradient is to multiply \(\log p\) by a <em>detached</em> weight. Define \(\operatorname{sg}(x)\) as stop-gradient: use the numerical value of \(x\), but do not differentiate through it.</p>
+<div class="formula">\[ j=\operatorname{sg}(w)A\log p
+\quad\Longrightarrow\quad c=Aw. \]</div>
+<p>Setting \(w=r\) gives the same gradient as \(rA\), although their scalar objective values differ. Without stop-gradient, differentiating \(rA\log p\) adds an unwanted extra term. This is why comparing raw loss values across these implementations is misleading.</p>
+<h3>CISPO: keep learning, bound the weight</h3>
+<p>Clipped IS-weight Policy Optimization (CISPO), introduced in MiniMax-M1, clips the importance-sampling weight rather than flattening the PPO objective. It aims to retain useful token gradients, including rare tokens associated with reflection, during repeated updates.</p>
+<div class="example"><p><strong>Same numerical bounds, different operation.</strong> Use \(l=0.5\), \(u=5\), \(r=10\), and \(A=+1\). CISPO retains a gradient coefficient of \(+5\). At \(r=0.2\), it retains \(+0.5\). These example bounds make the cap easy to compare with the rejection rule below; they are not a universal CISPO configuration.</p></div>
+<div class="formula">\[ j_{\rm CISPO}=\operatorname{sg}\!\left(\operatorname{clip}(r,l,u)\right)A\log p,
+\qquad c_{\rm CISPO}=A\operatorname{clip}(r,l,u). \]</div>
+<p>Outside the interval, the coefficient stays bounded instead of becoming zero. With a strictly positive lower bound, all valid tokens with nonzero advantage retain a local signal. The original M1 recipe also chooses its aggregation and update schedule; the surrogate alone does not explain the whole system’s performance.</p>
+<h3>GLM-5 async: reject extreme ratios</h3>
+<p>The GLM-5 report describes a <em>direct double-sided importance-sampling</em> rule for asynchronous agent training. Its denominator is the recorded rollout probability. This avoids reconstructing historical behavior models when weights can change during long trajectories.</p>
+<div class="example"><p>With the same interval \((0.5,5)\), a token at \(r=10\) receives <strong>zero</strong> gradient under the GLM-5 async rule. So does one at \(r=0.2\). At \(r=1.5\), it receives \(c=1.5A\). The rejection decision does not depend on the sign of \(A\).</p></div>
+<p>Let \(\mathbf{1}[\cdot]\) equal one when a condition is true and zero otherwise. The implemented policy-gradient form is:</p>
+<div class="formula">\[ m_{\rm GLM}=\mathbf{1}[l&lt;r&lt;u],\qquad
+j_{\rm GLM}=\operatorname{sg}(r\,m_{\rm GLM})A\log p,
+\qquad c_{\rm GLM}=Ar\,m_{\rm GLM}. \]</div>
+<p>The paper’s displayed objective leaves stop-gradient implicit; this form makes the intended detached importance weight explicit. Unlike PPO, GLM-5 can reject an update that would move the token back toward its old probability. That is deliberate: it treats an extreme ratio as a reason not to trust that token’s contribution.</p>
+<div class="callout note"><span class="label">Three separate filters</span><p>A loss mask zeroes a token’s contribution to backpropagation. A stale-sample filter decides whether a trajectory enters training. A rollout-concurrency limit controls how much work is outstanding. They operate at different points. Zeroing a loss term usually does not save the model’s forward/backward computation for that token.</p></div>
+<p>“GLM-5 loss” is also an ambiguous shorthand. The report’s synchronous reasoning section and its asynchronous agent section describe different choices. Here it always means the asynchronous token-rejection surrogate, not every stage used to train GLM-5.</p>
+</section>
+
+<section id="dppo"><h2><span class="num">5</span>DPPO: how much probability mass moved?</h2>
+<p>Divergence Proximal Policy Optimization (DPPO) challenges the ratio as the measure of a large change. Multiplying a tiny probability by ten can move less mass than multiplying a common token’s probability by 1.4.</p>
+<div class="example"><p><strong>Two rewarded tokens.</strong> First, \(q=0.001\rightarrow p=0.01\): the ratio is 10, but the absolute change is only 0.009. Second, \(q=0.50\rightarrow p=0.70\): the ratio is 1.4, but the absolute change is 0.20.</p><p>A GLM-style interval \((0.5,5)\) rejects the first and keeps the second. DPPO with a threshold of 0.15 on the absolute probability change does the opposite. They disagree about what counts as a large change.</p></div>
+<p><em>Total variation (TV)</em> measures probability mass moved between distributions. Computing a full distribution divergence at every token position would require more information than the single sampled token’s saved probability. DPPO proposes cheaper binary and top-\(K\) approximations.</p>
+<p>For the binary approximation, collapse the vocabulary into two outcomes: “the sampled token” and “everything else.” The old distribution becomes \([q,1-q]\); the current one becomes \([p,1-p]\). Their total variation is simply:</p>
+<div class="formula">\[ D_{\rm TV}^{\rm binary}
+=\tfrac12\left(|p-q|+|(1-p)-(1-q)|\right)=|p-q|. \]</div>
+<p>Binary-TV DPPO combines this magnitude with a PPO-like directional decision. Let \(\delta_+\) and \(\delta_-\) be the positive- and negative-advantage thresholds:</p>
+<div class="formula">\[ m_{\rm DPPO}=\begin{cases}0,&amp;A&gt;0\text{ and }p-q&gt;\delta_+,\\0,&amp;A&lt;0\text{ and }q-p&gt;\delta_-,\\1,&amp;\text{otherwise},\end{cases}
+\qquad j_{\rm DPPO}=\operatorname{sg}(m_{\rm DPPO})rA. \]</div>
+<p>Its retained coefficient is still \(Ar\). In the rare-token example, that means \(c=10\), not \(0.009\). Divergence changes the <strong>gate</strong>; it does not replace the importance ratio in the gradient.</p>
+<p>For the common-token example, switching to \(A=-1\) keeps \(c=-1.4\): reducing a probability that moved upward is corrective. Binary-TV is only a coarse view of divergence. It cannot see probability mass being rearranged among all the other vocabulary entries. The paper also studies binary Kullback–Leibler (KL) divergence and richer top-\(K\) alternatives, which are not interchangeable with this inexpensive variant.</p>
+<p>Library variants can combine this gate with a second operation. The pinned verl implementation additionally caps a detached importance weight, producing \(c=A\min(r,C)m_{\rm DPPO}\) for a configured cap \(C\). The pinned SkyRL path and our experiment use the uncapped \(Ar\) coefficient shown above, apart from a numerical log-ratio guard. The divergence gate and an importance-weight cap are separate choices; selecting a name alone does not specify both.</p>
+<div class="example"><p><strong>DPPO can also stop an update that PPO keeps.</strong> Take a discouraged token with \(A=-1\), \(q=0.90\), and \(p=0.74\). Its ratio is about 0.822, inside PPO’s 0.8–1.2 interval, so PPO retains \(c\approx-0.822\). But its probability fell by 0.16, beyond DPPO’s 0.15 threshold, so DPPO gates it off. The mass-based rule can be more permissive for rare tokens and more restrictive for common ones.</p></div>
+<p>The acronym here means <strong>Divergence PPO</strong>, not the “decoupled PPO” terminology used in some asynchronous RL systems.</p>
+</section>
+
+<section id="sapo"><h2><span class="num">6</span>SAPO: soften the boundary</h2>
+<p>Soft Adaptive Policy Optimization (SAPO) replaces abrupt clipping with gradual attenuation. Near the rollout policy, retain the ordinary update. As the ratio drifts, reduce its influence smoothly. Its basic component is the sigmoid \(\sigma(z)=1/(1+e^{-z})\), a smooth function between zero and one.</p>
+<div class="example"><p>Take \(r=1.5\), \(A=+1\), and temperature \(\tau=1\). PPO with upper bound 1.2 has coefficient zero. SAPO’s sigmoid input is \(\tau(r-1)=0.5\). Thus \(\sigma(0.5)\approx0.6225\), and its attenuation is \(4(0.6225)(1-0.6225)\approx0.9400\). Its gradient coefficient is \(1.5\times0.9400\approx1.4100\).</p></div>
+<p>Let \(h=\sigma(\tau(r-1))\). SAPO uses:</p>
+<div class="formula">\[ j_{\rm SAPO}=\frac{4}{\tau}hA,
+\qquad c_{\rm SAPO}=Ar\underbrace{4h(1-h)}_{\text{soft attenuation}}. \]</div>
+<p>At \(r=1\), \(h=1/2\), so attenuation is exactly one. The factor \(4/\tau\) makes this true for any chosen temperature. Larger \(\tau\) makes the gate decay more quickly. SAPO can use different temperatures for positive and negative advantages; the report motivates stronger attenuation of negative updates.</p>
+<p>The bounded quantity is the attenuation \(4h(1-h)\), not the complete coefficient \(Ar\,4h(1-h)\). And SAPO’s objective value at \(r=1\) need not equal PPO’s. Matching the gradient at that point is what matters.</p>
+<p>SAPO is still a token-level surrogate. Its paper analyzes circumstances in which token behavior aggregates coherently at sequence level, but that does not make its gate identical to GSPO’s whole-sequence decision.</p>
+</section>
+
+<section id="gspo"><h2><span class="num">7</span>GSPO: make the decision for a response</h2>
+<p>Group Sequence Policy Optimization (GSPO) changes the object being clipped. It uses a length-normalized sequence probability ratio, addressing noisy per-token ratio decisions in long responses and mixture-of-experts models, which route tokens through selected expert blocks.</p>
+<div class="example"><p><strong>A two-token response.</strong> Let its token ratios be 0.5 and 2.0, with advantage \(+1\). Their geometric mean is \(\sqrt{0.5\times2}=1\). GSPO treats the whole response as being at ratio one and keeps the sequence update.</p><p>Token-level PPO with upper bound 1.2 instead keeps the first token’s contribution and clips the second. The sequence ratio combines the first token’s decrease with the second token’s increase.</p></div>
+<p>For a response of \(L\) scored tokens, write \(r_t=p_t/q_t\). GSPO’s ratio is:</p>
+<div class="formula">\[ s=\exp\!\left(\frac1L\sum_{t=1}^{L}\log r_t\right),
+\qquad j_{\rm GSPO}=\min\!\left(sA,\operatorname{clip}(s,l,u)A\right). \]</div>
+<p>This is the geometric mean of token ratios, not the arithmetic mean and not the unnormalized product. When the response is retained, each token receives:</p>
+<div class="formula">\[ \frac{\partial j_{\rm GSPO}}{\partial\log p_t}=\frac{As}{L}. \]</div>
+<p>For the two-token example, GSPO gives coefficients \([0.5,0.5]\). Sequence-mean token PPO gives \([0.25,0]\): the retained first coefficient is \(0.5/2\). If GSPO clips a response, its common sequence decision suppresses all these local contributions.</p>
+<p>Sequence ratios concentrate differently from token ratios, so copying token-level clip thresholds into GSPO is not a calibrated comparison. The paper uses much tighter sequence-level thresholds. Our token-gradient explorer below leaves GSPO out for this reason: it needs the other tokens in the response to determine the coefficient.</p>
+</section>
+<section id="explorer"><h2><span class="num">8</span>Compare the gradients on identical inputs</h2>
+<p>This explorer plots the coefficient on \(\nabla_\theta\log p\), before aggregation or optimizer effects. Change the advantage sign and the old token probability. DPPO’s threshold moves with \(q\); a ratio-only rule cannot respond to that change.</p>
+<div class="panel" id="gradient-explorer"><p class="panel-title">Policy-gradient coefficient</p><p class="panel-sub">Same token probabilities and advantage; only the surrogate changes.</p>
+<div class="controls"><label>Advantage<select id="advantage"><option value="1">+1 · reward it</option><option value="-1">−1 · discourage it</option></select></label><label>Old probability q<input id="old-prob" type="number" min="0.00001" max="0.95" step="0.001" value="0.2"></label><label>Current ratio r<input id="ratio" type="range" min="0.02" max="5" step="0.01" value="1.5"><output id="ratio-output" for="ratio">1.50</output></label></div>
+<div class="controls"><button type="button" data-example="rare">Rare token: 0.001 → 0.01</button><button type="button" data-example="common">Common token: 0.5 → 0.7</button><button type="button" data-example="baseline">PPO example</button></div>
+<figure><svg id="gradient-plot" viewBox="0 0 680 350" role="img" aria-label="Gradient coefficients for six token-level surrogate objectives"></svg><figcaption>Illustrative parameters: PPO 0.8–1.2; DAPO 0.8–1.28; CISPO cap and GLM rejection 0.5–5; binary-TV DPPO δ = 0.15; SAPO τ = 1 for positive and 1.05 for negative advantages. These are not matched trust regions.</figcaption></figure>
+<div id="gradient-legend" class="chart-legend"></div><p id="gradient-readout" class="readout" aria-live="polite"></p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Surrogate</th><th>Coefficient c</th><th>At this token</th></tr></thead><tbody id="gradient-values"></tbody></table></div>
+</div>
+<p>At \(p=q\), every displayed family gives \(c=A\). If a run takes one tiny update from each fresh rollout batch, the gates may rarely activate. Different algorithm labels can then produce very similar training. To study the differences, measure how often each rule actually changes a nonzero-advantage contribution.</p>
+</section>
+
+<section id="aggregation"><h2><span class="num">9</span>Longer responses do not get more optimizer steps</h2>
+<p>A response of 2,000 tokens supplies more token-loss terms than one of 200 tokens. Both can belong to the same optimizer step. Their relative influence depends on how those terms are averaged.</p>
+<p><strong>Sequence mean</strong> gives each response the same outer weight. With the same group size, prompts also receive equal total weight. <strong>Prompt mean</strong> first pools all tokens within each prompt group, then gives prompts equal weight. Longer responses get more weight <em>within their group</em>. <strong>Token mean</strong> pools the whole batch, so prompts producing more tokens also receive more weight.</p>
+<div class="example"><p><strong>Fixed group size does not make sequence mean equal prompt mean.</strong> One prompt has two responses of lengths 10 and 90. Under sequence mean, each gets half of that prompt’s budget. Under prompt mean, their shares are 10% and 90%.</p><p>Now add another prompt with two 10-token responses. Prompt mean still gives each prompt half of the batch budget. Token mean gives the first prompt \(100/120\approx83.3\%\) of it. All groups still contain exactly two responses.</p></div>
+<p>Write \(j_{igt}\) for the token objective at position \(t\) in response \(g\) to prompt \(i\). There are \(B\) prompts, \(G\) responses per prompt, and \(L_{ig}\) valid response tokens. With fixed \(G\), three common reductions are:</p>
+<div class="formula">\[ J_{\rm sequence}=\frac1{BG}\sum_{i=1}^{B}\sum_{g=1}^{G}\frac{\sum_t j_{igt}}{L_{ig}}. \]</div>
+<div class="formula">\[ J_{\rm prompt}=\frac1B\sum_{i=1}^{B}\frac{\sum_g\sum_t j_{igt}}{\sum_g L_{ig}}. \]</div>
+<div class="formula">\[ J_{\rm token}=\frac{\sum_i\sum_g\sum_t j_{igt}}{\sum_i\sum_g L_{ig}}. \]</div>
+<p>A trajectory-level REINFORCE gradient naturally sums its token terms; dividing by response length is a deliberate reweighting. “Equal weight” describes the reduction coefficient, not equal realized gradient norm: advantages, token gradients, cancellation, and the optimizer still matter. Sequence mean removes a direct linear weighting by response length; it does not make every length-related learning effect disappear.</p>
+<p>There is no universal naming convention. Original GRPO’s displayed objective averages within each response. The DAPO and CISPO paper formulas pool tokens within the sampled group inside an expectation over prompts. Libraries may use “token mean” for a batch-wide reduction. Read the denominator, not just the label. Distributed microbatch normalization can introduce another discrepancy if local means are averaged without the appropriate global counts.</p>
+<p>Other familiar names often live in this layer or the advantage layer. <a href="https://arxiv.org/abs/2402.14740">RLOO</a> uses a leave-one-out reward baseline. <a href="https://arxiv.org/abs/2501.03262">REINFORCE++</a> changes baseline and normalization choices. <a href="https://arxiv.org/abs/2503.20783">Dr. GRPO</a> removes particular standard-deviation and length-normalization biases. These are useful methods to know, but listing each as a new token clipping function would obscure what actually changes.</p>
+</section>
+
+<section id="practice"><h2><span class="num">10</span>What public systems actually use</h2>
+<p>The strongest public evidence is a named model report or an inspectable implementation. It supports a narrower claim than “all top labs use X.” OpenAI’s and Anthropic’s current production gradient-surrogate details are not publicly established by the sources used here.</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Public report</th><th>Documented choice</th><th>Scope of the evidence</th></tr></thead><tbody>
+<tr><td>DeepSeekMath / GRPO</td><td>Group-relative advantages with PPO-style clipping</td><td>The public foundation for many later recipes</td></tr>
+<tr><td>DAPO</td><td>Clip-higher, dynamic sampling, token aggregation, overlong shaping</td><td>A full open reasoning-RL recipe</td></tr>
+<tr><td>MiniMax-M1</td><td>CISPO</td><td>Capped detached weights in a large reasoning model</td></tr>
+<tr><td>Qwen / GSPO</td><td>Sequence-level ratio and clipping</td><td>The GSPO report connects it to Qwen3 training</td></tr>
+<tr><td>Qwen / SAPO</td><td>Smooth token attenuation</td><td>The report describes practical use for Qwen3-VL</td></tr>
+<tr><td>GLM-5</td><td>Direct rollout-ratio rejection for asynchronous agents</td><td>Section 4.1.2; not a claim about every GLM training stage</td></tr>
+<tr><td>DPPO / Mercor</td><td>Divergence gating; Mercor tests binary-TV DPPO</td><td>An emerging method with published agent-task evidence</td></tr>
+</tbody></table></div>
+<p>Framework support is broader than any one default. These source snapshots were checked on September 15, 2026:</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Framework</th><th>Relevant source evidence</th><th>Reduction to check</th></tr></thead><tbody>
+<tr><td>verl</td><td>Registered PPO, DPPO-TV/KL, GSPO, SAPO, CISPO and other losses</td><td>Actor config defaults to <code>token-mean</code>; <code>seq-mean-token-mean</code> is a sequence-mean option</td></tr>
+<tr><td>SkyRL</td><td>PPO, GSPO, SAPO, CISPO, <code>rollout_is</code>, and DPPO in the policy-loss registry</td><td>Defaults to <code>token_mean</code>; sequence and prompt reductions are also supported</td></tr>
+<tr><td>Miles</td><td>Native PPO/GSPO loss paths, multiple advantage estimators, and a custom-loss hook used below</td><td>Default sequence mean (“sample mean” in code); <code>--calculate-per-token-loss</code> selects a different reduction</td></tr>
+</tbody></table></div>
+<p>On that evidence, excluding verl as “behind” would be misleading: it implements the families discussed here. That says nothing by itself about which framework is fastest for a particular model, rollout environment, or cluster. Framework throughput needs a systems benchmark with matched workloads.</p>
+<h3>What the Mercor comparison can tell us</h3>
+<p>Mercor’s <a href="https://github.com/Mercor-Intelligence/ApexAgents-SkyRL-Recipe/blob/8e7702f03b7464a36ab800a624fd911de0968a87/assets/full_ablation_table.md">full ablation table</a> contains token-mean arms for both surrogates without its context nudge—a reminder to wrap up as the context budget runs low. It reports reward 28.69 ± 0.80 for GLM and 29.03 ± 0.45 for DPPO, with task pass rates 13.12 ± 1.63 and 13.96 ± 0.21, respectively. Those spreads are the table’s standard deviations over three evaluation passes on 480 tasks, not training-seed uncertainty or uncertainty estimates from our experiment.</p>
+<p>The response-shape difference is revealing: DPPO has fewer tokens per turn (587.5 versus 834) but more turns (32.40 versus 21.21), and higher reported total tokens (87,124 versus 77,462). <strong>Shorter turns did not reduce the reported total token count.</strong> These numbers do not establish a wall-clock winner. They also do not establish that prompt mean beats sequence mean: that table has no sequence-mean arm.</p>
+</section>
+<section id="experiments"><h2><span class="num">11</span>Full-parameter experiments</h2>
+<p>We trained the <strong>Qwen3.5-9B language policy in Miles on two B200 GPUs</strong>, comparing PPO, binary-TV DPPO, and GLM-5 token rejection. Three surrogates × two datasets × two seeds gives <strong>12 full-parameter runs</strong>. Every run starts from the original checkpoint. Countdown receives 512 optimizer updates per arm; DeepMath receives 448.</p>
+<p>Countdown asks the model to construct an arithmetic expression using four supplied numbers. Our DeepMath subset asks for integer answers to math problems. Both have binary, inspectable graders. Scores below measure grader success within the response budget; the DeepMath integer checker does not verify the reasoning. Each dataset contributes 512 training examples and 256 separate evaluation examples; response caps are 1,024 and 2,048 tokens respectively.</p>
+<p>Only the surrogate and its stated thresholds change within a dataset/seed. GRPO advantages, sequence-mean reduction, sampling, optimizer, response budget, and update schedule stay fixed. We use four responses per prompt and no reference-policy or entropy penalty. <a href="#experiment-recipe">The full recipe is below</a>.</p>
+<p><strong>The strongest final configuration changed with the task.</strong> On Countdown, PPO averaged 59.38% grader success, DPPO 51.17%, and GLM-5 10.74%. On DeepMath, GLM-5 averaged 90.43%, while PPO and DPPO were nearly tied at 83.40% and 83.20%. These are the fixed final checkpoints, averaged across two seeds.</p>
+<p>GLM-5’s Countdown runs deteriorated in both seeds. Its stronger DeepMath endpoints came with fewer cap hits, but substantial intermediate fluctuations. The curves below show both observations; a single final score would hide much of that behavior.</p>
+
+<h3>Countdown: held-out learning curves</h3>
+<figure>
+<picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-countdown-mobile.svg"><img src="assets/rl-surrogates-2026-countdown.svg" width="720" height="450" alt="Held-out Countdown grader success from zero to 512 optimizer updates for PPO, DPPO, and GLM-5"></picture>
+<figcaption>Each dot is the mean of seeds 42 and 43 on the same 256 test tasks. Bars span the two observed seed results; they are not confidence intervals. Every preselected evaluation point is shown, including each run’s measured baseline.</figcaption></figure>
+<ul class="findings"><li><strong>Final two-seed means:</strong> PPO 59.38%; DPPO 51.17%; GLM-5 10.74%.</li>
+<li><strong>The response budget still matters.</strong> Final cap-hit rates were PPO 40.43%; DPPO 44.34%; GLM-5 90.23%. Scores measure success within the fixed budget.</li></ul>
+<div class="table-scroll"><table class="ptable results-table"><thead><tr><th>Surrogate</th><th>Seed 42</th><th>Seed 43</th><th>Mean</th></tr></thead><tbody>
+<tr><td>PPO</td><td>56.25%</td><td>62.50%</td><td>59.38%</td></tr>
+<tr><td>DPPO</td><td>54.30%</td><td>48.05%</td><td>51.17%</td></tr>
+<tr><td>GLM-5</td><td>17.19%</td><td>4.30%</td><td>10.74%</td></tr>
+</tbody></table></div>
+<p>Mean final response lengths, including truncated answers: PPO 741, DPPO 667, GLM-5 972 tokens. Across the six initial evaluations of the same starting checkpoint, grader success ranged from 48.44% to 50.39%. Across pairs of these baseline evaluations, an average of 15.94% of task rewards disagreed. Those repeats expose evaluation variability before any training takes place.</p>
+<details><summary>What the Countdown instability looked like</summary>
+<p>At the seed-42 GLM-5 checkpoint with 256 updates, held-out grader success had fallen to 10.55% and 89.06% of responses hit the cap. The first failed task in that evaluation’s recorded order produced the repeated fragment <code>145/ ? = ? 145/ ? = ? 145/ ? = ?</code> until truncation.</p>
+<p>All three methods failed this particular task at that checkpoint. The <a href="experiments/rl-surrogates-2026/repetition-case.json">labeled excerpt</a> illustrates the repetitive behavior; the full learning curves and cap-hit rates quantify the broader result. We kept the scheduled GLM run and its final checkpoint.</p>
+</details>
+
+<details><summary>Paired endpoint differences and conditional uncertainty</summary><p>Differences below are percentage points relative to PPO. The task bootstrap resamples the same 256 task IDs jointly across both seeds and both methods. Its interval conditions on these realized trained models and decoded outputs; it does not estimate training-seed or inference-runtime uncertainty.</p><div class="table-scroll"><table class="ptable results-table"><thead><tr><th>Comparison</th><th>Mean Δ</th><th>Task bootstrap 95%</th></tr></thead><tbody>
+<tr><td>DPPO − PPO</td><td>-8.20</td><td>[-12.89, -3.71]</td></tr>
+<tr><td>GLM-5 − PPO</td><td>-48.63</td><td>[-53.71, -43.55]</td></tr>
+</tbody></table></div></details>
+<h3>DeepMath: held-out learning curves</h3>
+<figure>
+<picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-deepmath-mobile.svg"><img src="assets/rl-surrogates-2026-deepmath.svg" width="720" height="450" alt="Held-out DeepMath grader success from zero to 448 optimizer updates for PPO, DPPO, and GLM-5"></picture>
+<figcaption>Each dot is the mean of seeds 42 and 43 on the same 256 test tasks. Bars span the two observed seed results; they are not confidence intervals. Every preselected evaluation point is shown, including each run’s measured baseline.</figcaption></figure>
+<ul class="findings"><li><strong>Final two-seed means:</strong> PPO 83.40%; DPPO 83.20%; GLM-5 90.43%.</li>
+<li><strong>The response budget still matters.</strong> Final cap-hit rates were PPO 11.52%; DPPO 9.38%; GLM-5 4.49%. Scores measure success within the fixed budget.</li></ul>
+<div class="table-scroll"><table class="ptable results-table"><thead><tr><th>Surrogate</th><th>Seed 42</th><th>Seed 43</th><th>Mean</th></tr></thead><tbody>
+<tr><td>PPO</td><td>82.81%</td><td>83.98%</td><td>83.40%</td></tr>
+<tr><td>DPPO</td><td>83.59%</td><td>82.81%</td><td>83.20%</td></tr>
+<tr><td>GLM-5</td><td>91.02%</td><td>89.84%</td><td>90.43%</td></tr>
+</tbody></table></div>
+<p>Mean final response lengths, including truncated answers: PPO 1134, DPPO 883, GLM-5 818 tokens. Across the six initial evaluations of the same starting checkpoint, grader success ranged from 67.97% to 73.44%. Across pairs of these baseline evaluations, an average of 11.93% of task rewards disagreed. Those repeats expose evaluation variability before any training takes place.</p>
+<details><summary>Paired endpoint differences and conditional uncertainty</summary><p>Differences below are percentage points relative to PPO. The task bootstrap resamples the same 256 task IDs jointly across both seeds and both methods. Its interval conditions on these realized trained models and decoded outputs; it does not estimate training-seed or inference-runtime uncertainty.</p><div class="table-scroll"><table class="ptable results-table"><thead><tr><th>Comparison</th><th>Mean Δ</th><th>Task bootstrap 95%</th></tr></thead><tbody>
+<tr><td>DPPO − PPO</td><td>-0.20</td><td>[-3.71, +3.12]</td></tr>
+<tr><td>GLM-5 − PPO</td><td>+7.03</td><td>[+3.71, +10.35]</td></tr>
+</tbody></table></div></details>
+<h3>What a higher reward means here</h3>
+<p>Reward can improve because the model finishes an answer within budget, not only because it learns a new mathematical technique. In a <a href="experiments/rl-surrogates-2026/grader-cases.json">three-response spot-check</a> of newly rewarded DeepMath outputs, one baseline had already derived the correct answer, 44, but hit the token cap before boxing it. The trained response completed and received reward.</p>
+<p>The same check also exposed the grader’s limits. Another response used Taylor expansions despite an instruction forbidding them. A third matched an incorrect dataset reference answer. We retain the frozen labels for every arm; the reported metric is <strong>grader success under a response budget</strong>, not independently verified reasoning correctness. These selected cases do not estimate how often either problem occurs.</p>
+<details><summary>The incorrect-reference example and how it was selected</summary>
+<p>We inspected the first three transitions from baseline reward zero to final reward one, in recorded evaluation order, for DeepMath GLM-5 seed 42. The first asked for the limit of \(\left(\frac{1}{n!}\int_0^e (\log x)^n\,dx\right)^n\). The dataset answer is 1.</p>
+<p>But the integral from 0 to 1 is \((-1)^n n!\), and the remaining integral lies between 0 and \(e-1\). Thus the quantity inside the outer power is \((-1)^n+\varepsilon_n\), with \(n\varepsilon_n\to0\). The even subsequence tends to +1 and the odd subsequence to −1, so the written limit does not exist. The rewarded response noticed this oscillation and still boxed 1. No task was removed or relabeled after inspecting these outputs.</p>
+</details>
+
+<h3>Did the different gates actually activate?</h3>
+<p>The following audit applies all three rules to <strong>the same token probabilities from the PPO training runs</strong>. This separates the immediate gating decision from the different responses that separately trained policies eventually generate. Only PPO contributes to backpropagation in these particular traces.</p>
+<div class="table-scroll"><table class="ptable results-table"><thead><tr><th>PPO-run inputs</th><th>PPO gate</th><th>DPPO gate</th><th>GLM gate</th></tr></thead><tbody>
+<tr><td>Countdown</td><td>1.51%</td><td>0.38%</td><td>0.24%</td></tr>
+<tr><td>DeepMath</td><td>0.43%</td><td>0.04%</td><td>0.02%</td></tr>
+</tbody></table></div>
+<p>Each percentage is the share of <em>sequence-normalized token weight with nonzero advantage</em> whose coefficient the rule sets to zero. It is not a raw token count or a fraction of the parameter-gradient norm. A rare token can have a large ratio and matter more than its counting weight suggests. The audit does not predict how a counterfactual training run would evolve. Once an update differs, future sampled responses and advantages can differ too; that feedback is part of this training comparison.</p>
+<p>The <a href="experiments/rl-surrogates-2026/gate-audit.csv">complete gate audit</a> also evaluates DAPO, CISPO, and SAPO on every run’s inputs. These are diagnostics, not trained-model results for those three additional surrogates. SAPO’s extremely small tail weights can round to zero in finite precision.</p>
+<details><summary>Reading the additional weight diagnostics</summary><p>For PPO, DAPO, DPPO, and SAPO, the counterfactual weight columns omit the extra zero derivative introduced when the numerical log-ratio guard activates. Those columns are not exact counterfactual gradients at the guarded extremes; the artifact notes describe this limitation. The PPO traces used in the table above did not activate that guard.</p></details>
+
+<p>Another limit on useful updates comes before clipping: when all four responses to a prompt have equal reward, their GRPO advantages vanish. Across these runs, 27.34%–62.89% of minibatch steps had zero fresh gradient. Adam’s accumulated momentum can still move weights on such a step. We keep these groups in every arm; DAPO-style dynamic replacement would be a different experiment.</p>
+<details id="experiment-recipe"><summary>Full training recipe, dataset construction, and correctness checks</summary>
+<h3>A controlled comparison in Miles</h3>
+<p>We compare <strong>PPO, binary-TV DPPO, and the GLM-5 async surrogate</strong>, each starting from the same <a href="https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a">Qwen3.5-9B checkpoint</a>. These three make a useful first ablation: they share the retained coefficient <code>A × r</code>, but disagree about when to set it to zero. We hold the advantage estimator, reduction, and training schedule fixed.</p>
+<p>This is <strong>full-parameter language-policy training on two NVIDIA B200 GPUs</strong>. All 8,953,803,264 language-policy parameters participate in the optimizer; there are no adapters or quantized trainable weights. The public checkpoint also contains vision and multi-token-prediction components unused by these text tasks. The smaller 9B model leaves room for optimizer states, activations, and resident inference copies on the two allocated GPUs.</p>
+<div class="table-scroll"><table class="ptable settings-table"><thead><tr><th>Held fixed</th><th>Setting in every surrogate arm</th></tr></thead><tbody>
+<tr><td>Training engine</td><td>Miles, with Fully Sharded Data Parallel (FSDP2) splitting model and optimizer state across two GPUs; SGLang generates responses</td></tr>
+<tr><td>Precision and optimizer</td><td>Bfloat16 (BF16) model computation; 32-bit floating-point (FP32) master weights, gradient reduction, and Adam states. AdamW learning rate 10<sup>−6</sup>, zero weight decay, gradient norm clipped to 1</td></tr>
+<tr><td>Advantage and reduction</td><td>GRPO with group sample-standard-deviation normalization; sequence mean; no reference-policy penalty or entropy bonus</td></tr>
+<tr><td>Each collection</td><td>32 prompts × 4 responses = 128 trajectories, consumed in 16 minibatches of 8 trajectories</td></tr>
+<tr><td>Countdown budget</td><td>32 collections, 512 optimizer updates, 4,096 sampled responses; two passes through 512 training tasks</td></tr>
+<tr><td>DeepMath budget</td><td>28 collections, 448 optimizer updates, 3,584 sampled responses; 1.75 passes through 512 training tasks</td></tr>
+<tr><td>Sampling and evaluation</td><td>Training temperature 1, top-p 1; greedy evaluation on 256 separate test tasks before training and every 64 updates</td></tr>
+<tr><td>Replication</td><td>Seeds 42 and 43; the same prompt order within each dataset/seed; every arm resets model and optimizer</td></tr>
+</tbody></table></div>
+<p>The only selected training change is the surrogate, including its declared thresholds: PPO ratios 0.8–1.2; DPPO probability-mass thresholds 0.15/0.15; GLM rejection ratios 0.5–5. These are <strong>not calibrated to equally strong trust regions</strong>, and we do not tune them against the test set. The comparison asks what these concrete choices do in a shared recipe, not which family could win after separate hyperparameter searches. Update and response counts match; actual generated token counts can differ because each policy may finish at a different length.</p>
+<p>Within a collection, the rollout anchor stays fixed while the trainer performs 16 updates on successive minibatches. Each response is consumed once. Later minibatches therefore see a changed trainer, which gives the gates something to respond to. After the collection, weights synchronize and fresh responses are generated. This is synchronous training; using the GLM-5 surrogate here does not reproduce its asynchronous agent system.</p>
+<p>Greedy decoding does not guarantee bit-for-bit deterministic inference. Repeated initial evaluations of the same checkpoint produced different continuations in this setup, which does not enforce deterministic inference across batches. We retain every measured baseline and report their score range alongside the trained endpoints. Matching configured seeds fixes the prompt order and seed settings; it does not guarantee identical sampled continuations across runs.</p>
+<h3>Two tasks with inspectable graders</h3>
+<p><strong>Countdown</strong> uses four-number puzzles from <a href="https://huggingface.co/datasets/Jiayi-Pan/Countdown-Tasks-3to4">Countdown-Tasks-3to4</a>. The model must use each supplied number exactly once and produce an arithmetic expression equal to the target. A restricted parser checks the expression with exact rational arithmetic. Common LaTeX arithmetic forms are accepted; model-produced code is never executed. The response cap is 1,024 tokens.</p>
+<p><strong>DeepMath</strong> uses problems with integer final answers from the first shard of <a href="https://huggingface.co/datasets/zwhe99/DeepMath-103K">DeepMath-103K</a>. The grader compares the final boxed integer with the dataset answer. The response cap is 2,048 tokens. The native chat template has <code>enable_thinking=False</code> for both tasks, while the prompts still request brief working.</p>
+<p>Both rewards are binary, with no partial credit or special truncation penalty. A missing or invalid final answer scores zero. A valid box can still earn reward if the response later hits the cap; truncation alone does not force reward to zero. DeepMath checks agreement with the reference integer, not the correctness of the derivation or compliance with requested solution methods. Reference-answer errors are inherited by this grader. Training, pilot, and test splits are deduplicated and disjoint within this study. DeepMath's integer-answer selection and single-shard restriction make this a <em>custom subset</em>, not the official dataset benchmark. No dataset solution traces are used for training.</p>
+<details><summary>Correctness checks and the grader correction</summary>
+<p>Analytic checks verify all six token surrogates against their expected derivatives. The custom PPO implementation matches Miles' native PPO loss and gradients on 1,000 randomized cases. Full-parameter pilots check forward/backward execution, mixed-reward groups, and weight synchronization before the matched study.</p>
+<p>All surrogates share a numerical guard that clamps log ratios to [−20,20] before exponentiation. The exported records report its activation. For GLM, both guarded extremes are already outside the accepted ratio interval of 0.5–5, so these tokens already have zero contribution. Additional analytic checks confirm that case.</p>
+<p>A pilot response exposed a valid Countdown solution written with a LaTeX fraction that the original ASCII-only grader rejected. We extended the restricted parser, added valid/invalid cases, and restarted the matched study from the original checkpoint. The interrupted attempt is excluded. The correction came from inspecting pilot responses, not from comparing algorithm scores. Training code hashes were frozen for the restarted queue.</p>
+<p>Measured DeepMath throughput left little margin before the eight-hour allocation deadline. We therefore shortened every DeepMath arm to 28 collections and restarted its initial timing attempt from the original checkpoint. Countdown retains 32 collections. The interrupted timing attempt is excluded; the change used runtime measurements, not algorithm scores. The complete configuration, exact source revisions, data hashes, and the protocol are in the <a href="https://github.com/simondong1/simondong1.github.io/tree/main/experiments/rl-surrogates-2026">companion experiment directory</a>.</p>
+</details>
+
+</details>
+<h3>Runtime, memory, and implementation checks</h3>
+<p>The study queue spanned 6.91 hours on the two allocated GPUs, including the interrupted timing attempt and restarts. Individual runs took 32.4–35.5 minutes, including initialization, compilation, generation, evaluation, and checkpoint saving. These timings do not isolate loss-kernel speed: every arm computes the same six-rule diagnostics, and run order and shared compilation caches also affect elapsed time. The maximum GPU memory usage observed by the five-second sampler was 153.4 GiB on one device.</p>
+<p>Every final checkpoint passed the full-parameter audit: 32-bit Adam state covers all <strong>8,953,803,264 language-policy parameters</strong>, with weight changes in all 32 decoder layers and no adapter parameters. Before minibatch updates, the response-averaged mean absolute trainer/inference log-probability difference was 0.0047–0.0124 natural-log units across run means. Per-run 99.9th-percentile absolute differences were 0.155–0.250; the largest individual difference was 14.491. These tail statistics are computed over tokens, while the means average responses equally. This same-weight check is separate from policy drift during training.</p>
+<p>Small means do not establish numerical equivalence. In the failed Countdown GLM-5 seed-43 run, 6 of 4,039,764 scored token positions differed by more than 5 natural-log units, with a maximum of 14.491. Those large outliers appeared after 320 updates, when the score had already fallen. Their cause remains unresolved, and the exported records include the full tail audit.</p>
+<p>The public artifacts include <a href="experiments/rl-surrogates-2026/endpoints.csv">per-seed endpoints</a>, <a href="experiments/rl-surrogates-2026/summary.json">summaries</a>, and <a href="experiments/rl-surrogates-2026/results.json.gz">compressed measured records</a>, alongside the <a href="https://github.com/simondong1/simondong1.github.io/tree/main/experiments/rl-surrogates-2026">source and reproduction instructions</a>. Full checkpoints and complete response dumps are retained locally; the public artifacts include a few labeled diagnostic excerpts.</p>
+<h3>What this study supports</h3>
+<p>This is a short, two-seed comparison of three concrete surrogate configurations. It does not establish an industry-wide ranking, a tuned optimum for each family, or performance on long asynchronous agent trajectories. The shared test tasks cannot be treated as 512 independent observations just because two seeds evaluated them. Disjoint study splits also do not rule out base-model pretraining exposure.</p>
+<p>For this Countdown recipe, PPO produced the highest final mean, while GLM-5’s mean fell from 49.80% initially to 10.74%. For this DeepMath subset, GLM-5 produced the highest grader success and fewer cap hits; PPO and DPPO’s endpoint means differed by only 0.20 percentage points. These conclusions apply to the stated thresholds, short response budgets, two seeds, and observed Miles/SGLang behavior. They do not identify the best possible tuning of each method.</p>
+<p>The useful comparison starts with four questions: how is the advantage computed, which policy supplies the ratio denominator, what coefficient reaches each token’s log-probability gradient, and how are those terms averaged? Keep those choices explicit, check the numerical tails, and compare complete learning curves with response lengths and cap-hit rates. A shared retained coefficient does not make two training rules interchangeable.</p>
+</section>
+<section id="references"><h2>References and reproduction</h2>
+<p>The experiment code is in <a href="https://github.com/simondong1/simondong1.github.io/tree/main/experiments/rl-surrogates-2026">experiments/rl-surrogates-2026</a>. It includes the protocol, surrogate implementations, analytic checks, reward graders, data preparation, launch commands, and measured summaries.</p>
+<ol class="sources">
+<li><a href="https://arxiv.org/abs/1707.06347">Schulman et al., Proximal Policy Optimization Algorithms</a> (2017). Clipped surrogate.</li>
+<li><a href="https://arxiv.org/abs/2402.03300">DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models</a> (2024). GRPO and its original sequence-mean objective.</li>
+<li><a href="https://arxiv.org/abs/2503.14476">DAPO: An Open-Source LLM Reinforcement Learning System at Scale</a> (2025). Clip-higher and the broader training recipe.</li>
+<li><a href="https://arxiv.org/abs/2506.13585">MiniMax-M1: Scaling Test-Time Compute Efficiently with Lightning Attention</a> (2025), §3. CISPO.</li>
+<li><a href="https://arxiv.org/abs/2507.18071">Group Sequence Policy Optimization</a> (2025). Sequence ratios and clipping.</li>
+<li><a href="https://arxiv.org/abs/2511.20347">Soft Adaptive Policy Optimization</a> (2025). Smooth token gradients and Qwen3-VL practice.</li>
+<li><a href="https://arxiv.org/abs/2602.04879">Rethinking the Trust Region in LLM Reinforcement Learning</a> (2026). DPPO; Binary and top-K divergence gates.</li>
+<li><a href="https://arxiv.org/abs/2602.15763">GLM-5: from Vibe Coding to Agentic Engineering</a> (2026), §4.1.2. Direct rollout importance ratios and token rejection.</li>
+<li><a href="https://arxiv.org/abs/2510.13786">The Art of Scaling Reinforcement Learning Compute for LLMs</a> (2025). ScaleRL; Controlled study including prompt, sequence, and token aggregation.</li>
+<li><a href="https://www.mercor.com/blog/training-frontier-knowledge-work-agents-a-397b-rl-training-guide-with-skyrl/">Mercor’s 397B SkyRL training guide</a> and <a href="https://github.com/Mercor-Intelligence/ApexAgents-SkyRL-Recipe/blob/8e7702f03b7464a36ab800a624fd911de0968a87/assets/full_ablation_table.md">pinned full ablation table</a>.</li>
+<li><a href="https://github.com/verl-project/verl/blob/90714c2a2b7b3d187c92cc0ef72dfc4952a3ec8f/verl/trainer/ppo/core_algos.py">verl policy losses</a> and <a href="https://github.com/verl-project/verl/blob/90714c2a2b7b3d187c92cc0ef72dfc4952a3ec8f/verl/trainer/config/actor/actor.yaml">actor defaults</a>, pinned September 15, 2026.</li>
+<li><a href="https://github.com/NovaSky-AI/SkyRL/blob/58891b2f0e84240da5cc1b3b76f0b91c62b0aef9/skyrl/backends/skyrl_train/utils/ppo_utils.py">SkyRL policy losses</a>, pinned September 15, 2026. Executable operations, rather than comments alone, determine the gradients.</li>
+<li><a href="https://github.com/radixark/miles/tree/2ef603a8ca44410beaad8c1dda5bf85f2a9d2533">Miles source used for training</a>.</li>
+<li><a href="https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a">Qwen3.5-9B checkpoint</a>; <a href="https://huggingface.co/datasets/Jiayi-Pan/Countdown-Tasks-3to4">Countdown-Tasks-3to4</a>; <a href="https://huggingface.co/datasets/zwhe99/DeepMath-103K">DeepMath-103K</a>. Exact data revisions and split hashes accompany the experiment.</li>
+</ol>
+<h3>How to cite this post</h3>
+<pre><code>@article{dong2026rlsurrogates,
+  title = {RL Surrogate Losses in 2026: What Changes the Gradient?},
+  author = {Dong, Simon},
+  year = {2026},
+  url = {https://simondong1.github.io/rl-surrogates-2026.html}
+}</code></pre>
+</section>
+</main><footer><div class="wrap"><a href="index.html">← All posts</a> · <a href="ppo.html">Part 1: Understanding PPO</a> · <a href="https://x.com/dongsixiang">Simon Dong</a></div></footer>
+<script>
+(() => {
+'use strict';
+const ns = 'http://www.w3.org/2000/svg';
+const colors = {PPO:'#4f46e5',DAPO:'#0ea5e9',CISPO:'#d97706','GLM-5':'#e5484d',DPPO:'#16865c',SAPO:'#a855f7'};
+const names=Object.keys(colors), plot=document.getElementById('gradient-plot');
+const prob=document.getElementById('old-prob'), ratio=document.getElementById('ratio'), adv=document.getElementById('advantage');
+function el(tag,attrs={},text=''){const n=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(text)n.textContent=text;return n;}
+function coefficient(name,r,q,a){
+ if(name==='PPO'||name==='DAPO'){const upper=name==='DAPO'?1.28:1.2;return (a>0&&r>upper)||(a<0&&r<.8)?0:a*r;}
+ if(name==='CISPO')return a*Math.max(.5,Math.min(5,r));
+ if(name==='GLM-5')return r>.5&&r<5?a*r:0;
+ if(name==='DPPO')return (a>0&&q*(r-1)>.15)||(a<0&&q*(1-r)>.15)?0:a*r;
+ const h=1/(1+Math.exp(-(a>0?1:1.05)*(r-1)));return a*r*4*h*(1-h);
+}
+function render(){
+ let q=Number(prob.value);if(!Number.isFinite(q)||q<=0||q>.95)return;
+ const a=Number(adv.value),maxR=Math.min(10,1/q);
+ ratio.max=maxR;const r=Math.min(maxR,Math.max(.02,Number(ratio.value)));ratio.value=r;
+ document.getElementById('ratio-output').value=r.toFixed(2);
+ plot.replaceChildren();
+ const mobile=plot.clientWidth<480,W=mobile?380:680,H=mobile?330:350;plot.setAttribute('viewBox',`0 0 ${W} ${H}`);
+ const left=mobile?44:56,right=W-24,top=26,bottom=H-55,maxY=Math.max(2,Math.min(10,maxR)), x=v=>left+v/maxR*(right-left), y=v=>a>0?bottom-v/maxY*(bottom-top):top-v/maxY*(bottom-top);
+ for(let k=0;k<=4;k++){const xv=k*maxR/4,yv=a*k*maxY/4;plot.append(el('line',{x1:x(xv),x2:x(xv),y1:top,y2:bottom,stroke:'#e8e8e6'}));plot.append(el('text',{x:x(xv),y:bottom+21,'text-anchor':'middle',class:'svg-label'},xv.toFixed(1)));plot.append(el('line',{x1:left,x2:right,y1:y(yv),y2:y(yv),stroke:'#e8e8e6'}));plot.append(el('text',{x:left-10,y:y(yv)+4,'text-anchor':'end',class:'svg-label'},yv.toFixed(1)));}
+ plot.append(el('line',{x1:x(1),x2:x(1),y1:top,y2:bottom,stroke:'#8b949e','stroke-dasharray':'4 4'}));
+ plot.append(el('text',{x:(left+right)/2,y:H-8,'text-anchor':'middle',class:'svg-label'},'Probability ratio (r = p/q)'));
+ plot.append(el('text',{x:left,y:12,class:'svg-label'},'Coefficient c on ∇ log p'));
+ names.forEach((name,idx)=>{
+  let d='',last=null;
+  for(let k=0;k<=1000;k++){const rv=.00001+(maxR-.00001)*k/1000,cv=coefficient(name,rv,q,a);const jump=last!==null&&Math.abs(cv-last)>.15;d+=(k===0||jump?'M':'L')+x(rv).toFixed(2)+','+y(cv).toFixed(2);last=cv;}
+  plot.append(el('path',{d,fill:'none',stroke:colors[name],'stroke-width':2.3,'stroke-dasharray':idx===1?'7 3':idx===2?'2 3':'none'}));
+  plot.append(el('circle',{cx:x(r),cy:y(coefficient(name,r,q,a)),r:4.3,fill:colors[name],stroke:'#fff','stroke-width':1.4}));
+ });
+ plot.append(el('line',{x1:x(r),x2:x(r),y1:top,y2:bottom,stroke:'#475059','stroke-width':1,'stroke-dasharray':'2 4'}));
+ document.getElementById('gradient-readout').textContent=`q = ${q.toPrecision(4)}, p = ${(q*r).toPrecision(4)}, ratio = ${r.toFixed(2)}, probability change = ${(q*(r-1)).toFixed(4)}. Advantage ${a>0?'+1':'−1'}.`;
+ const tbody=document.getElementById('gradient-values');tbody.replaceChildren();
+ names.forEach(name=>{const c=coefficient(name,r,q,a),tr=document.createElement('tr');const status=c===0?'Gated off':name==='SAPO'?'Smoothly weighted':name==='CISPO'&&(r<.5||r>5)?'Weight capped':'Retained';[name,c.toFixed(4),status].forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.append(td)});tbody.append(tr);});
+}
+const legend=document.getElementById('gradient-legend');names.forEach(name=>{const s=document.createElement('span');s.style.setProperty('--series',colors[name]);s.textContent=name;legend.append(s)});
+[prob,ratio,adv].forEach(n=>n.addEventListener('input',render));window.addEventListener('resize',render);
+document.querySelectorAll('[data-example]').forEach(b=>b.addEventListener('click',()=>{const mode=b.dataset.example;prob.value=mode==='rare'?.001:mode==='common'?.5:.2;ratio.max=10;ratio.value=mode==='rare'?10:mode==='common'?1.4:1.5;adv.value=1;render()}));render();
+const links=[...document.querySelectorAll('.toc a')];const observer=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.hash==='#'+e.target.id))}})},{rootMargin:'-10% 0px -72% 0px'});document.querySelectorAll('main section[id]').forEach(s=>observer.observe(s));
+window.surrogateCoefficient=coefficient;
+})();
+</script>
+</body></html>

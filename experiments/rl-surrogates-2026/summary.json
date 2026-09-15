@@ -1,0 +1,409 @@
+{
+  "datasets": {
+    "countdown": {
+      "optimizer_updates": 512,
+      "algorithms": {
+        "ppo": {
+          "seed_accuracy": {
+            "42": 0.5625,
+            "43": 0.625
+          },
+          "seed_baseline_accuracy": {
+            "42": 0.4921875,
+            "43": 0.50390625
+          },
+          "mean_accuracy": 0.59375,
+          "min_accuracy": 0.5625,
+          "max_accuracy": 0.625,
+          "mean_response_tokens": 741.263671875,
+          "baseline_mean_response_tokens": 824.66796875,
+          "mean_truncation_fraction": 0.404296875,
+          "baseline_mean_truncation_fraction": 0.501953125,
+          "wall_seconds": 3954.0959932804108,
+          "mean_same_weight_logprob_abs_diff": 0.005208501654010433,
+          "gate_audit_on_this_policy": {
+            "ppo": {
+              "conditional_gated_fraction": 0.01506294381907875,
+              "conditional_mean_gradient_weight": 0.9844018890517099
+            },
+            "dapo": {
+              "conditional_gated_fraction": 0.012630859936221636,
+              "conditional_mean_gradient_weight": 0.9874094693320138
+            },
+            "cispo": {
+              "conditional_gated_fraction": 0.0,
+              "conditional_mean_gradient_weight": 1.0001889175687517
+            },
+            "glm5": {
+              "conditional_gated_fraction": 0.0024266358256073936,
+              "conditional_mean_gradient_weight": 0.9988226327214922
+            },
+            "sapo": {
+              "conditional_gated_fraction": 1.4731817812259708e-06,
+              "conditional_mean_gradient_weight": 0.9973384139197213
+            },
+            "dppo": {
+              "conditional_gated_fraction": 0.003786885704279744,
+              "conditional_mean_gradient_weight": 0.9956194346291678
+            }
+          },
+          "mean_zero_variance_group_fraction": 0.57275390625,
+          "training_response_tokens": 6697656,
+          "training_seconds": 2323.4094653129578,
+          "generation_seconds": 754.1689782142639,
+          "zero_gradient_step_fraction": 0.3349609375,
+          "mean_preclip_gradient_norm": 1.2420184585498646,
+          "p95_preclip_gradient_norm": 2.6064862251281737,
+          "gradient_norm_clip_step_fraction": 0.6650390625
+        },
+        "dppo": {
+          "seed_accuracy": {
+            "42": 0.54296875,
+            "43": 0.48046875
+          },
+          "seed_baseline_accuracy": {
+            "42": 0.484375,
+            "43": 0.4921875
+          },
+          "mean_accuracy": 0.51171875,
+          "min_accuracy": 0.48046875,
+          "max_accuracy": 0.54296875,
+          "mean_response_tokens": 666.96875,
+          "baseline_mean_response_tokens": 827.10546875,
+          "mean_truncation_fraction": 0.443359375,
+          "baseline_mean_truncation_fraction": 0.51171875,
+          "wall_seconds": 3915.2938566207886,
+          "mean_same_weight_logprob_abs_diff": 0.004939273919603693,
+          "gate_audit_on_this_policy": {
+            "ppo": {
+              "conditional_gated_fraction": 0.021595869162525892,
+              "conditional_mean_gradient_weight": 0.9773723097067702
+            },
+            "dapo": {
+              "conditional_gated_fraction": 0.01843108152148126,
+              "conditional_mean_gradient_weight": 0.9812863652355616
+            },
+            "cispo": {
+              "conditional_gated_fraction": 0.0,
+              "conditional_mean_gradient_weight": 1.0003861671229903
+            },
+            "glm5": {
+              "conditional_gated_fraction": 0.005139695929789425,
+              "conditional_mean_gradient_weight": 0.9974150880718579
+            },
+            "sapo": {
+              "conditional_gated_fraction": 3.885380568136693e-06,
+              "conditional_mean_gradient_weight": 0.9950083095132218
+            },
+            "dppo": {
+              "conditional_gated_fraction": 0.007925905466096969,
+              "conditional_mean_gradient_weight": 0.9914577651863978
+            }
+          },
+          "mean_zero_variance_group_fraction": 0.59814453125,
+          "training_response_tokens": 6192661,
+          "training_seconds": 2341.2108891010284,
+          "generation_seconds": 717.7137560844421,
+          "zero_gradient_step_fraction": 0.3642578125,
+          "mean_preclip_gradient_norm": 1.2663876743172295,
+          "p95_preclip_gradient_norm": 2.8933143734931934,
+          "gradient_norm_clip_step_fraction": 0.634765625
+        },
+        "glm5": {
+          "seed_accuracy": {
+            "42": 0.171875,
+            "43": 0.04296875
+          },
+          "seed_baseline_accuracy": {
+            "42": 0.4921875,
+            "43": 0.50390625
+          },
+          "mean_accuracy": 0.107421875,
+          "min_accuracy": 0.04296875,
+          "max_accuracy": 0.171875,
+          "mean_response_tokens": 972.494140625,
+          "baseline_mean_response_tokens": 830.787109375,
+          "mean_truncation_fraction": 0.90234375,
+          "baseline_mean_truncation_fraction": 0.501953125,
+          "wall_seconds": 4014.448396205902,
+          "mean_same_weight_logprob_abs_diff": 0.010000074844128903,
+          "gate_audit_on_this_policy": {
+            "ppo": {
+              "conditional_gated_fraction": 0.044867288725995914,
+              "conditional_mean_gradient_weight": 0.9552272101140393
+            },
+            "dapo": {
+              "conditional_gated_fraction": 0.04166869004362581,
+              "conditional_mean_gradient_weight": 0.9591836906673583
+            },
+            "cispo": {
+              "conditional_gated_fraction": 0.0,
+              "conditional_mean_gradient_weight": 0.9981365704165839
+            },
+            "glm5": {
+              "conditional_gated_fraction": 0.02296572009297345,
+              "conditional_mean_gradient_weight": 0.9831304182660394
+            },
+            "sapo": {
+              "conditional_gated_fraction": 7.919208097371349e-05,
+              "conditional_mean_gradient_weight": 0.9779037504822067
+            },
+            "dppo": {
+              "conditional_gated_fraction": 0.02729531759372068,
+              "conditional_mean_gradient_weight": 0.971839588231991
+            }
+          },
+          "mean_zero_variance_group_fraction": 0.71728515625,
+          "training_response_tokens": 7228834,
+          "training_seconds": 2361.1303718090057,
+          "generation_seconds": 775.3339807987213,
+          "zero_gradient_step_fraction": 0.537109375,
+          "mean_preclip_gradient_norm": 1.379640441504307,
+          "p95_preclip_gradient_norm": 4.134332799911498,
+          "gradient_norm_clip_step_fraction": 0.462890625
+        }
+      },
+      "paired_vs_ppo": {
+        "dppo": {
+          "mean_difference": -0.08203125,
+          "seed_differences": [
+            -0.01953125,
+            -0.14453125
+          ],
+          "task_bootstrap_95": [
+            -0.12890625,
+            -0.037109375
+          ]
+        },
+        "glm5": {
+          "mean_difference": -0.486328125,
+          "seed_differences": [
+            -0.390625,
+            -0.58203125
+          ],
+          "task_bootstrap_95": [
+            -0.537109375,
+            -0.435546875
+          ]
+        }
+      },
+      "same_checkpoint_baselines": {
+        "run_accuracy": {
+          "countdown-ppo-s42": 0.4921875,
+          "countdown-dppo-s42": 0.484375,
+          "countdown-glm5-s42": 0.4921875,
+          "countdown-glm5-s43": 0.50390625,
+          "countdown-dppo-s43": 0.4921875,
+          "countdown-ppo-s43": 0.50390625
+        },
+        "mean_accuracy": 0.4947916666666667,
+        "min_accuracy": 0.484375,
+        "max_accuracy": 0.50390625,
+        "mean_pairwise_reward_disagreement": 0.159375
+      }
+    },
+    "deepmath": {
+      "optimizer_updates": 448,
+      "algorithms": {
+        "ppo": {
+          "seed_accuracy": {
+            "42": 0.828125,
+            "43": 0.83984375
+          },
+          "seed_baseline_accuracy": {
+            "42": 0.72265625,
+            "43": 0.734375
+          },
+          "mean_accuracy": 0.833984375,
+          "min_accuracy": 0.828125,
+          "max_accuracy": 0.83984375,
+          "mean_response_tokens": 1134.0703125,
+          "baseline_mean_response_tokens": 1383.95703125,
+          "mean_truncation_fraction": 0.115234375,
+          "baseline_mean_truncation_fraction": 0.25390625,
+          "wall_seconds": 4247.000600576401,
+          "mean_same_weight_logprob_abs_diff": 0.0051710113239096245,
+          "gate_audit_on_this_policy": {
+            "ppo": {
+              "conditional_gated_fraction": 0.004279593233304488,
+              "conditional_mean_gradient_weight": 0.9955143131331133
+            },
+            "dapo": {
+              "conditional_gated_fraction": 0.0030423967692507895,
+              "conditional_mean_gradient_weight": 0.9970435160781039
+            },
+            "cispo": {
+              "conditional_gated_fraction": 0.0,
+              "conditional_mean_gradient_weight": 1.0000094456702286
+            },
+            "glm5": {
+              "conditional_gated_fraction": 0.00024171065237598712,
+              "conditional_mean_gradient_weight": 0.9998711753582609
+            },
+            "sapo": {
+              "conditional_gated_fraction": 3.55005721989672e-07,
+              "conditional_mean_gradient_weight": 0.9994734292444976
+            },
+            "dppo": {
+              "conditional_gated_fraction": 0.00043042399363151673,
+              "conditional_mean_gradient_weight": 0.9995126247899626
+            }
+          },
+          "mean_zero_variance_group_fraction": 0.73046875,
+          "training_response_tokens": 9074763,
+          "training_seconds": 2108.238634824753,
+          "generation_seconds": 1120.0634093284607,
+          "zero_gradient_step_fraction": 0.5267857142857142,
+          "mean_preclip_gradient_norm": 0.7920930290461651,
+          "p95_preclip_gradient_norm": 2.2582924365997314,
+          "gradient_norm_clip_step_fraction": 0.46986607142857145
+        },
+        "dppo": {
+          "seed_accuracy": {
+            "42": 0.8359375,
+            "43": 0.828125
+          },
+          "seed_baseline_accuracy": {
+            "42": 0.7265625,
+            "43": 0.6796875
+          },
+          "mean_accuracy": 0.83203125,
+          "min_accuracy": 0.828125,
+          "max_accuracy": 0.8359375,
+          "mean_response_tokens": 882.892578125,
+          "baseline_mean_response_tokens": 1386.017578125,
+          "mean_truncation_fraction": 0.09375,
+          "baseline_mean_truncation_fraction": 0.28125,
+          "wall_seconds": 4112.569989204407,
+          "mean_same_weight_logprob_abs_diff": 0.005707451581007003,
+          "gate_audit_on_this_policy": {
+            "ppo": {
+              "conditional_gated_fraction": 0.009321805831009885,
+              "conditional_mean_gradient_weight": 0.9899130367599758
+            },
+            "dapo": {
+              "conditional_gated_fraction": 0.007168960771873692,
+              "conditional_mean_gradient_weight": 0.9925734890245759
+            },
+            "cispo": {
+              "conditional_gated_fraction": 0.0,
+              "conditional_mean_gradient_weight": 1.0001009338724929
+            },
+            "glm5": {
+              "conditional_gated_fraction": 0.0011029650620493906,
+              "conditional_mean_gradient_weight": 0.9994371832999508
+            },
+            "sapo": {
+              "conditional_gated_fraction": 5.414050362954757e-07,
+              "conditional_mean_gradient_weight": 0.9984838944620791
+            },
+            "dppo": {
+              "conditional_gated_fraction": 0.001545685052199998,
+              "conditional_mean_gradient_weight": 0.9983093738555908
+            }
+          },
+          "mean_zero_variance_group_fraction": 0.6847098214285714,
+          "training_response_tokens": 8092655,
+          "training_seconds": 2091.669673681259,
+          "generation_seconds": 1051.6973452568054,
+          "zero_gradient_step_fraction": 0.4754464285714286,
+          "mean_preclip_gradient_norm": 1.1218822114834828,
+          "p95_preclip_gradient_norm": 3.210019528865814,
+          "gradient_norm_clip_step_fraction": 0.5234375
+        },
+        "glm5": {
+          "seed_accuracy": {
+            "42": 0.91015625,
+            "43": 0.8984375
+          },
+          "seed_baseline_accuracy": {
+            "42": 0.7109375,
+            "43": 0.69921875
+          },
+          "mean_accuracy": 0.904296875,
+          "min_accuracy": 0.8984375,
+          "max_accuracy": 0.91015625,
+          "mean_response_tokens": 817.90625,
+          "baseline_mean_response_tokens": 1396.634765625,
+          "mean_truncation_fraction": 0.044921875,
+          "baseline_mean_truncation_fraction": 0.283203125,
+          "wall_seconds": 4039.041519880295,
+          "mean_same_weight_logprob_abs_diff": 0.006100507247278333,
+          "gate_audit_on_this_policy": {
+            "ppo": {
+              "conditional_gated_fraction": 0.016967352375982812,
+              "conditional_mean_gradient_weight": 0.9813355872481778
+            },
+            "dapo": {
+              "conditional_gated_fraction": 0.014125865291638619,
+              "conditional_mean_gradient_weight": 0.9848476713929728
+            },
+            "cispo": {
+              "conditional_gated_fraction": 0.0,
+              "conditional_mean_gradient_weight": 0.9996125700351636
+            },
+            "glm5": {
+              "conditional_gated_fraction": 0.00468714591273658,
+              "conditional_mean_gradient_weight": 0.996768642874325
+            },
+            "sapo": {
+              "conditional_gated_fraction": 1.085520732133478e-05,
+              "conditional_mean_gradient_weight": 0.995007819649843
+            },
+            "dppo": {
+              "conditional_gated_fraction": 0.005007959042950374,
+              "conditional_mean_gradient_weight": 0.9939488170269092
+            }
+          },
+          "mean_zero_variance_group_fraction": 0.7059151785714286,
+          "training_response_tokens": 7443446,
+          "training_seconds": 2098.711433649063,
+          "generation_seconds": 991.5665011405945,
+          "zero_gradient_step_fraction": 0.4955357142857143,
+          "mean_preclip_gradient_norm": 1.241916548527245,
+          "p95_preclip_gradient_norm": 3.3163760900497437,
+          "gradient_norm_clip_step_fraction": 0.5022321428571429
+        }
+      },
+      "paired_vs_ppo": {
+        "dppo": {
+          "mean_difference": -0.001953125,
+          "seed_differences": [
+            0.0078125,
+            -0.01171875
+          ],
+          "task_bootstrap_95": [
+            -0.037109375,
+            0.03125
+          ]
+        },
+        "glm5": {
+          "mean_difference": 0.0703125,
+          "seed_differences": [
+            0.08203125,
+            0.05859375
+          ],
+          "task_bootstrap_95": [
+            0.037109375,
+            0.103515625
+          ]
+        }
+      },
+      "same_checkpoint_baselines": {
+        "run_accuracy": {
+          "deepmath-glm5-s42": 0.7109375,
+          "deepmath-ppo-s42": 0.72265625,
+          "deepmath-dppo-s42": 0.7265625,
+          "deepmath-dppo-s43": 0.6796875,
+          "deepmath-ppo-s43": 0.734375,
+          "deepmath-glm5-s43": 0.69921875
+        },
+        "mean_accuracy": 0.7122395833333334,
+        "min_accuracy": 0.6796875,
+        "max_accuracy": 0.734375,
+        "mean_pairwise_reward_disagreement": 0.11927083333333334
+      }
+    }
+  },
+  "uncertainty": "Paired task-bootstrap intervals condition on the two realized trained models and decoded outputs; they do not measure training-seed or inference-runtime uncertainty."
+}

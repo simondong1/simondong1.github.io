@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simon Dong — Blog</title>
-  <meta name="description" content="Visual technical notes on LLM internals and GPU architecture, including CUDA Graphs, Hopper-to-Blackwell MMA, Flash Attention, Kimi Delta Attention, PPO, MLA, GQA, and RoPE. By Simon Dong, MLE @ Roblox.">
+  <meta name="description" content="Visual technical notes on LLM internals and GPU architecture, including RL surrogate losses, CUDA Graphs, Hopper-to-Blackwell MMA, Flash Attention, Kimi Delta Attention, PPO, MLA, GQA, and RoPE. By Simon Dong, MLE @ Roblox.">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <meta name="author" content="Simon Dong">
   <link rel="canonical" href="https://simondong1.github.io/">
@@ -53,6 +53,7 @@
         "name": "Simon Dong Blog",
         "author": { "@id": "https://simondong1.github.io/#person" },
         "blogPost": [
+          {"@type": "BlogPosting", "headline": "RL Surrogate Losses in 2026: What Changes the Gradient?", "url": "https://simondong1.github.io/rl-surrogates-2026.html", "datePublished": "2026-09-15"},
           {
             "@type": "BlogPosting",
             "headline": "How CUDA Graphs Speed Up Decode — and By How Much",
@@ -146,6 +147,12 @@
     </nav>
 
     <h2 class="section-title">Blog</h2>
+    <a class="post" href="https://simondong1.github.io/rl-surrogates-2026.html">
+      <p class="meta">September 2026 · Reinforcement Learning · Part 2</p>
+      <h2>RL Surrogate Losses in 2026: What Changes the Gradient?</h2>
+      <p>How PPO, DPPO, GLM-5, and related methods change each token’s gradient, with worked examples, an interactive comparison, and full-parameter Miles experiments.</p>
+    </a>
+
     <a class="post" href="https://simondong1.github.io/cuda-graphs.html">
       <p class="meta">September 2026 · Serving · CUDA Graphs</p>
       <h2>How CUDA Graphs Speed Up Decode — and By How Much</h2>

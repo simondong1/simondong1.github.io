@@ -1,0 +1,45 @@
+{
+  "seed": 20260914,
+  "splits": {
+    "countdown_pilot": {
+      "count": 64,
+      "sha256": "fcb7c7ffb929be3f1426faf8fa0549f92664dd2a1c8c0cac60505eb71ddf4548"
+    },
+    "countdown_test": {
+      "count": 256,
+      "sha256": "26d2487babaca2a7b1460e72de68c6fcae4c506cec55f740ed40e1c968276e10"
+    },
+    "countdown_train": {
+      "count": 512,
+      "sha256": "290f1b20e0388f6208980ed270796a8887c362f0ccb76d1367848b945a269d0b"
+    },
+    "deepmath_pilot": {
+      "count": 64,
+      "sha256": "a4ab704533b998c8224f0d02007e449f10bc7816cd3a4d2080f00a82df3addaa"
+    },
+    "deepmath_test": {
+      "count": 256,
+      "sha256": "18c7c4233c229687dad864af3de2e7e06ce942c9967c8f609372d59f288595dc"
+    },
+    "deepmath_train": {
+      "count": 512,
+      "sha256": "ab9ee05dc0200be9de6e74c1f23d13e43f672bfb85f59aa82c89d0be377a6299"
+    }
+  },
+  "sources": {
+    "countdown": {
+      "repo": "Jiayi-Pan/Countdown-Tasks-3to4",
+      "revision": "408f70d177020686d34a56bba5952feb45aaaee4",
+      "file": "data/train-00000-of-00001.parquet",
+      "eligible_deduplicated_rows": 249168,
+      "file_sha256": "a1b37bea0f439c858b11b908daa682e521f13f9592f1866b08650f58b730d126"
+    },
+    "deepmath": {
+      "repo": "zwhe99/DeepMath-103K",
+      "revision": "5cf055d1fe3d7a2eb19719ac020211469736ae44",
+      "file": "data/train-00000-of-00010.parquet",
+      "eligible_deduplicated_rows": 3590,
+      "file_sha256": "d6412432f30425e848a224dc641e681eb1ed51b970d52536eda7daefc01d8c8b"
+    }
+  }
+}

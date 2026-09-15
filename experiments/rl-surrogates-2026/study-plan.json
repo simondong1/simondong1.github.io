@@ -1,0 +1,109 @@
+{
+  "locked_utc": "2026-09-15T04:12:24.972915+00:00",
+  "deadline_utc": "2026-09-15T11:46:00+00:00",
+  "rollouts": 32,
+  "prompts_per_rollout": 32,
+  "samples_per_prompt": 4,
+  "global_batch_size": 8,
+  "eval_interval": 4,
+  "max_tokens": {
+    "countdown": 1024,
+    "deepmath": 2048
+  },
+  "runs": [
+    {
+      "name": "countdown-ppo-s42",
+      "dataset": "countdown",
+      "algorithm": "ppo",
+      "seed": 42,
+      "rollouts": 32
+    },
+    {
+      "name": "countdown-dppo-s42",
+      "dataset": "countdown",
+      "algorithm": "dppo",
+      "seed": 42,
+      "rollouts": 32
+    },
+    {
+      "name": "countdown-glm5-s42",
+      "dataset": "countdown",
+      "algorithm": "glm5",
+      "seed": 42,
+      "rollouts": 32
+    },
+    {
+      "name": "deepmath-glm5-s42",
+      "dataset": "deepmath",
+      "algorithm": "glm5",
+      "seed": 42,
+      "rollouts": 28
+    },
+    {
+      "name": "deepmath-ppo-s42",
+      "dataset": "deepmath",
+      "algorithm": "ppo",
+      "seed": 42,
+      "rollouts": 28
+    },
+    {
+      "name": "deepmath-dppo-s42",
+      "dataset": "deepmath",
+      "algorithm": "dppo",
+      "seed": 42,
+      "rollouts": 28
+    },
+    {
+      "name": "deepmath-dppo-s43",
+      "dataset": "deepmath",
+      "algorithm": "dppo",
+      "seed": 43,
+      "rollouts": 28
+    },
+    {
+      "name": "deepmath-ppo-s43",
+      "dataset": "deepmath",
+      "algorithm": "ppo",
+      "seed": 43,
+      "rollouts": 28
+    },
+    {
+      "name": "deepmath-glm5-s43",
+      "dataset": "deepmath",
+      "algorithm": "glm5",
+      "seed": 43,
+      "rollouts": 28
+    },
+    {
+      "name": "countdown-glm5-s43",
+      "dataset": "countdown",
+      "algorithm": "glm5",
+      "seed": 43,
+      "rollouts": 32
+    },
+    {
+      "name": "countdown-dppo-s43",
+      "dataset": "countdown",
+      "algorithm": "dppo",
+      "seed": 43,
+      "rollouts": 32
+    },
+    {
+      "name": "countdown-ppo-s43",
+      "dataset": "countdown",
+      "algorithm": "ppo",
+      "seed": 43,
+      "rollouts": 32
+    }
+  ],
+  "revised_utc": "2026-09-15T06:00:03.539352+00:00",
+  "revision_reason": "Measured DeepMath throughput left little margin before the fixed eight-hour deadline. Use 28 collections for every DeepMath arm, restarting its timing probe; keep all two-seed comparisons and Countdown controls.",
+  "rollouts_by_dataset": {
+    "countdown": 32,
+    "deepmath": 28
+  },
+  "optimizer_updates_by_dataset": {
+    "countdown": 512,
+    "deepmath": 448
+  }
+}
