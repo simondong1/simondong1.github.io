@@ -1,0 +1,51 @@
+{
+  "seed": 20260915,
+  "sources": {
+    "gsm8k": {
+      "repo": "openai/gsm8k",
+      "revision": "740312add88f781978c0658806c59bc2815b9866"
+    },
+    "dapo": {
+      "repo": "BytedTsinghua-SIA/DAPO-Math-17k",
+      "revision": "65877096c24ffa7abc4e4fa5edb95cf3413a5674",
+      "raw_rows": 1791700,
+      "unique_questions": 17188,
+      "duplicates_removed": 1774512,
+      "conflicting_questions_removed": 12
+    }
+  },
+  "splits": {
+    "gsm8k_train": {
+      "count": 7409,
+      "sha256": "ffa8d9e10cca5ee33db75b87bbfaaf8176e1c8ba20f92e68ad5380894bbec36d"
+    },
+    "gsm8k_pilot": {
+      "count": 64,
+      "sha256": "af9c8a27532095f5c1acc2e70e91d541b98b5ac253d3eaf2b72862a0c07ec546"
+    },
+    "gsm8k_test": {
+      "count": 512,
+      "sha256": "aa27f3b6ff6ad7369cd92984206f54fba09ec7436ab452aed1272a7b0f250bad"
+    },
+    "gsm8k_test_full": {
+      "count": 1319,
+      "sha256": "67f9079f7620253936fcc223a931669ef1dadc9d9e6cc2fbaf947cf793166d1d"
+    },
+    "dapo_train": {
+      "count": 16088,
+      "sha256": "92323f75745323a135c8717dd8f4813ff659d55026c91880b2cde8a7b8be95da"
+    },
+    "dapo_pilot": {
+      "count": 64,
+      "sha256": "6faef765427e7b93edbf3e93da575b4c638c1b5233cdd0c0528e181054e5e102"
+    },
+    "dapo_test": {
+      "count": 512,
+      "sha256": "73cb8e80c860bb8962141255e8a7ff343e9d4c6baaa3e26e25e4d5a0dbd000da"
+    },
+    "dapo_test_full": {
+      "count": 1024,
+      "sha256": "a036d0f5d74d8142a815fecbf3708c0c52f91b4fb68152d2bdb1dc6c1a96fc8e"
+    }
+  }
+}

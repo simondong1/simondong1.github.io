@@ -1,0 +1,8 @@
+{
+  "gsm8k": {
+    "max_prompt_tokens": 250
+  },
+  "dapo": {
+    "max_prompt_tokens": 1555
+  }
+}

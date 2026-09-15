@@ -1,0 +1,99 @@
+{
+  "created_epoch": 1789500899.4092276,
+  "wall_budget_seconds": 27625,
+  "model": "Qwen/Qwen3.5-9B",
+  "seed_count": 1,
+  "common": {
+    "prompts_per_rollout": 64,
+    "group_size": 4,
+    "global_batch_size": 16,
+    "packed_tokens": 8192,
+    "concurrency": 128,
+    "eval_interval": 4,
+    "eval_samples": 1
+  },
+  "datasets": {
+    "gsm8k": {
+      "rollouts": 16,
+      "max_tokens": 1536
+    },
+    "dapo": {
+      "rollouts": 20,
+      "max_tokens": 4096
+    }
+  },
+  "runs": [
+    {
+      "name": "gsm8k_ppo_s42",
+      "dataset": "gsm8k",
+      "algorithm": "ppo",
+      "seed": 42
+    },
+    {
+      "name": "dapo_ppo_s42",
+      "dataset": "dapo",
+      "algorithm": "ppo",
+      "seed": 42
+    },
+    {
+      "name": "gsm8k_cispo_s42",
+      "dataset": "gsm8k",
+      "algorithm": "cispo",
+      "seed": 42
+    },
+    {
+      "name": "dapo_cispo_s42",
+      "dataset": "dapo",
+      "algorithm": "cispo",
+      "seed": 42
+    },
+    {
+      "name": "gsm8k_glm5_s42",
+      "dataset": "gsm8k",
+      "algorithm": "glm5",
+      "seed": 42
+    },
+    {
+      "name": "dapo_glm5_s42",
+      "dataset": "dapo",
+      "algorithm": "glm5",
+      "seed": 42
+    },
+    {
+      "name": "gsm8k_dppo_s42",
+      "dataset": "gsm8k",
+      "algorithm": "dppo",
+      "seed": 42
+    },
+    {
+      "name": "dapo_dppo_s42",
+      "dataset": "dapo",
+      "algorithm": "dppo",
+      "seed": 42
+    },
+    {
+      "name": "gsm8k_sapo_s42",
+      "dataset": "gsm8k",
+      "algorithm": "sapo",
+      "seed": 42
+    },
+    {
+      "name": "dapo_sapo_s42",
+      "dataset": "dapo",
+      "algorithm": "sapo",
+      "seed": 42
+    },
+    {
+      "name": "gsm8k_gspo_s42",
+      "dataset": "gsm8k",
+      "algorithm": "gspo",
+      "seed": 42
+    },
+    {
+      "name": "dapo_gspo_s42",
+      "dataset": "dapo",
+      "algorithm": "gspo",
+      "seed": 42
+    }
+  ]
+}
