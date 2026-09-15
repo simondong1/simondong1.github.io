@@ -37,6 +37,9 @@ def main():
         name = 'grpo-batch-knobs-screen-time' + ('-mobile' if mobile else '')
         for extension in ['svg', 'png']:
             fig.savefig(args.assets / f'{name}.{extension}', dpi=180, facecolor='#fbfbfa')
+            if extension == 'svg':
+                path = args.assets / f'{name}.{extension}'
+                path.write_text('\n'.join(line.rstrip() for line in path.read_text().splitlines()) + '\n')
         plt.close(fig)
 
 

@@ -79,6 +79,9 @@ def curves(runs, task, selection, destination, x_key, mobile=False):
     name = f'grpo-batch-knobs-{task}-{axis}{suffix}'
     for extension in ['svg', 'png']:
         fig.savefig(destination / f'{name}.{extension}', dpi=180, facecolor='#fbfbfa')
+        if extension == 'svg':
+            path = destination / f'{name}.{extension}'
+            path.write_text('\n'.join(line.rstrip() for line in path.read_text().splitlines()) + '\n')
     plt.close(fig)
 
 
