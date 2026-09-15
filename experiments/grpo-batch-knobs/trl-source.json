@@ -1,0 +1,7 @@
+{
+  "repository": "huggingface/trl",
+  "revision": "03ad26d2c56974b2e72e57fcb7e5002b47b55ca5",
+  "path": "trl/trainer/grpo_config.py",
+  "sha256": "767d0b85e60f9f9290d497f1dbf06a8da7cea91ec7dd180dcfb9f066f41296bf",
+  "verified_utc": "2026-09-15T14:16:15.135134+00:00"
+}

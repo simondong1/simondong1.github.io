@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "configurations": 61,
+  "checks": [
+    "exact scientific and systems argument parity",
+    "flag presence and ordering"
+  ],
+  "excluded_values": [
+    "--hf-checkpoint",
+    "--ref-load",
+    "--prompt-data",
+    "--wandb-host",
+    "--wandb-team",
+    "--wandb-dir",
+    "--save",
+    "--load",
+    "evaluation file destination"
+  ],
+  "fresh_gpu_runtime_tested": false
+}

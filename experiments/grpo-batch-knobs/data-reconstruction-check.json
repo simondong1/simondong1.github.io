@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "checks": [
+    "source revisions",
+    "split row counts",
+    "all six SHA256 hashes"
+  ],
+  "source": "public/prepare_data.py"
+}

@@ -1,0 +1,11 @@
+{
+  "task": "gsm8k",
+  "id": "29cd6c85bd87ab4143da",
+  "source_revision": "740312add88f781978c0658806c59bc2815b9866",
+  "reference_answer": "10",
+  "mathematically_correct_answer": "15",
+  "split": "validation",
+  "found_via": "random.Random(1729), three newly credited validation responses from the first completed baseline",
+  "verification": "A 30-minute head start at 15 mph is 7.5 miles. Closing speed is 45-15=30 mph. Catch-up time is 7.5/30 hours = 15 minutes. The source solution instead substitutes a 20-minute head start.",
+  "effect": "Primary frozen-label results unchanged. This one item changes a 512-example validation score by at most 1/512. This spot check does not estimate label-error prevalence."
+}

@@ -1,0 +1,1484 @@
+{
+  "uncertainty": "Paired task-ID bootstrap conditional on the three trained seeds; seed spread reported separately.",
+  "time_axis": "Sum of recorded generation, trainer, and weight-sync durations. Complete job time is separate.",
+  "initial_model_test": {
+    "gsm8k": {
+      "accuracy": 0.7270659590598939,
+      "n": 1319,
+      "job_seconds": 115.26582860946655,
+      "mean_response_length": 296.0841546626232,
+      "truncation_fraction": 0.0075815011372251705
+    },
+    "countdown": {
+      "accuracy": 0.0126953125,
+      "n": 1024,
+      "job_seconds": 103.78548645973206,
+      "mean_response_length": 21.212890625,
+      "truncation_fraction": 0.001953125
+    }
+  },
+  "candidate_comparisons": {
+    "gsm8k": {
+      "candidate": "batch-256-sqrt",
+      "reference": "onpolicy-large",
+      "mean_pp": -4.346727318675764,
+      "conditional_prompt_ci95_pp": [
+        -5.635582512004043,
+        -3.057872125347485
+      ],
+      "per_seed_difference_pp": {
+        "1": -2.1986353297952994,
+        "2": 0.1516300227445034,
+        "3": -10.993176648976497
+      }
+    },
+    "countdown": {
+      "candidate": "group-4",
+      "reference": "onpolicy-large",
+      "mean_pp": -1.3346354166666667,
+      "conditional_prompt_ci95_pp": [
+        -2.865397135416666,
+        0.19531250000000008
+      ],
+      "per_seed_difference_pp": {
+        "1": -3.80859375,
+        "2": -1.46484375,
+        "3": 1.26953125
+      }
+    }
+  },
+  "tasks": {
+    "gsm8k": {
+      "onpolicy-small": {
+        "shape": {
+          "prompts": 16,
+          "group": 8,
+          "batch": 128,
+          "steps": 1
+        },
+        "lr": 3e-06,
+        "per_seed": [
+          {
+            "seed": 1,
+            "initial_accuracy": 0.841796875,
+            "final_accuracy": 0.81640625,
+            "sample_auc": 0.8436279296875,
+            "active_phase_seconds": 1090.1712384223938,
+            "job_seconds": 1426.1216659545898,
+            "output_tokens": 7524744,
+            "mean_response_length": 229.636962890625,
+            "truncation_fraction": 0.00054931640625,
+            "mixed_group_fraction": 0.386474609375,
+            "mean_training_reward": 0.821044921875,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 54.81012964248657,
+            "generation_seconds": 651.4886543750763,
+            "training_seconds": 402.11717343330383,
+            "weight_sync_seconds": 36.56541061401367,
+            "test_accuracy": 0.7399545109931767,
+            "test_mean_response_length": 281.89689158453376,
+            "test_truncation_fraction": 0.008339651250947688,
+            "test_evaluation_seconds": 111.42909240722656,
+            "targets": {
+              "0.8859375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 1090.1712384223938
+              },
+              "0.9359375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 1090.1712384223938
+              }
+            }
+          },
+          {
+            "seed": 2,
+            "initial_accuracy": 0.841796875,
+            "final_accuracy": 0.83984375,
+            "sample_auc": 0.8480224609375,
+            "active_phase_seconds": 1144.7869284152985,
+            "job_seconds": 1453.3555471897125,
+            "output_tokens": 8401564,
+            "mean_response_length": 256.3953857421875,
+            "truncation_fraction": 0.000762939453125,
+            "mixed_group_fraction": 0.372314453125,
+            "mean_training_reward": 0.83343505859375,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 54.77160596847534,
+            "generation_seconds": 693.3699097633362,
+            "training_seconds": 414.95253586769104,
+            "weight_sync_seconds": 36.46448278427124,
+            "test_accuracy": 0.7407126611068992,
+            "test_mean_response_length": 241.882486732373,
+            "test_truncation_fraction": 0.0,
+            "test_evaluation_seconds": 113.2710292339325,
+            "targets": {
+              "0.8859375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 1144.7869284152985
+              },
+              "0.9359375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 1144.7869284152985
+              }
+            }
+          },
+          {
+            "seed": 3,
+            "initial_accuracy": 0.84765625,
+            "final_accuracy": 0.8359375,
+            "sample_auc": 0.60498046875,
+            "active_phase_seconds": 1376.645516872406,
+            "job_seconds": 1722.9489269256592,
+            "output_tokens": 14708926,
+            "mean_response_length": 448.88079833984375,
+            "truncation_fraction": 0.244232177734375,
+            "mixed_group_fraction": 0.300048828125,
+            "mean_training_reward": 0.591949462890625,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 54.96060752868652,
+            "generation_seconds": 774.7277843952179,
+            "training_seconds": 565.5749464035034,
+            "weight_sync_seconds": 36.34278607368469,
+            "test_accuracy": 0.7657316148597423,
+            "test_mean_response_length": 290.00530705079603,
+            "test_truncation_fraction": 0.001516300227445034,
+            "test_evaluation_seconds": 112.31669163703918,
+            "targets": {
+              "0.8859375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 1376.645516872406
+              },
+              "0.9359375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 1376.645516872406
+              }
+            }
+          }
+        ],
+        "mean": {
+          "final_accuracy": 0.8307291666666666,
+          "test_accuracy": 0.7487995956532728,
+          "sample_auc": 0.7655436197916666,
+          "active_phase_seconds": 1203.8678945700328,
+          "job_seconds": 1534.1420466899872,
+          "mixed_group_fraction": 0.3529459635416667,
+          "mean_response_length": 311.63771565755206,
+          "output_tokens": 10211744.666666666,
+          "generation_seconds": 706.5287828445435,
+          "training_seconds": 460.88155190149945,
+          "weight_sync_seconds": 36.45755982398987,
+          "prompt_exposures": 4096.0,
+          "distinct_training_prompts": 4096.0,
+          "test_mean_response_length": 271.2615617892343,
+          "test_truncation_fraction": 0.003285317159464241
+        },
+        "seed_min_max": {
+          "final_accuracy": [
+            0.81640625,
+            0.83984375
+          ],
+          "test_accuracy": [
+            0.7399545109931767,
+            0.7657316148597423
+          ],
+          "sample_auc": [
+            0.60498046875,
+            0.8480224609375
+          ],
+          "active_phase_seconds": [
+            1090.1712384223938,
+            1376.645516872406
+          ],
+          "job_seconds": [
+            1426.1216659545898,
+            1722.9489269256592
+          ],
+          "mixed_group_fraction": [
+            0.300048828125,
+            0.386474609375
+          ],
+          "mean_response_length": [
+            229.636962890625,
+            448.88079833984375
+          ],
+          "output_tokens": [
+            7524744,
+            14708926
+          ],
+          "generation_seconds": [
+            651.4886543750763,
+            774.7277843952179
+          ],
+          "training_seconds": [
+            402.11717343330383,
+            565.5749464035034
+          ],
+          "weight_sync_seconds": [
+            36.34278607368469,
+            36.56541061401367
+          ],
+          "prompt_exposures": [
+            4096,
+            4096
+          ],
+          "distinct_training_prompts": [
+            4096,
+            4096
+          ],
+          "test_mean_response_length": [
+            241.882486732373,
+            290.00530705079603
+          ],
+          "test_truncation_fraction": [
+            0.0,
+            0.008339651250947688
+          ]
+        }
+      },
+      "onpolicy-large": {
+        "shape": {
+          "prompts": 64,
+          "group": 8,
+          "batch": 512,
+          "steps": 1
+        },
+        "lr": 3e-06,
+        "per_seed": [
+          {
+            "seed": 1,
+            "initial_accuracy": 0.849609375,
+            "final_accuracy": 0.8828125,
+            "sample_auc": 0.8756103515625,
+            "active_phase_seconds": 897.2971444129944,
+            "job_seconds": 1108.3284413814545,
+            "output_tokens": 10114455,
+            "mean_response_length": 308.6686706542969,
+            "truncation_fraction": 0.002227783203125,
+            "mixed_group_fraction": 0.408203125,
+            "mean_training_reward": 0.828887939453125,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 55.24496793746948,
+            "generation_seconds": 468.7196731567383,
+            "training_seconds": 417.1798565387726,
+            "weight_sync_seconds": 11.39761471748352,
+            "test_accuracy": 0.775587566338135,
+            "test_mean_response_length": 311.8999241849886,
+            "test_truncation_fraction": 0.003032600454890068,
+            "test_evaluation_seconds": 113.51650261878967,
+            "targets": {
+              "0.8859375": {
+                "observed": true,
+                "sample_bracket": [
+                  12288,
+                  16384
+                ],
+                "phase_seconds_bracket": [
+                  341.6688003540039,
+                  451.9632866382599
+                ],
+                "job_seconds_bracket": [
+                  471.1294684410095,
+                  594.1521928310394
+                ]
+              },
+              "0.9359375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 897.2971444129944
+              }
+            }
+          },
+          {
+            "seed": 2,
+            "initial_accuracy": 0.84765625,
+            "final_accuracy": 0.865234375,
+            "sample_auc": 0.8682861328125,
+            "active_phase_seconds": 890.8077116012573,
+            "job_seconds": 1099.0378925800323,
+            "output_tokens": 9516172,
+            "mean_response_length": 290.4105224609375,
+            "truncation_fraction": 0.001617431640625,
+            "mixed_group_fraction": 0.41845703125,
+            "mean_training_reward": 0.820343017578125,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 54.80518198013306,
+            "generation_seconds": 464.1965765953064,
+            "training_seconds": 415.2781524658203,
+            "weight_sync_seconds": 11.332982540130615,
+            "test_accuracy": 0.7733131159969674,
+            "test_mean_response_length": 312.8400303260045,
+            "test_truncation_fraction": 0.011372251705837756,
+            "test_evaluation_seconds": 112.413658618927,
+            "targets": {
+              "0.8859375": {
+                "observed": true,
+                "sample_bracket": [
+                  24576,
+                  28672
+                ],
+                "phase_seconds_bracket": [
+                  662.0691797733307,
+                  777.2537655830383
+                ],
+                "job_seconds_bracket": [
+                  826.4408547878265,
+                  954.4860217571259
+                ]
+              },
+              "0.9359375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 890.8077116012573
+              }
+            }
+          },
+          {
+            "seed": 3,
+            "initial_accuracy": 0.84765625,
+            "final_accuracy": 0.88671875,
+            "sample_auc": 0.87158203125,
+            "active_phase_seconds": 892.535092830658,
+            "job_seconds": 1102.9597346782684,
+            "output_tokens": 9704743,
+            "mean_response_length": 296.1652526855469,
+            "truncation_fraction": 0.00128173828125,
+            "mixed_group_fraction": 0.40087890625,
+            "mean_training_reward": 0.83203125,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 54.871787548065186,
+            "generation_seconds": 468.3874762058258,
+            "training_seconds": 412.81135535240173,
+            "weight_sync_seconds": 11.33626127243042,
+            "test_accuracy": 0.7892342683851402,
+            "test_mean_response_length": 293.7300985595148,
+            "test_truncation_fraction": 0.002274450341167551,
+            "test_evaluation_seconds": 107.93359565734863,
+            "targets": {
+              "0.8859375": {
+                "observed": true,
+                "sample_bracket": [
+                  20480,
+                  24576
+                ],
+                "phase_seconds_bracket": [
+                  566.6624929904938,
+                  676.4251070022583
+                ],
+                "job_seconds_bracket": [
+                  720.6552047729492,
+                  842.729983329773
+                ]
+              },
+              "0.9359375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 892.535092830658
+              }
+            }
+          }
+        ],
+        "mean": {
+          "final_accuracy": 0.8782552083333334,
+          "test_accuracy": 0.7793783169067475,
+          "sample_auc": 0.871826171875,
+          "active_phase_seconds": 893.5466496149699,
+          "job_seconds": 1103.4420228799183,
+          "mixed_group_fraction": 0.4091796875,
+          "mean_response_length": 298.41481526692706,
+          "output_tokens": 9778456.666666666,
+          "generation_seconds": 467.10124198595685,
+          "training_seconds": 415.08978811899823,
+          "weight_sync_seconds": 11.355619510014852,
+          "prompt_exposures": 4096.0,
+          "distinct_training_prompts": 4096.0,
+          "test_mean_response_length": 306.15668435683597,
+          "test_truncation_fraction": 0.005559767500631792
+        },
+        "seed_min_max": {
+          "final_accuracy": [
+            0.865234375,
+            0.88671875
+          ],
+          "test_accuracy": [
+            0.7733131159969674,
+            0.7892342683851402
+          ],
+          "sample_auc": [
+            0.8682861328125,
+            0.8756103515625
+          ],
+          "active_phase_seconds": [
+            890.8077116012573,
+            897.2971444129944
+          ],
+          "job_seconds": [
+            1099.0378925800323,
+            1108.3284413814545
+          ],
+          "mixed_group_fraction": [
+            0.40087890625,
+            0.41845703125
+          ],
+          "mean_response_length": [
+            290.4105224609375,
+            308.6686706542969
+          ],
+          "output_tokens": [
+            9516172,
+            10114455
+          ],
+          "generation_seconds": [
+            464.1965765953064,
+            468.7196731567383
+          ],
+          "training_seconds": [
+            412.81135535240173,
+            417.1798565387726
+          ],
+          "weight_sync_seconds": [
+            11.332982540130615,
+            11.39761471748352
+          ],
+          "prompt_exposures": [
+            4096,
+            4096
+          ],
+          "distinct_training_prompts": [
+            4096,
+            4096
+          ],
+          "test_mean_response_length": [
+            293.7300985595148,
+            312.8400303260045
+          ],
+          "test_truncation_fraction": [
+            0.002274450341167551,
+            0.011372251705837756
+          ]
+        },
+        "test_difference_vs_baseline": {
+          "mean_pp": 3.057872125347485,
+          "conditional_prompt_ci95_pp": [
+            1.6932019206469542,
+            4.47308567096285
+          ],
+          "per_seed_difference_pp": {
+            "1": 3.56330553449583,
+            "2": 3.2600454890068233,
+            "3": 2.350265352539803
+          }
+        }
+      },
+      "batch-256-sqrt": {
+        "shape": {
+          "prompts": 64,
+          "group": 8,
+          "batch": 256,
+          "steps": 2
+        },
+        "lr": 4.242640687119286e-06,
+        "per_seed": [
+          {
+            "seed": 1,
+            "initial_accuracy": 0.84375,
+            "final_accuracy": 0.84375,
+            "sample_auc": 0.85595703125,
+            "active_phase_seconds": 868.399222612381,
+            "job_seconds": 1072.522117614746,
+            "output_tokens": 8814684,
+            "mean_response_length": 269.0028076171875,
+            "truncation_fraction": 0.00067138671875,
+            "mixed_group_fraction": 0.390625,
+            "mean_training_reward": 0.83026123046875,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 54.88644218444824,
+            "generation_seconds": 458.4653515815735,
+            "training_seconds": 398.67485070228577,
+            "weight_sync_seconds": 11.259020328521729,
+            "test_accuracy": 0.7536012130401819,
+            "test_mean_response_length": 243.03639120545867,
+            "test_truncation_fraction": 0.004548900682335102,
+            "test_evaluation_seconds": 109.47792077064514,
+            "targets": {
+              "0.8859375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 868.399222612381
+              },
+              "0.9359375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 868.399222612381
+              }
+            }
+          },
+          {
+            "seed": 2,
+            "initial_accuracy": 0.83984375,
+            "final_accuracy": 0.84765625,
+            "sample_auc": 0.857421875,
+            "active_phase_seconds": 853.4391145706177,
+            "job_seconds": 1063.87371134758,
+            "output_tokens": 8432363,
+            "mean_response_length": 257.3352966308594,
+            "truncation_fraction": 0.0009765625,
+            "mixed_group_fraction": 0.431640625,
+            "mean_training_reward": 0.80816650390625,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 54.75575542449951,
+            "generation_seconds": 451.14838767051697,
+            "training_seconds": 390.77880597114563,
+            "weight_sync_seconds": 11.511920928955078,
+            "test_accuracy": 0.7748294162244125,
+            "test_mean_response_length": 281.068233510235,
+            "test_truncation_fraction": 0.0075815011372251705,
+            "test_evaluation_seconds": 109.25576376914978,
+            "targets": {
+              "0.8859375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 853.4391145706177
+              },
+              "0.9359375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 853.4391145706177
+              }
+            }
+          },
+          {
+            "seed": 3,
+            "initial_accuracy": 0.857421875,
+            "final_accuracy": 0.806640625,
+            "sample_auc": 0.834228515625,
+            "active_phase_seconds": 872.2616264820099,
+            "job_seconds": 1081.4339606761932,
+            "output_tokens": 8765011,
+            "mean_response_length": 267.4869079589844,
+            "truncation_fraction": 0.000946044921875,
+            "mixed_group_fraction": 0.435791015625,
+            "mean_training_reward": 0.80047607421875,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 54.78175735473633,
+            "generation_seconds": 458.3492474555969,
+            "training_seconds": 402.4420669078827,
+            "weight_sync_seconds": 11.470312118530273,
+            "test_accuracy": 0.6793025018953753,
+            "test_mean_response_length": 186.696739954511,
+            "test_truncation_fraction": 0.0,
+            "test_evaluation_seconds": 110.78807854652405,
+            "targets": {
+              "0.8859375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 872.2616264820099
+              },
+              "0.9359375": {
+                "observed": false,
+                "last_samples": 32768,
+                "last_phase_seconds": 872.2616264820099
+              }
+            }
+          }
+        ],
+        "mean": {
+          "final_accuracy": 0.8326822916666666,
+          "test_accuracy": 0.7359110437199899,
+          "sample_auc": 0.8492024739583334,
+          "active_phase_seconds": 864.6999878883362,
+          "job_seconds": 1072.6099298795064,
+          "mixed_group_fraction": 0.4193522135416667,
+          "mean_response_length": 264.60833740234375,
+          "output_tokens": 8670686.0,
+          "generation_seconds": 455.9876622358958,
+          "training_seconds": 397.2985745271047,
+          "weight_sync_seconds": 11.413751125335693,
+          "prompt_exposures": 4096.0,
+          "distinct_training_prompts": 4096.0,
+          "test_mean_response_length": 236.9337882234016,
+          "test_truncation_fraction": 0.004043467273186757
+        },
+        "seed_min_max": {
+          "final_accuracy": [
+            0.806640625,
+            0.84765625
+          ],
+          "test_accuracy": [
+            0.6793025018953753,
+            0.7748294162244125
+          ],
+          "sample_auc": [
+            0.834228515625,
+            0.857421875
+          ],
+          "active_phase_seconds": [
+            853.4391145706177,
+            872.2616264820099
+          ],
+          "job_seconds": [
+            1063.87371134758,
+            1081.4339606761932
+          ],
+          "mixed_group_fraction": [
+            0.390625,
+            0.435791015625
+          ],
+          "mean_response_length": [
+            257.3352966308594,
+            269.0028076171875
+          ],
+          "output_tokens": [
+            8432363,
+            8814684
+          ],
+          "generation_seconds": [
+            451.14838767051697,
+            458.4653515815735
+          ],
+          "training_seconds": [
+            390.77880597114563,
+            402.4420669078827
+          ],
+          "weight_sync_seconds": [
+            11.259020328521729,
+            11.511920928955078
+          ],
+          "prompt_exposures": [
+            4096,
+            4096
+          ],
+          "distinct_training_prompts": [
+            4096,
+            4096
+          ],
+          "test_mean_response_length": [
+            186.696739954511,
+            281.068233510235
+          ],
+          "test_truncation_fraction": [
+            0.0,
+            0.0075815011372251705
+          ]
+        },
+        "test_difference_vs_baseline": {
+          "mean_pp": -1.288855193328279,
+          "conditional_prompt_ci95_pp": [
+            -2.602982057113975,
+            0.0
+          ],
+          "per_seed_difference_pp": {
+            "1": 1.3646702047005308,
+            "2": 3.411675511751327,
+            "3": -8.642911296436695
+          }
+        }
+      }
+    },
+    "countdown": {
+      "onpolicy-small": {
+        "shape": {
+          "prompts": 16,
+          "group": 8,
+          "batch": 128,
+          "steps": 1
+        },
+        "lr": 3e-06,
+        "per_seed": [
+          {
+            "seed": 1,
+            "initial_accuracy": 0.013671875,
+            "final_accuracy": 0.0,
+            "sample_auc": 0.0792236328125,
+            "active_phase_seconds": 1268.2392506599426,
+            "job_seconds": 1589.1387372016907,
+            "output_tokens": 10274990,
+            "mean_response_length": 313.56781005859375,
+            "truncation_fraction": 0.07635498046875,
+            "mixed_group_fraction": 0.1181640625,
+            "mean_training_reward": 0.069091796875,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 55.4178524017334,
+            "generation_seconds": 773.0071425437927,
+            "training_seconds": 458.8052361011505,
+            "weight_sync_seconds": 36.42687201499939,
+            "test_accuracy": 0.0,
+            "test_mean_response_length": 310.3828125,
+            "test_truncation_fraction": 0.0029296875,
+            "test_evaluation_seconds": 106.78200030326843,
+            "targets": {
+              "0.0578125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  103.07743620872498
+                ],
+                "job_seconds_bracket": [
+                  94.92342162132263,
+                  219.25955986976624
+                ]
+              },
+              "0.1078125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  103.07743620872498
+                ],
+                "job_seconds_bracket": [
+                  94.92342162132263,
+                  219.25955986976624
+                ]
+              }
+            }
+          },
+          {
+            "seed": 2,
+            "initial_accuracy": 0.01171875,
+            "final_accuracy": 0.12890625,
+            "sample_auc": 0.126220703125,
+            "active_phase_seconds": 687.9971063137054,
+            "job_seconds": 979.0625483989716,
+            "output_tokens": 830488,
+            "mean_response_length": 25.344482421875,
+            "truncation_fraction": 0.001800537109375,
+            "mixed_group_fraction": 0.11474609375,
+            "mean_training_reward": 0.11346435546875,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 52.99696493148804,
+            "generation_seconds": 400.0392153263092,
+            "training_seconds": 251.73159003257751,
+            "weight_sync_seconds": 36.226300954818726,
+            "test_accuracy": 0.119140625,
+            "test_mean_response_length": 19.26953125,
+            "test_truncation_fraction": 0.0009765625,
+            "test_evaluation_seconds": 105.17713832855225,
+            "targets": {
+              "0.0578125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  111.40871262550354
+                ],
+                "job_seconds_bracket": [
+                  93.53773927688599,
+                  224.93553471565247
+                ]
+              },
+              "0.1078125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  111.40871262550354
+                ],
+                "job_seconds_bracket": [
+                  93.53773927688599,
+                  224.93553471565247
+                ]
+              }
+            }
+          },
+          {
+            "seed": 3,
+            "initial_accuracy": 0.01171875,
+            "final_accuracy": 0.1484375,
+            "sample_auc": 0.191162109375,
+            "active_phase_seconds": 616.9338898658752,
+            "job_seconds": 907.3342063426971,
+            "output_tokens": 491991,
+            "mean_response_length": 15.014373779296875,
+            "truncation_fraction": 0.000518798828125,
+            "mixed_group_fraction": 0.112548828125,
+            "mean_training_reward": 0.186614990234375,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 52.39077663421631,
+            "generation_seconds": 335.28866934776306,
+            "training_seconds": 245.13490509986877,
+            "weight_sync_seconds": 36.51031541824341,
+            "test_accuracy": 0.1728515625,
+            "test_mean_response_length": 12.73046875,
+            "test_truncation_fraction": 0.0,
+            "test_evaluation_seconds": 103.49175500869751,
+            "targets": {
+              "0.0578125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  93.44493985176086
+                ],
+                "job_seconds_bracket": [
+                  93.13931512832642,
+                  206.77128100395203
+                ]
+              },
+              "0.1078125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  93.44493985176086
+                ],
+                "job_seconds_bracket": [
+                  93.13931512832642,
+                  206.77128100395203
+                ]
+              }
+            }
+          }
+        ],
+        "mean": {
+          "final_accuracy": 0.09244791666666667,
+          "test_accuracy": 0.09733072916666667,
+          "sample_auc": 0.1322021484375,
+          "active_phase_seconds": 857.7234156131744,
+          "job_seconds": 1158.5118306477864,
+          "mixed_group_fraction": 0.11515299479166667,
+          "mean_response_length": 117.97555541992188,
+          "output_tokens": 3865823.0,
+          "generation_seconds": 502.778342405955,
+          "training_seconds": 318.5572437445323,
+          "weight_sync_seconds": 36.38782946268717,
+          "prompt_exposures": 4096.0,
+          "distinct_training_prompts": 4096.0,
+          "test_mean_response_length": 114.12760416666667,
+          "test_truncation_fraction": 0.0013020833333333333
+        },
+        "seed_min_max": {
+          "final_accuracy": [
+            0.0,
+            0.1484375
+          ],
+          "test_accuracy": [
+            0.0,
+            0.1728515625
+          ],
+          "sample_auc": [
+            0.0792236328125,
+            0.191162109375
+          ],
+          "active_phase_seconds": [
+            616.9338898658752,
+            1268.2392506599426
+          ],
+          "job_seconds": [
+            907.3342063426971,
+            1589.1387372016907
+          ],
+          "mixed_group_fraction": [
+            0.112548828125,
+            0.1181640625
+          ],
+          "mean_response_length": [
+            15.014373779296875,
+            313.56781005859375
+          ],
+          "output_tokens": [
+            491991,
+            10274990
+          ],
+          "generation_seconds": [
+            335.28866934776306,
+            773.0071425437927
+          ],
+          "training_seconds": [
+            245.13490509986877,
+            458.8052361011505
+          ],
+          "weight_sync_seconds": [
+            36.226300954818726,
+            36.51031541824341
+          ],
+          "prompt_exposures": [
+            4096,
+            4096
+          ],
+          "distinct_training_prompts": [
+            4096,
+            4096
+          ],
+          "test_mean_response_length": [
+            12.73046875,
+            310.3828125
+          ],
+          "test_truncation_fraction": [
+            0.0,
+            0.0029296875
+          ]
+        }
+      },
+      "onpolicy-large": {
+        "shape": {
+          "prompts": 64,
+          "group": 8,
+          "batch": 512,
+          "steps": 1
+        },
+        "lr": 3e-06,
+        "per_seed": [
+          {
+            "seed": 1,
+            "initial_accuracy": 0.01171875,
+            "final_accuracy": 0.23828125,
+            "sample_auc": 0.169921875,
+            "active_phase_seconds": 626.5885918140411,
+            "job_seconds": 819.0840709209442,
+            "output_tokens": 655709,
+            "mean_response_length": 20.010650634765625,
+            "truncation_fraction": 0.00054931640625,
+            "mixed_group_fraction": 0.185791015625,
+            "mean_training_reward": 0.173553466796875,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 52.526774406433105,
+            "generation_seconds": 396.9182960987091,
+            "training_seconds": 218.37123250961304,
+            "weight_sync_seconds": 11.299063205718994,
+            "test_accuracy": 0.24609375,
+            "test_mean_response_length": 16.76953125,
+            "test_truncation_fraction": 0.0,
+            "test_evaluation_seconds": 103.51748204231262,
+            "targets": {
+              "0.0578125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  85.6062581539154
+                ],
+                "job_seconds_bracket": [
+                  95.3597960472107,
+                  188.23587775230408
+                ]
+              },
+              "0.1078125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  85.6062581539154
+                ],
+                "job_seconds_bracket": [
+                  95.3597960472107,
+                  188.23587775230408
+                ]
+              }
+            }
+          },
+          {
+            "seed": 2,
+            "initial_accuracy": 0.01171875,
+            "final_accuracy": 0.234375,
+            "sample_auc": 0.175048828125,
+            "active_phase_seconds": 623.9893374443054,
+            "job_seconds": 818.2676613330841,
+            "output_tokens": 572344,
+            "mean_response_length": 17.466552734375,
+            "truncation_fraction": 0.000396728515625,
+            "mixed_group_fraction": 0.153076171875,
+            "mean_training_reward": 0.164764404296875,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 52.5311336517334,
+            "generation_seconds": 397.00398993492126,
+            "training_seconds": 215.71019077301025,
+            "weight_sync_seconds": 11.275156736373901,
+            "test_accuracy": 0.2177734375,
+            "test_mean_response_length": 15.56640625,
+            "test_truncation_fraction": 0.0,
+            "test_evaluation_seconds": 103.63792896270752,
+            "targets": {
+              "0.0578125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  84.92666792869568
+                ],
+                "job_seconds_bracket": [
+                  94.91793894767761,
+                  187.57282662391663
+                ]
+              },
+              "0.1078125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  84.92666792869568
+                ],
+                "job_seconds_bracket": [
+                  94.91793894767761,
+                  187.57282662391663
+                ]
+              }
+            }
+          },
+          {
+            "seed": 3,
+            "initial_accuracy": 0.013671875,
+            "final_accuracy": 0.1953125,
+            "sample_auc": 0.1878662109375,
+            "active_phase_seconds": 621.9644820690155,
+            "job_seconds": 824.6862914562225,
+            "output_tokens": 584600,
+            "mean_response_length": 17.840576171875,
+            "truncation_fraction": 0.000640869140625,
+            "mixed_group_fraction": 0.130859375,
+            "mean_training_reward": 0.180328369140625,
+            "distinct_training_prompts": 4096,
+            "prompt_exposures": 4096,
+            "peak_allocated_gib": 52.860472679138184,
+            "generation_seconds": 388.61461114883423,
+            "training_seconds": 222.09279322624207,
+            "weight_sync_seconds": 11.257077693939209,
+            "test_accuracy": 0.18359375,
+            "test_mean_response_length": 14.408203125,
+            "test_truncation_fraction": 0.0,
+            "test_evaluation_seconds": 103.09783673286438,
+            "targets": {
+              "0.0578125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  85.01831889152527
+                ],
+                "job_seconds_bracket": [
+                  94.87932443618774,
+                  187.98484539985657
+                ]
+              },
+              "0.1078125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  85.01831889152527
+                ],
+                "job_seconds_bracket": [
+                  94.87932443618774,
+                  187.98484539985657
+                ]
+              }
+            }
+          }
+        ],
+        "mean": {
+          "final_accuracy": 0.22265625,
+          "test_accuracy": 0.2158203125,
+          "sample_auc": 0.1776123046875,
+          "active_phase_seconds": 624.1808037757874,
+          "job_seconds": 820.6793412367502,
+          "mixed_group_fraction": 0.15657552083333334,
+          "mean_response_length": 18.439259847005207,
+          "output_tokens": 604217.6666666666,
+          "generation_seconds": 394.1789657274882,
+          "training_seconds": 218.72473883628845,
+          "weight_sync_seconds": 11.277099212010702,
+          "prompt_exposures": 4096.0,
+          "distinct_training_prompts": 4096.0,
+          "test_mean_response_length": 15.581380208333334,
+          "test_truncation_fraction": 0.0
+        },
+        "seed_min_max": {
+          "final_accuracy": [
+            0.1953125,
+            0.23828125
+          ],
+          "test_accuracy": [
+            0.18359375,
+            0.24609375
+          ],
+          "sample_auc": [
+            0.169921875,
+            0.1878662109375
+          ],
+          "active_phase_seconds": [
+            621.9644820690155,
+            626.5885918140411
+          ],
+          "job_seconds": [
+            818.2676613330841,
+            824.6862914562225
+          ],
+          "mixed_group_fraction": [
+            0.130859375,
+            0.185791015625
+          ],
+          "mean_response_length": [
+            17.466552734375,
+            20.010650634765625
+          ],
+          "output_tokens": [
+            572344,
+            655709
+          ],
+          "generation_seconds": [
+            388.61461114883423,
+            397.00398993492126
+          ],
+          "training_seconds": [
+            215.71019077301025,
+            222.09279322624207
+          ],
+          "weight_sync_seconds": [
+            11.257077693939209,
+            11.299063205718994
+          ],
+          "prompt_exposures": [
+            4096,
+            4096
+          ],
+          "distinct_training_prompts": [
+            4096,
+            4096
+          ],
+          "test_mean_response_length": [
+            14.408203125,
+            16.76953125
+          ],
+          "test_truncation_fraction": [
+            0.0,
+            0.0
+          ]
+        },
+        "test_difference_vs_baseline": {
+          "mean_pp": 11.848958333333332,
+          "conditional_prompt_ci95_pp": [
+            10.319010416666668,
+            13.37890625
+          ],
+          "per_seed_difference_pp": {
+            "1": 24.609375,
+            "2": 9.86328125,
+            "3": 1.07421875
+          }
+        }
+      },
+      "group-4": {
+        "shape": {
+          "prompts": 128,
+          "group": 4,
+          "batch": 128,
+          "steps": 4
+        },
+        "lr": 3e-06,
+        "per_seed": [
+          {
+            "seed": 1,
+            "initial_accuracy": 0.01171875,
+            "final_accuracy": 0.1875,
+            "sample_auc": 0.170654296875,
+            "active_phase_seconds": 628.2893531322479,
+            "job_seconds": 821.8546023368835,
+            "output_tokens": 628567,
+            "mean_response_length": 19.182342529296875,
+            "truncation_fraction": 0.0008544921875,
+            "mixed_group_fraction": 0.10302734375,
+            "mean_training_reward": 0.181396484375,
+            "distinct_training_prompts": 8192,
+            "prompt_exposures": 8192,
+            "peak_allocated_gib": 52.34289216995239,
+            "generation_seconds": 396.05445647239685,
+            "training_seconds": 220.94797372817993,
+            "weight_sync_seconds": 11.286922931671143,
+            "test_accuracy": 0.2080078125,
+            "test_mean_response_length": 14.537109375,
+            "test_truncation_fraction": 0.0,
+            "test_evaluation_seconds": 103.29937553405762,
+            "targets": {
+              "0.0578125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  87.70443439483643
+                ],
+                "job_seconds_bracket": [
+                  96.17481994628906,
+                  191.18421912193298
+                ]
+              },
+              "0.1078125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  87.70443439483643
+                ],
+                "job_seconds_bracket": [
+                  96.17481994628906,
+                  191.18421912193298
+                ]
+              }
+            }
+          },
+          {
+            "seed": 2,
+            "initial_accuracy": 0.009765625,
+            "final_accuracy": 0.21484375,
+            "sample_auc": 0.1705322265625,
+            "active_phase_seconds": 628.4020340442657,
+            "job_seconds": 827.5261826515198,
+            "output_tokens": 622877,
+            "mean_response_length": 19.008697509765625,
+            "truncation_fraction": 0.000244140625,
+            "mixed_group_fraction": 0.0791015625,
+            "mean_training_reward": 0.16851806640625,
+            "distinct_training_prompts": 8192,
+            "prompt_exposures": 8192,
+            "peak_allocated_gib": 52.61462593078613,
+            "generation_seconds": 393.89285492897034,
+            "training_seconds": 223.30836486816406,
+            "weight_sync_seconds": 11.200814247131348,
+            "test_accuracy": 0.203125,
+            "test_mean_response_length": 15.3203125,
+            "test_truncation_fraction": 0.0,
+            "test_evaluation_seconds": 103.87136316299438,
+            "targets": {
+              "0.0578125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  86.51117014884949
+                ],
+                "job_seconds_bracket": [
+                  94.08341574668884,
+                  188.644593000412
+                ]
+              },
+              "0.1078125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  86.51117014884949
+                ],
+                "job_seconds_bracket": [
+                  94.08341574668884,
+                  188.644593000412
+                ]
+              }
+            }
+          },
+          {
+            "seed": 3,
+            "initial_accuracy": 0.01171875,
+            "final_accuracy": 0.205078125,
+            "sample_auc": 0.1885986328125,
+            "active_phase_seconds": 622.546441078186,
+            "job_seconds": 822.2063720226288,
+            "output_tokens": 572193,
+            "mean_response_length": 17.461944580078125,
+            "truncation_fraction": 0.00042724609375,
+            "mixed_group_fraction": 0.1214599609375,
+            "mean_training_reward": 0.193115234375,
+            "distinct_training_prompts": 8192,
+            "prompt_exposures": 8192,
+            "peak_allocated_gib": 52.62707805633545,
+            "generation_seconds": 391.69242787361145,
+            "training_seconds": 219.598477602005,
+            "weight_sync_seconds": 11.25553560256958,
+            "test_accuracy": 0.1962890625,
+            "test_mean_response_length": 14.55859375,
+            "test_truncation_fraction": 0.0,
+            "test_evaluation_seconds": 103.62855553627014,
+            "targets": {
+              "0.0578125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  85.2495505809784
+                ],
+                "job_seconds_bracket": [
+                  94.6892626285553,
+                  188.15040159225464
+                ]
+              },
+              "0.1078125": {
+                "observed": true,
+                "sample_bracket": [
+                  0,
+                  4096
+                ],
+                "phase_seconds_bracket": [
+                  0,
+                  85.2495505809784
+                ],
+                "job_seconds_bracket": [
+                  94.6892626285553,
+                  188.15040159225464
+                ]
+              }
+            }
+          }
+        ],
+        "mean": {
+          "final_accuracy": 0.20247395833333334,
+          "test_accuracy": 0.20247395833333334,
+          "sample_auc": 0.17659505208333334,
+          "active_phase_seconds": 626.4126094182333,
+          "job_seconds": 823.862385670344,
+          "mixed_group_fraction": 0.1011962890625,
+          "mean_response_length": 18.550994873046875,
+          "output_tokens": 607879.0,
+          "generation_seconds": 393.87991309165955,
+          "training_seconds": 221.284938732783,
+          "weight_sync_seconds": 11.24775759379069,
+          "prompt_exposures": 8192.0,
+          "distinct_training_prompts": 8192.0,
+          "test_mean_response_length": 14.805338541666666,
+          "test_truncation_fraction": 0.0
+        },
+        "seed_min_max": {
+          "final_accuracy": [
+            0.1875,
+            0.21484375
+          ],
+          "test_accuracy": [
+            0.1962890625,
+            0.2080078125
+          ],
+          "sample_auc": [
+            0.1705322265625,
+            0.1885986328125
+          ],
+          "active_phase_seconds": [
+            622.546441078186,
+            628.4020340442657
+          ],
+          "job_seconds": [
+            821.8546023368835,
+            827.5261826515198
+          ],
+          "mixed_group_fraction": [
+            0.0791015625,
+            0.1214599609375
+          ],
+          "mean_response_length": [
+            17.461944580078125,
+            19.182342529296875
+          ],
+          "output_tokens": [
+            572193,
+            628567
+          ],
+          "generation_seconds": [
+            391.69242787361145,
+            396.05445647239685
+          ],
+          "training_seconds": [
+            219.598477602005,
+            223.30836486816406
+          ],
+          "weight_sync_seconds": [
+            11.200814247131348,
+            11.286922931671143
+          ],
+          "prompt_exposures": [
+            8192,
+            8192
+          ],
+          "distinct_training_prompts": [
+            8192,
+            8192
+          ],
+          "test_mean_response_length": [
+            14.537109375,
+            15.3203125
+          ],
+          "test_truncation_fraction": [
+            0.0,
+            0.0
+          ]
+        },
+        "test_difference_vs_baseline": {
+          "mean_pp": 10.514322916666666,
+          "conditional_prompt_ci95_pp": [
+            9.049479166666666,
+            12.044270833333332
+          ],
+          "per_seed_difference_pp": {
+            "1": 20.80078125,
+            "2": 8.3984375,
+            "3": 2.34375
+          }
+        }
+      }
+    }
+  }
+}

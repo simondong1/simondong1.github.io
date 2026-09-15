@@ -1,0 +1,74 @@
+[
+  {
+    "task": "gsm8k",
+    "run": "gsm8k-screen-onpolicy-small-s0",
+    "id": "29cd6c85bd87ab4143da",
+    "index": 463,
+    "response": "To determine how long Anna spends traveling, we first need to find the distance Jenny has already traveled before Anna leaves. Jenny leaves at 8:00 and Anna leaves half an hour later at 8:30. In half an hour, Jenny has traveled:\n\n\\[\n15 \\text{ miles per hour} \\times 0.5 \\text{ hours} = 7.5 \\text{ miles}\n\\]\n\nAnna leaves at 8:30 and needs to catch up to Jenny, who has a 7.5-mile head start. Anna drives at 45 miles per hour, so the time it takes for Anna to catch up is:\n\n\\[\n\\frac{7.5 \\text{ miles}}{45 \\text{ miles per hour}} = \\frac{7.5}{45} = \\frac{1}{6} \\text{ hours}\n\\]\n\nTo convert this time into minutes, we multiply by 60:\n\n\\[\n\\frac{1}{6} \\text{ hours} \\times 60 \\text{ minutes per hour} = 10 \\text{ minutes}\n\\]\n\nTherefore, the time Anna spends traveling is \\(\\boxed{10}\\).<|im_end|>",
+    "label": "{\"task\": \"gsm8k\", \"answer\": \"10\"}",
+    "reward": 1.0,
+    "response_length": 254,
+    "status": "completed",
+    "audit": "Incorrect reference answer; see known_label_issue.json"
+  },
+  {
+    "task": "gsm8k",
+    "run": "gsm8k-screen-onpolicy-small-s0",
+    "id": "bdbdf45045856579e733",
+    "index": 25,
+    "response": "To determine the number of attendees who registered but are not from companies A, B, C, or D, we need to first find the number of attendees from each company.\n\n1. **Calculate the number of attendees from company B:**\n   Company B has twice the number of attendees of company A.\n   \\[\n   \\text{Attendees from company B} = 2 \\times 30 = 60\n   \\]\n\n2. **Calculate the number of attendees from company C:**\n   Company C has 10 more attendees than company A.\n   \\[\n   \\text{Attendees from company C} = 30 + 10 = 40\n   \\]\n\n3. **Calculate the number of attendees from company D:**\n   Company D has 5 fewer attendees than company C.\n   \\[\n   \\text{Attendees from company D} = 40 - 5 = 35\n   \\]\n\n4. **Calculate the total number of attendees from companies A, B, C, and D:**\n   \\[\n   \\text{Total attendees from A, B, C, and D} = 30 + 60 + 40 + 35 = 165\n   \\]\n\n5. **Determine the number of attendees who registered but are not from companies A, B, C, or D:**\n   The total number of attendees who registered is 185. Therefore, the number of attendees who registered but are not from companies A, B, C, or D is:\n   \\[\n   185 - 165 = 20\n   \\]\n\nThus, the number of attendees who registered but are not from companies A, B, C, or D is \\(\\boxed{20}\\).<|im_end|>",
+    "label": "{\"task\": \"gsm8k\", \"answer\": \"20\"}",
+    "reward": 1.0,
+    "response_length": 378,
+    "status": "completed",
+    "audit": "Arithmetic spot-check passed"
+  },
+  {
+    "task": "gsm8k",
+    "run": "gsm8k-screen-onpolicy-small-s0",
+    "id": "8a97c1e50259aec17b75",
+    "index": 253,
+    "response": "To determine the cost for Oliver to ensure that each of his 4 friends plays 60 games each, we need to follow these steps:\n\n1. **Calculate the total number of games needed:**\n   Since Oliver has 4 friends and each friend wants to play 60 games, the total number of games is \\(4 \\times 60 = 240\\) games.\n\n2. **Determine the number of tokens required:**\n   Since each game costs 2 tokens, the total number of tokens needed for 240 games is \\(240 \\times 2 = 480\\) tokens.\n\n3. **Calculate the cost of the tokens:**\n   Since 30 tokens cost $1, the number of sets of 30 tokens in 480 tokens is \\(480 \\div 30 = 16\\) sets. Therefore, the cost for 480 tokens is \\(16 \\times 1 = 16\\) dollars.\n\nThus, the cost for Oliver to ensure that each of his friends plays 60 games each is \\(\\boxed{16}\\).<|im_end|>",
+    "label": "{\"task\": \"gsm8k\", \"answer\": \"16\"}",
+    "reward": 1.0,
+    "response_length": 237,
+    "status": "completed",
+    "audit": "Arithmetic spot-check passed"
+  },
+  {
+    "task": "countdown",
+    "run": "countdown-screen-batch-256-s0",
+    "id": "a516ff9d8f653fff88ae",
+    "index": 483,
+    "response": "```answer\n21 + 97 - 20\n```<|im_end|>",
+    "label": "{\"task\": \"countdown\", \"numbers\": [21, 20, 97], \"target\": 98}",
+    "reward": 1.0,
+    "response_length": 16,
+    "status": "completed",
+    "audit": "Arithmetic spot-check passed"
+  },
+  {
+    "task": "countdown",
+    "run": "countdown-screen-batch-256-s0",
+    "id": "1df047d081322be1cc83",
+    "index": 45,
+    "response": "```answer\n52 + 48 - 36\n```<|im_end|>",
+    "label": "{\"task\": \"countdown\", \"numbers\": [52, 48, 36], \"target\": 64}",
+    "reward": 1.0,
+    "response_length": 16,
+    "status": "completed",
+    "audit": "Arithmetic spot-check passed"
+  },
+  {
+    "task": "countdown",
+    "run": "countdown-screen-batch-256-s0",
+    "id": "b664509ff32d2655ee4e",
+    "index": 315,
+    "response": "```answer\n65 - 96 + 47\n```<|im_end|>",
+    "label": "{\"task\": \"countdown\", \"numbers\": [65, 96, 47], \"target\": 16}",
+    "reward": 1.0,
+    "response_length": 16,
+    "status": "completed",
+    "audit": "Arithmetic spot-check passed"
+  }
+]

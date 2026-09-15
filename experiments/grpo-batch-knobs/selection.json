@@ -1,0 +1,28 @@
+{
+  "selected_at_utc": "2026-09-15T14:09:23.914823+00:00",
+  "tasks": {
+    "gsm8k": [
+      "onpolicy-small",
+      "onpolicy-large",
+      "batch-256-sqrt"
+    ],
+    "countdown": [
+      "onpolicy-small",
+      "onpolicy-large",
+      "group-4"
+    ]
+  },
+  "basis": "Validation endpoints, sample-indexed AUC, full job time, and representation of distinct update regimes; not a mechanical top-two endpoint ranking.",
+  "gsm8k_reason": "One large update had the best screening endpoint (88.28%). B256 with sqrt LR tied G16 at 87.89%, with higher sample AUC (86.99% versus 86.11%) and similar runtime; it provides a distinct two-update regime. B256 fixed LR had higher AUC (87.21%) but lower endpoint (86.33%). Split-2 was fastest (9.25 min) but ended at 84.57%, with AUC84.23%.",
+  "countdown_reason": "G4 had the best sample AUC (18.92%), second endpoint (24.22%), and shortest full job (7.46 min). G16 ended25.00% but had lower AUC16.46%; its four-item endpoint edge is not sufficient to establish superiority. One large update at unchanged LR ended22.85%, represents the one-update family and supplies an identical candidate on both tasks. It is not the second-highest endpoint arm. The sqrt-LR large batch ended23.44% but offered no AUC improvement. This controlled selection tests transfer of the one-update recipe rather than maximizing a noisy single endpoint.",
+  "followup_reason": "Small batch LR1e-6 improved Countdown endpoint19.34% versus13.28% at3e-6, but remained below selected candidates and took8.96min. Keep it as exploratory evidence that the baseline gap depends on LR; it is not selected for confirmation.",
+  "limitations": "Three confirmation arms cannot cover every promising screen outcome. Nonselected arms retain single-seed status; neither group16 nor the LR control is ruled out globally.",
+  "training_budget_per_run": 32768,
+  "fresh_seeds": [
+    1,
+    2,
+    3
+  ],
+  "test_selection_used": false,
+  "selection_evidence_sha256": "1daea3b0172c5237a0d8b12af2699a7bbd245dc753797d6709950e97cc606e52"
+}

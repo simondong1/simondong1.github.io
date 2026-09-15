@@ -1,0 +1,73 @@
+{
+  "run": "countdown-confirm-onpolicy-small-s1",
+  "scope": "Post-hoc audit of saved outputs; no training, selection, or primary score changes.",
+  "test_examples": 1024,
+  "primary_correct": 0.0,
+  "format_controls_removed_correct": 0.0,
+  "responses_with_zero_width_space": 1023,
+  "validation_curve": [
+    {
+      "samples": 0,
+      "accuracy": 0.013671875
+    },
+    {
+      "samples": 4096,
+      "accuracy": 0.125
+    },
+    {
+      "samples": 8192,
+      "accuracy": 0.283203125
+    },
+    {
+      "samples": 12288,
+      "accuracy": 0.21875
+    },
+    {
+      "samples": 16384,
+      "accuracy": 0.0
+    },
+    {
+      "samples": 20480,
+      "accuracy": 0.0
+    },
+    {
+      "samples": 24576,
+      "accuracy": 0.0
+    },
+    {
+      "samples": 28672,
+      "accuracy": 0.0
+    },
+    {
+      "samples": 32768,
+      "accuracy": 0.0
+    }
+  ],
+  "inspected_cases": [
+    {
+      "id": "d31068a0511ced7954bd",
+      "label": "{\"task\": \"countdown\", \"numbers\": [36, 92, 64, 20], \"target\": 10}",
+      "reward": 0.0,
+      "response_excerpt": "First \n\n(\u200b\n\n9\u200b\n\n-\u200b\n\n36) +\n\n64 - \n\n20\u200b\n\n=\u200b\n\n-27\u200b\n\n+\u200b64 -\u200b\n\n2\u200b\n\n=\u200b37\u200b\n\n-\u200b2\u200b =\u200b\n\n15\u200b\n\n-\u200b\n\n2 =\u200b\n\n13\u200b\n\n-\u200b\u200b\n\n3\u200b\n\n=\u200b\n\n1\n\nBut\u200b\n\n9 -\n\n\n36\u200b\n\n= -27\u200b\n\nSo\u200b\n\n-27 + \u200b\n\n64 - 2 =\u200b\n\n35\u200b\n\nwhich\u200b\n\nneither\u200b equal\u200b\n\n10\u200b\n\nBut\u200b\n\nif\u200b\n\nyou \n\nchoose\u200b to\u200b -27 + 64 -\u200b\n\ninstead\u200b\n\nof\u200b\n\n9\u200b\n\n-\u200b36\u200b the\u200b\n\nfinal\u200b\n\nanswer\u200b\n\nwill\u200b\n\nbe\u200b\n\n17\u200b\n\nwhich\u200b\n\nis\u200b\n\nnot\u200b\n\ncorrect So\u200b\n\nthe\u200b\n\ncorrect\u200b\n\nanswer\u200b\n\nis\u200b\n\n15\u200b\n\n-\u200b1\u200b\n\n=\u200b\n\n14\u200b\n\nwhich\u200b\uff1a\n\nis\u200b\n\nwrong\n\n\nso\u200b\n\nthe\u200b\n\ncorrect\u200b\n\nanswer\u200b\n\nis\u200b\n\n1\u200b\n\nthus\u200b\n\nproof\u200b\n\nthat\u200b\n\nchosen\u200b operation\u200b changed\u200b\n\nthe\u200b\n\nresult\n\n\ncorrect\u200b\n\nanswer\u200b\n\nis\u200b\n\n1\u200b\n\nbut\u200b if\u200b\n\nyou\u200b\n\nneed\u200b\n\nan\u200b\n\nanswer\u200b\n\nequal\u200b\n\n1\u200b\n\nyou\u200b\n\nmust\u200b\n\nrechoose\u200b\n\nnumbers\u200b\n\nor\u200b change\u200b operation Let\u200b\n\nme\u200b\n\nwho\u200b choose\u200b\n\n64 - 2\u200b\n\ninstead\u200b\n\nanswer\u200b\n\nis\u200b\n\n61acho<|im_end|>"
+    },
+    {
+      "id": "19af4145a4aa0c10b472",
+      "label": "{\"task\": \"countdown\", \"numbers\": [61, 14, 80, 45], \"target\": 40}",
+      "reward": 0.0,
+      "response_excerpt": "First \n\n14 \n\nsubtracted\u200b\n\nfrom 8\u200b\n\n0 equals 66 (\u200b\n\n6\u200b\n\n1 subtracted from 7 equals 4 (but\u200b\n\n80 \n\nadded back in\u200b\n\nmakes 86) - but that\n\ntoo much.\u200b\n\nAdd\u200b\n\n61\u200b\n\nback in\u200b\n\nmakes\u200b\n\n147 but we need\u200b\n\n4\u200b\n\n0 left\u200b\n\nso finally add \u200b\n\n4\u200b\n\n5\n\ninside gives\u200b\n\n4\u200b\n\nanswer\uff1a\n\n1\u200b\n\n4\u200b\n\n- 6\u200b 0\u200b =\u200b\n\n8\u200b6\u51cf\u200b6\u200b1 equals\u200b\n\n1\u200b\n\n5\n\nbut we need\u200b\n\n4\u200b so again add 4 gives final answer\n\n1\u200b\n\n4\u200b\n\n\n-\u200b\n\n4\u200b equals\u200b\n\n0\u200b\n\nwhich is\u200b\n\nwrong so let\u200b\n\n1\u200b4\u200b again gives final answer \u200b\n\n4\u200b\n\n(https\u200b\n\n=https\u200b://www. calculatorsoup. com/ calculator/ algebra/\u200b\n\nlinear. php?\n\na=\u200b\n\n14, b=\u200b\n\n6\u200b\n\n)\u200b\n\nso indeed\u200b answer \u200b1\u200b4\u200b -\u200b\n\n6\u200b\u200b\n\n1 equals\u200b\n\n4\u200b\n\nyou\u200b\n\ncan\n\nalso\u200b\n\ndo\u200b\n\n8\u200b0 - 1\u200b4\u200b + 6\u200b1\u200b\n\nwhich equals\u200b\n\n4\u200b\n\nfinal\u200b\n\nanswer\r\n\r\n1\u200b4\u200b\n\n- 6\u200b = 4\r\n\r\nor\u200b 8\u200b0 -\u200b\n\n1\u200b4\u200b + 6\u200b1\u200b\n\nwhich\u200b\n\nalso\u200b equals\u200b 4\n\nso indeed\u200b\n\n1\u200b4\u200b - 6\u200b\n\nequals 4\n\nthus final answer\u200b\n\n1\u200b4\u200b\n\n-\u200b\n\n6\u200b\n\n=\u200b\n\n4\n\n\nfinal\u200b\n\nanswer\u200b\n\n4\u200b\n\n(this\u200b is\u200b actually\u200b the\u200b correct\u200b\n\nanswer\u200b\n\naccording\u200b to\u200b the\u200b problem\u200b\n\nstatement\u200b\n\nbut\u200b it\u200b can\u200b be\u200b solved\u200b using\u200b other\u200b methods\u200b as\u200b well\u200b\n\nas\u200b shown\u200b"
+    },
+    {
+      "id": "01e69ca85d87ec0f8d9d",
+      "label": "{\"task\": \"countdown\", \"numbers\": [84, 89, 53], \"target\": 58}",
+      "reward": 0.0,
+      "response_excerpt": "Let\u200b\n\nFirst\u200b\n\nAdd\uff1a\n\n89\u200b\n\n- 84 =\u200b\n\n15\u200b\r\n\r\nThen\u200b\n\nAdd\uff1a\n\n5\u200b\n\n3 - 15\u200b\n\n= \n\n5\u200b\n\n8\u200b\n\n=\u200b\n\n5\u200b\n\nThus\u200b\n\n5\u200b\n\n3\u200b\n\n-\u200b\n\n15 = \r\n\r\n\r\nFinally\u200b\r\n\r\n5\u200b\n\n3\u200b\n\n- 15\u200b\n\n=\u200b\n\n8\u200b\n\n- 15\u200b=\u200b -\u200b\n\n9\u200b\n\nHowever\u200b\n\nwe needed \u200b\n\n58\u200b so\u200b\n\nlet\u200b\n\nwe\u200b\n\nmultiply\u200b the\u200b result\u200b of\u200b\n\n5\u200b\n\n3 - 15\u200b by\u200b 2 Answer\uff1a\u200b\n\n2\u200b\n\n(\u200b\n\n5\u200b\n\n3\u200b\n\n- 15\u200b) =\u200b\n\n2\u200b\n\n(\u200b\n\n8\u200b\r\n\r\n= 5\u200b\n\n3 -\n\n15\u200b\n\n=\u200b\n\n- 9\u200b but\u200b we needed 58 so let\u200b\n\nmultiply\u200b\n\nthe\u200b\n\nresult\u200b\n\nby\u200b\n\n2\u200b\n\nfinal answer\r\n\r\n2(8\n\n- 15\u200b\n\n)\u200b\n\n= 58 Reasoning\u200b: Initially\u200b\n\nwe got\u200b\n\n-\u200b\n\n9 but we need 5\u200b\n\n8 so we\u200b multiplied the result by\u200b\n\n2\u200b\n\nto get the desired\u200b\n\n58\u200b\n\nanswer.\u200b\n\nthus final\u200b\n\nanswer\u200b\n\n2\u200b\n\n\n\n(8\n- 15\u200b\n\n)\r\n\r\n= 58\u200b\n\nThis follows the condition of using all numbers and every number exactly\u200b\n\nonce\u200b\n\nin the expression\u200b\n\nanswer:\u200b\n\n2\u200b\n\n(\u200b\n\n8\u200b - 15\u200b\n\n)=\u200b\n\n58 Growth mindset note\uff1aThe\u200b\n\n- sign\nin the initial step was a mistake, it's supposed to be a plus sign as we are adding smaller number to larger\u200b\n\nAnswer is typically not\n\n\n2(\u200b\n\n8\u200b - 15\u200b) = -20 but as mentioned we need 58 so we multiplied by 2 which is"
+    },
+    {
+      "id": "38501b2c766be33175e2",
+      "label": "{\"task\": \"countdown\", \"numbers\": [51, 39, 80], \"target\": 92}",
+      "reward": 0.0,
+      "response_excerpt": "Let\u200b\n\nFirst\u200b\n\nAdd \n\n3\u200b\n\n9\u200b \nThen subtract \n51\u200b\n\n80\u200b \nThen you\u200b\n\n Get 9\u200b\n\nSo the\n\nfinal\u200b\n\nexpression\u200b\n\nis \n\n3\u200b\n\n+\u200b\n\n51 =\u200b\n\n54\u200b\n\n-\u200b\n\n8\u200b\n\n0\u200b\n\n\u200b\n\n=\u200b\n\n9\u200b\n\nanswer\u200b\n\n3\u200b\n\n+\u200b\n51\u200b\n\n-\u200b\n8\u200b\n\n0\u200b\n\n=\u200b\n\n9\u200b\n\nwhich\n\n\nequals\n\n\n9\u200b\n\nbut\u200b\n\nwe need\n\n\n9\u200b2\u200b\n\nSo let\u200b\n\n4\u200b\nthen subtract\u200b11\u200b\n\nfrom that We\u200b\n\nget\u200b\n\n2\u200b\n\nthen add\u200b7\u200b Finally we have\u200b\n\n2\u200b +\u200b\n\n11\u200b =\u200b\u200b\n\n13\u200b\n\nbut we need\u200b\n\n9\u200b\n\n2\u200b so the correct\n\n\nfinal\u200b\n\nexpression\u200b\n\nis \u200b\u200b\n\n3\u200b\u200b\n\n\n\n+\u200b\n51\u200b\n\n-\u200b\n8\u200b\u200b\n\n=\n\n9\u200b\n\nanswer\r\n\r\n4\u200b\nthen subtract\u200b\n\n1\u200b\n\nfrom\u200b\n\nthat\r\n\r\nwe get 2\r\nthen add \u200b\n\n7\u200b\r\nfinally we\u200b\n\nhave 2\u200b + 1\u200b\n\nwhich\u200b\n\nequals 3\u200b\n\nbut we need 9 2\u200b\n\nso\n\n\nthe correct\u200b\n\nfinal\u200b\n\nexpression\u200b\n\nis\u200b\n\n\u200b\n\n\u200b\n\n\n\n\n3\u200b\n+\u200b\n51\u200b\n-\u200b\n8\u200b\n=\u200b\n9\u200b\n\nanswer\r\n\r\n4\u200b\nthen subtract\u200b\n\n1\u200b from\u200b that\ngot\u200b\n\n2\nthen\u200b\n\nadd\u200b\n\n7\nfinal\u200b\n\nget\u200b\n\n9\r\n\r\nbut we\u200b\n\nneed 9\u200b\n\n2\nso the\u200b\n\nfinal\u200b\n\nexpression\u200b\n\nis\u200b\n\n3\u200b\n+\u200b\n51\u200b\n-\u200b\n8\u200b\n=\u200b\n9\u200b2\r\n\r\nanswer\n\n3\u200b\n\n+\u200b\n51\u200b\n-\u200b\n8\u200b\n=\u200b\n9\u200b\n\n2\u200b\n\nwhich\u200b\n\nequals\r\n\r\n9\u200b2 Answer\uff1a\n\n3\u200b\n\n+\u200b\n51\u200b\n-\u200b\n8\u200b\n=\u200b\n9\u200b2<|im_end|>"
+    }
+  ],
+  "interpretation": "The four inspected outputs contain incorrect arithmetic and altered or missing operands. Removing Unicode format controls alone recovers no test successes. This does not test every possible alternative parser."
+}
