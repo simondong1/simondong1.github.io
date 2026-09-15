@@ -173,9 +173,6 @@ figcaption{font-size:.79rem;line-height:1.55;color:var(--ink-soft);margin-top:.7
 .controls select,.controls input[type=number]{padding:.4rem;border:1px solid var(--line);border-radius:5px;color:var(--ink);background:#fff}
 .controls button{font-size:.75rem;padding:.55rem .65rem;border:1px solid #dfe2fb;border-radius:6px;background:var(--accent-soft);color:var(--accent);cursor:pointer}
 .controls button:hover{background:#e0e3ff}
-.chart-legend{display:flex;flex-wrap:wrap;gap:.4rem .9rem;font-size:.75rem}
-.chart-legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--series);margin-right:.3rem}
-.svg-label{font:11px Inter,sans-serif;fill:#65707b}
 .readout{font-size:.79rem;color:var(--ink-soft);background:#f4f5f8;padding:.65rem .8rem;border-radius:6px;font-variant-numeric:tabular-nums}
 .caveat{background:#f4f3ef;padding:1.2rem 1.3rem;border-radius:8px;margin:2rem 0}
 .caveat .kicker{color:#75613a;margin-top:0}
@@ -188,7 +185,31 @@ figcaption{font-size:.79rem;line-height:1.55;color:var(--ink-soft);margin-top:.7
 footer{border-top:1px solid var(--line);margin-top:4rem;padding:2rem 0 3rem;font-size:.85rem;color:var(--muted)}
 footer a{color:var(--ink-soft)}
 @media(min-width:1300px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 48rem)/2 - 14rem);width:12rem;max-height:calc(100vh - 7rem);overflow-y:auto;border:0;padding:0;margin:0}nav.toc ol{display:block}nav.toc li{font-size:.78rem;margin:.35rem 0}}
-@media(max-width:640px){.wrap{padding:0 1.25rem}header.hero{padding:3rem 0 2rem}h1.title{font-size:2.6rem}.subtitle{font-size:1.08rem}h2{font-size:1.6rem}h3{font-size:1.15rem}section{margin-top:3rem}section+section{padding-top:2.3rem}.takeaways{padding:1rem 0}.takeaways li{font-size:.96rem}.background-link{padding:1rem}.example,.caveat{padding:1rem}.formula{font-size:.87rem}.notation{grid-template-columns:1fr}.notation div{padding:.45rem 0}.notation dt{min-width:4rem}.reward-example{gap:.35rem}.reward-example code{font-size:.77rem}.reward-example div span{font-size:.65rem}.comparison{gap:.6rem}.comparison>div{padding-left:.6rem}.comparison strong{font-size:1.08rem}.comparison span{font-size:.74rem}table.ptable{font-size:.8rem}table.ptable th,table.ptable td{padding:.6rem .35rem}table.ptable th{font-size:.6rem;letter-spacing:.025em}.overview td:first-child{width:25%}.overview td:last-child{width:29%}.panel{padding:1rem .75rem}.controls{gap:.65rem}.controls label:last-child{flex:1 1 100%}.controls input[type=range]{width:100%}.controls button{font-size:.71rem}#gradient-plot .svg-label{font-size:13px}figcaption{font-size:.76rem}.caveat li{font-size:.88rem}.settings-table th{width:24%}.artifact-links{flex-direction:column;gap:.7rem}}
+@media(max-width:640px){.wrap{padding:0 1.25rem}header.hero{padding:3rem 0 2rem}h1.title{font-size:2.6rem}.subtitle{font-size:1.08rem}h2{font-size:1.6rem}h3{font-size:1.15rem}section{margin-top:3rem}section+section{padding-top:2.3rem}.takeaways{padding:1rem 0}.takeaways li{font-size:.96rem}.background-link{padding:1rem}.example,.caveat{padding:1rem}.formula{font-size:.87rem}.notation{grid-template-columns:1fr}.notation div{padding:.45rem 0}.notation dt{min-width:4rem}.reward-example{gap:.35rem}.reward-example code{font-size:.77rem}.reward-example div span{font-size:.65rem}.comparison{gap:.6rem}.comparison>div{padding-left:.6rem}.comparison strong{font-size:1.08rem}.comparison span{font-size:.74rem}table.ptable{font-size:.8rem}table.ptable th,table.ptable td{padding:.6rem .35rem}table.ptable th{font-size:.6rem;letter-spacing:.025em}.overview td:first-child{width:25%}.overview td:last-child{width:29%}.panel{padding:1rem .75rem}.controls{gap:.65rem}.controls label:last-child{flex:1 1 100%}.controls input[type=range]{width:100%}.controls button{font-size:.71rem}figcaption{font-size:.76rem}.caveat li{font-size:.88rem}.settings-table th{width:24%}.artifact-links{flex-direction:column;gap:.7rem}}
+.example-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.5rem;margin:1rem 0}
+.example-presets button{font:inherit;font-size:.76rem;font-weight:600;line-height:1.4;padding:.65rem .5rem;color:var(--ink-soft);background:#fff;border:1px solid var(--line);border-radius:7px;cursor:pointer}
+.example-presets button:hover{border-color:#a5a1f5}
+.example-presets button[aria-pressed=true]{color:#3730a3;background:var(--accent-soft);border-color:#a5a1f5}
+.example-explanation{font-size:.92rem;line-height:1.6;margin:1rem 0 1.2rem}
+.coefficient-inputs{font-size:.83rem;font-variant-numeric:tabular-nums;color:var(--ink-soft);padding:.7rem 0;border-top:1px solid var(--line);margin:0 0 .5rem}
+.coefficient-axis,.coefficient-row{display:grid;grid-template-columns:4.3rem minmax(0,1fr) 5.2rem;column-gap:.8rem;align-items:center}
+.coefficient-axis{font-size:.72rem;color:var(--muted);margin:.8rem 0 .25rem;font-variant-numeric:tabular-nums}
+.coefficient-axis>div{display:flex;justify-content:space-between}
+.coefficient-axis>span:last-child{text-align:right}
+.coefficient-rows{list-style:none;padding:0;margin:0}
+.coefficient-row{margin:0;padding:.8rem 0;border-bottom:1px solid var(--line);row-gap:.25rem}
+.coefficient-name{font-size:.86rem}
+.coefficient-track{position:relative;height:16px;background:#f1f3f6;border-left:1px solid #aeb5bf;border-right:1px solid #d8dde4;border-radius:2px}
+.coefficient-bar{position:absolute;left:0;top:3px;height:10px;background:var(--series);border-radius:0 2px 2px 0}
+.coefficient-zero{position:absolute;left:0;top:4px;transform:translateX(-50%);height:8px;width:8px;border:2px solid var(--series);border-radius:50%;background:#fff}
+.coefficient-value{text-align:right;font-family:"JetBrains Mono",monospace;font-size:.85rem;font-weight:500;font-variant-numeric:tabular-nums}
+.coefficient-reason{grid-column:2/-1;font-size:.76rem;color:var(--ink-soft);line-height:1.4}
+[data-direction=negative] .coefficient-bar{left:auto;right:0;border-radius:2px 0 0 2px}
+[data-direction=negative] .coefficient-zero{left:auto;right:0;transform:translateX(50%)}
+.coefficient-settings{margin:1rem 0 0;font-size:.82rem}
+.coefficient-settings summary{font-size:.8rem}
+.gradient-error{font-size:.85rem;color:#a3292e}
+@media(max-width:640px){.example-presets{grid-template-columns:1fr 1fr}.example-presets button{font-size:.76rem;padding:.65rem .45rem}.coefficient-axis,.coefficient-row{grid-template-columns:3.6rem minmax(0,1fr) 4.65rem;column-gap:.65rem}.coefficient-name,.coefficient-value{font-size:.79rem}.coefficient-reason{font-size:.72rem}.example-explanation{font-size:.89rem}.coefficient-inputs{font-size:.77rem}.coefficient-row{padding:.7rem 0}}
 </style>
 </head>
 <body>
@@ -364,16 +385,34 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 
 <section id="explorer">
 <h2>Try the gradients</h2>
-<p>Change the old probability or advantage sign. The plot shows the coefficient \(c\) before length normalization. GSPO is omitted because its coefficient depends on the entire response.</p>
-<div class="panel" id="gradient-explorer"><p class="panel-title">Policy-gradient coefficient</p><p class="panel-sub">Same token probabilities and advantage; only the surrogate changes.</p>
-<div class="controls"><label>Advantage<select id="advantage"><option value="1">+1 · reward it</option><option value="-1">−1 · discourage it</option></select></label><label>Old probability q<input id="old-prob" max="0.95" min="0.00001" step="0.001" type="number" value="0.2"/></label><label>Current ratio r<input id="ratio" max="5" min="0.02" step="0.01" type="range" value="1.5"/><output for="ratio" id="ratio-output">1.50</output></label></div>
-<div class="controls"><button data-example="rare" type="button">Rare token: 0.001 → 0.01</button><button data-example="common" type="button">Common token: 0.5 → 0.7</button><button data-example="baseline" type="button">PPO example</button></div>
-<figure><svg aria-label="Gradient coefficients for six token-level surrogate objectives" id="gradient-plot" role="img" viewbox="0 0 680 350"></svg><figcaption>Illustrative bounds: PPO 0.8–1.2; DAPO 0.8–1.28; CISPO cap and GLM rejection 0.5–5; binary-TV DPPO δ = 0.15; SAPO τ = 1 for positive and 1.05 for negative advantages. The constraints are not matched in strength.</figcaption></figure>
-<div class="chart-legend" id="gradient-legend"></div><p aria-live="polite" class="readout" id="gradient-readout"></p>
-<div class="table-scroll"><table class="ptable"><thead><tr><th>Surrogate</th><th>Coefficient c</th><th>At this token</th></tr></thead><tbody id="gradient-values"></tbody></table></div>
+<p>Compare one token across six rules. Positive \(c\) reinforces the token; negative \(c\) discourages it. GSPO needs a whole response and is omitted here.</p>
+<div class="panel" id="gradient-explorer">
+<p class="panel-title">Policy-gradient coefficient</p>
+<p class="panel-sub">Choose an example, then adjust the token probabilities.</p>
+<div class="example-presets" role="group" aria-label="Worked examples">
+<button data-example="rare" type="button" aria-pressed="true">Rare token ×10</button>
+<button data-example="clip" type="button" aria-pressed="false">PPO vs. DAPO</button>
+<button data-example="common" type="button" aria-pressed="false">Common token +40%</button>
+<button data-example="negative" type="button" aria-pressed="false">Negative advantage</button>
 </div>
-<p>At \(p=q\), all six displayed rules give \(c=A\). Small updates on fresh batches may barely activate the gates. Measure their activation before attributing a result to an algorithm name.</p>
+<p id="example-explanation" class="example-explanation" aria-live="polite"></p>
+<div class="controls">
+<label>Advantage<select id="advantage"><option value="1">+1 · reinforce</option><option value="-1">−1 · discourage</option></select></label>
+<label>Rollout probability q<input id="old-prob" max="0.95" min="0.00001" step="any" type="number" value="0.001" aria-describedby="gradient-error"/></label>
+<label>Ratio r = p/q<input id="ratio" max="10" min="0.02" step="0.01" type="range" value="10"/><output for="ratio" id="ratio-output">10.00</output></label>
+</div>
+<p id="gradient-error" class="gradient-error" role="status" hidden></p>
+<figure id="gradient-comparison" aria-label="Gradient coefficients by algorithm">
+<p id="gradient-readout" class="coefficient-inputs"></p>
+<div class="coefficient-axis" aria-hidden="true"><span>Method</span><div><span id="coefficient-min">0</span><span id="coefficient-max">+10</span></div><span>c</span></div>
+<ol id="gradient-values" class="coefficient-rows" aria-label="Coefficients for the selected token"></ol>
+<figcaption>Every row uses the same scale. A hollow circle marks zero; small nonzero values are printed explicitly. Coefficients are shown before length normalization.</figcaption>
+</figure>
+<details class="coefficient-settings"><summary>Example thresholds</summary><p>PPO: 0.8–1.2. DAPO: 0.8–1.28. CISPO cap and GLM rejection: 0.5–5. Binary-TV DPPO: δ = 0.15. SAPO: τ = 1 for positive and 1.05 for negative advantages. These are illustrative settings, not constraints matched in strength.</p></details>
+</div>
+<p>At \(p=q\), all six rules give \(c=A\). Small updates on fresh batches may barely activate the gates. Measure their activation before attributing a result to an algorithm name.</p>
 </section>
+
 
 <section id="aggregation">
 <h2>Weighting long responses</h2>
@@ -549,44 +588,86 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 <script>
 (() => {
 'use strict';
-const ns = 'http://www.w3.org/2000/svg';
-const colors = {PPO:'#4f46e5',DAPO:'#0ea5e9',CISPO:'#d97706','GLM-5':'#e5484d',DPPO:'#16865c',SAPO:'#a855f7'};
-const names=Object.keys(colors), plot=document.getElementById('gradient-plot');
+const colors = {PPO:'#4f46e5',DAPO:'#0284c7',CISPO:'#b96805','GLM-5':'#e5484d',DPPO:'#16865c',SAPO:'#9333ea'};
+const names=Object.keys(colors);
 const prob=document.getElementById('old-prob'), ratio=document.getElementById('ratio'), adv=document.getElementById('advantage');
-function el(tag,attrs={},text=''){const n=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(text)n.textContent=text;return n;}
+const presets={
+ rare:{q:.001,r:10,a:1,text:'A tenfold increase moves only 0.009 probability mass. DPPO keeps +10; CISPO caps it at +5; GLM-5 rejects it.'},
+ clip:{q:.2,r:1.25,a:1,text:'At ratio 1.25, PPO has crossed its 1.2 cutoff. DAPO still allows the update up to 1.28.'},
+ common:{q:.5,r:1.4,a:1,text:'The ratio is only 1.4, but probability rose by 0.20. DPPO stops the update; GLM-5 keeps it.'},
+ negative:{q:.9,r:.82,a:-1,text:'Probability fell by 0.162. DPPO stops pushing it down; PPO has not reached its lower ratio bound of 0.8.'}
+};
 function coefficient(name,r,q,a){
  if(name==='PPO'||name==='DAPO'){const upper=name==='DAPO'?1.28:1.2;return (a>0&&r>upper)||(a<0&&r<.8)?0:a*r;}
  if(name==='CISPO')return a*Math.max(.5,Math.min(5,r));
  if(name==='GLM-5')return r>.5&&r<5?a*r:0;
- if(name==='DPPO')return (a>0&&q*(r-1)>.15)||(a<0&&q*(1-r)>.15)?0:a*r;
+ // Avoid treating an exact decimal threshold as exceeded due to floating-point roundoff.
+ if(name==='DPPO')return q*(a>0?r-1:1-r)>.15+1e-12?0:a*r;
  const h=1/(1+Math.exp(-(a>0?1:1.05)*(r-1)));return a*r*4*h*(1-h);
 }
-function render(){
- let q=Number(prob.value);if(!Number.isFinite(q)||q<=0||q>.95)return;
- const a=Number(adv.value),maxR=Math.min(10,1/q);
- ratio.max=maxR;const r=Math.min(maxR,Math.max(.02,Number(ratio.value)));ratio.value=r;
- document.getElementById('ratio-output').value=r.toFixed(2);
- plot.replaceChildren();
- const mobile=plot.clientWidth<480,W=mobile?380:680,H=mobile?330:350;plot.setAttribute('viewBox',`0 0 ${W} ${H}`);
- const left=mobile?44:56,right=W-24,top=26,bottom=H-55,maxY=Math.max(2,Math.min(10,maxR)), x=v=>left+v/maxR*(right-left), y=v=>a>0?bottom-v/maxY*(bottom-top):top-v/maxY*(bottom-top);
- for(let k=0;k<=4;k++){const xv=k*maxR/4,yv=a*k*maxY/4;plot.append(el('line',{x1:x(xv),x2:x(xv),y1:top,y2:bottom,stroke:'#e8e8e6'}));plot.append(el('text',{x:x(xv),y:bottom+21,'text-anchor':'middle',class:'svg-label'},xv.toFixed(1)));plot.append(el('line',{x1:left,x2:right,y1:y(yv),y2:y(yv),stroke:'#e8e8e6'}));plot.append(el('text',{x:left-10,y:y(yv)+4,'text-anchor':'end',class:'svg-label'},yv.toFixed(1)));}
- plot.append(el('line',{x1:x(1),x2:x(1),y1:top,y2:bottom,stroke:'#8b949e','stroke-dasharray':'4 4'}));
- plot.append(el('text',{x:(left+right)/2,y:H-8,'text-anchor':'middle',class:'svg-label'},'Probability ratio (r = p/q)'));
- plot.append(el('text',{x:left,y:12,class:'svg-label'},'Coefficient c on ∇ log p'));
- names.forEach((name,idx)=>{
-  let d='',last=null;
-  for(let k=0;k<=1000;k++){const rv=.00001+(maxR-.00001)*k/1000,cv=coefficient(name,rv,q,a);const jump=last!==null&&Math.abs(cv-last)>.15;d+=(k===0||jump?'M':'L')+x(rv).toFixed(2)+','+y(cv).toFixed(2);last=cv;}
-  plot.append(el('path',{d,fill:'none',stroke:colors[name],'stroke-width':2.3,'stroke-dasharray':idx===1?'7 3':idx===2?'2 3':'none'}));
-  plot.append(el('circle',{cx:x(r),cy:y(coefficient(name,r,q,a)),r:4.3,fill:colors[name],stroke:'#fff','stroke-width':1.4}));
- });
- plot.append(el('line',{x1:x(r),x2:x(r),y1:top,y2:bottom,stroke:'#475059','stroke-width':1,'stroke-dasharray':'2 4'}));
- document.getElementById('gradient-readout').textContent=`q = ${q.toPrecision(4)}, p = ${(q*r).toPrecision(4)}, ratio = ${r.toFixed(2)}, probability change = ${(q*(r-1)).toFixed(4)}. Advantage ${a>0?'+1':'−1'}.`;
- const tbody=document.getElementById('gradient-values');tbody.replaceChildren();
- names.forEach(name=>{const c=coefficient(name,r,q,a),tr=document.createElement('tr');const status=c===0?'Gated off':name==='SAPO'?'Smoothly weighted':name==='CISPO'&&(r<.5||r>5)?'Weight capped':'Retained';[name,c.toFixed(4),status].forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.append(td)});tbody.append(tr);});
+function signed(value){
+ if(value===0)return '0';
+ const magnitude=Math.abs(value);
+ const digits=magnitude<.0001?magnitude.toExponential(2):Number(magnitude.toFixed(4)).toString();
+ return (value<0?'−':'+')+digits;
 }
-const legend=document.getElementById('gradient-legend');names.forEach(name=>{const s=document.createElement('span');s.style.setProperty('--series',colors[name]);s.textContent=name;legend.append(s)});
-[prob,ratio,adv].forEach(n=>n.addEventListener('input',render));window.addEventListener('resize',render);
-document.querySelectorAll('[data-example]').forEach(b=>b.addEventListener('click',()=>{const mode=b.dataset.example;prob.value=mode==='rare'?.001:mode==='common'?.5:.2;ratio.max=10;ratio.value=mode==='rare'?10:mode==='common'?1.4:1.5;adv.value=1;render()}));render();
+function reason(name,c,r,a){
+ if(name==='PPO'||name==='DAPO'){
+  const upper=name==='DAPO'?'1.28':'1.2';
+  return c===0?(a>0?'Above upper bound '+upper:'Below lower bound 0.8'):'Retained for this advantage';
+ }
+ if(name==='CISPO')return r>5?'Weight capped at 5':r<.5?'Weight floored at 0.5':'Weight equals the ratio';
+ if(name==='GLM-5')return c===0?'Outside accepted interval (0.5, 5)':'Inside accepted interval (0.5, 5)';
+ if(name==='DPPO')return c===0?'Probability change exceeds 0.15':'Directional probability change ≤ 0.15';
+ return 'Smooth attenuation; no hard cutoff';
+}
+function render(){
+ const q=Number(prob.value),a=Number(adv.value);
+ const error=document.getElementById('gradient-error'),figure=document.getElementById('gradient-comparison');
+ const valid=Number.isFinite(q)&&q>=.00001&&q<=.95;
+ error.hidden=valid;figure.hidden=!valid;prob.setAttribute('aria-invalid',String(!valid));
+ if(!valid){
+  error.textContent='Enter a rollout probability between 0.00001 and 0.95.';
+  document.getElementById('example-explanation').textContent='';
+  document.querySelectorAll('[data-example]').forEach(b=>b.setAttribute('aria-pressed','false'));
+  return;
+ }
+ // The slider only offers feasible token probabilities (p = q × r ≤ 1).
+ ratio.max=Math.floor(Math.min(10,1/q)*100)/100;
+ ratio.value=Math.min(Number(ratio.max),Math.max(.02,Number(ratio.value)));
+ const r=Number(ratio.value);
+ document.getElementById('ratio-output').value=r.toFixed(2);
+ const selected=Object.keys(presets).find(key=>{const x=presets[key];return Math.abs(q-x.q)<1e-12&&Math.abs(r-x.r)<1e-12&&a===x.a;});
+ document.querySelectorAll('[data-example]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.example===selected)));
+ document.getElementById('example-explanation').textContent=selected?presets[selected].text:'All six rules see the same token and advantage. Compare their coefficients and the reason each update is kept or stopped.';
+ document.getElementById('gradient-readout').textContent='q = '+q.toPrecision(3)+' → p = '+(q*r).toPrecision(3)+' · r = '+r.toFixed(2)+' · A = '+signed(a);
+ const values=names.map(name=>coefficient(name,r,q,a));
+ const scale=Math.max(1,Math.ceil(Math.max(r,...values.map(Math.abs))));
+ document.getElementById('coefficient-min').textContent=a>0?'0':'−'+scale;
+ document.getElementById('coefficient-max').textContent=a>0?'+'+scale:'0';
+ figure.dataset.direction=a>0?'positive':'negative';
+ figure.dataset.scale=scale;
+ const list=document.getElementById('gradient-values');list.replaceChildren();
+ names.forEach((name,i)=>{
+  const c=values[i],row=document.createElement('li');
+  row.className='coefficient-row';row.dataset.algorithm=name;row.dataset.coefficient=c;
+  row.style.setProperty('--series',colors[name]);
+  const label=document.createElement('strong');label.className='coefficient-name';label.textContent=name;
+  const track=document.createElement('div');track.className='coefficient-track';track.setAttribute('aria-hidden','true');
+  const bar=document.createElement('span');bar.className=c===0?'coefficient-zero':'coefficient-bar';
+  if(c!==0)bar.style.width=(Math.abs(c)/scale*100)+'%';
+  track.append(bar);
+  const value=document.createElement('span');value.className='coefficient-value';value.textContent=signed(c);
+  const why=document.createElement('span');why.className='coefficient-reason';why.textContent=reason(name,c,r,a);
+  row.append(label,track,value,why);list.append(row);
+ });
+}
+[prob,ratio,adv].forEach(input=>input.addEventListener('input',render));
+document.querySelectorAll('[data-example]').forEach(button=>button.addEventListener('click',()=>{
+ const preset=presets[button.dataset.example];
+ prob.value=preset.q;ratio.max=10;ratio.value=preset.r;adv.value=preset.a;render();
+}));
+render();
 const links=[...document.querySelectorAll('.toc a')];
 const sections=[...document.querySelectorAll('main > section[id]')];
 function updateToc(){

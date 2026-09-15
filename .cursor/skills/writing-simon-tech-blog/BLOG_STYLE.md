@@ -75,6 +75,12 @@ Use color consistently. Keep one visual focused on one question. Do not use
 large pseudocode blocks, giant profiler tables, or screenshots whose details
 the prose does not need.
 
+When curves coincide over much of their domain, use separate labeled rows or
+small multiples. Choose examples that expose the mechanisms' differences and
+show exact values for small nonzero contributions. Do not rely on color or
+dashes to distinguish identical curves. If plotting discontinuous functions,
+mark and explain the cutoff rather than leaving an unexplained gap.
+
 For performance sections:
 
 - Show wall-clock measurements first.
