@@ -95,8 +95,8 @@ def social_card(output):
     fontroot=Path(matplotlib.get_data_path())/"fonts/ttf"
     def font(size,bold=False):
         return ImageFont.truetype(str(fontroot/("DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf")),size)
-    draw.text((58,42),"GRPO batch sizes",font=font(72,True),fill=INK)
-    draw.text((62,143),"Qwen3.5-4B · two math training runs",font=font(31),fill="#515963")
+    draw.text((58,42),"Choosing RL batch sizes",font=font(68,True),fill=INK)
+    draw.text((62,143),"Batch accounting · published evidence · Qwen3.5-4B",font=font(30),fill="#515963")
     for box in [(60,240,548,459),(652,240,1140,459)]:
         draw.rounded_rectangle(box,radius=20,fill="#f0f1ff",outline="#deddfb",width=2)
     draw.text((91,263),"GENERATE",font=font(26,True),fill=ACCENT)

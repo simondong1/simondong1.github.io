@@ -63,3 +63,26 @@ backbone, not the vision encoder. The pinned model provider constructs
 contain text only. Source paths at the pinned Miles commit:
 `miles/backends/megatron_utils/model_provider.py` and
 `miles_plugins/mbridge/qwen3_5.py`.
+
+## Batch-sizing article revision, September 16, 2026
+
+Rechecked the primary HTML versions of DeepSeek-R1 v2 (2501.12948), DAPO v2
+(2503.14476), and Tencent's batch-scaling paper v1 (2608.29296). The R1 worked
+example describes its first RL stage: G=16, R=8192, B=512, S=16, one inner
+epoch, LR=3e-6. P=512 is derived from R/G rather than separately reported.
+
+Tencent's GRPO reference uses Qwen3-30B-A3B-Instruct-2507, P=128, G=8,
+B=1024, one optimizer update per retained batch, and LR=1e-6. Its reported
+approximately aligned range is P=64–1024 after square-root LR scaling;
+P=2048 and 4096 depart from that range. Its Table 1 uses a 77% validation
+target and reports 11.90h at P=128, 8.42h at P=1024, and 14.68h at P=2048.
+The fixed-LR P=256 control uses 1.67 times the reference samples in that
+accounting. The 2.29x generation result belongs to the separate Hunyuan PPO
+workload, not to end-to-end GRPO training.
+
+The revised article separates exact PG=BS accounting from empirical
+batch-size invariance, introduces variables before comparisons, and ends
+with a model-specific batch recommendation. Its local result tables are
+unchanged. The browser check covered equation rendering, calculator inputs,
+local links, and layouts at widths 390, 768, and 1440 pixels; the full article
+and its heading outline received separate editorial review.

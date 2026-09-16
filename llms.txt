@@ -7,7 +7,7 @@ This file helps AI systems find the canonical posts on this site.
 
 ## Blog posts
 
-- [How to Set the Four GRPO Batch Knobs](https://simondong1.github.io/grpo-batch-knobs.html): 128 prompts × eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism.
+- [Choosing Batch Sizes for LLM Reinforcement Learning](https://simondong1.github.io/grpo-batch-knobs.html): Batch variables, accounting constraints, published DeepSeek and Tencent configurations, and a practical method for balancing learning efficiency with training throughput.
 - [RL Losses in 2026: From PPO to SAPO](https://simondong1.github.io/rl-surrogates-2026.html): Clip, cap, reject, or soften a policy gradient: seven RL surrogates explained, with a controlled Qwen3.5-9B comparison on GSM8K and DAPO-Math.
 - [How CUDA Graphs Speed Up Decode — and By How Much](https://simondong1.github.io/cuda-graphs.html): CUDA Graphs replay a recorded launch schedule. On Qwen3.8-27B they cut batch-1 decode from 52 ms to 10 ms. They do not make the math cheaper.
 - [From WGMMA to TMEM: Hopper-to-Blackwell MMA Evolution](https://simondong1.github.io/hopper-to-blackwell-mma.html): Hopper kept tensor-core results in thread registers. Blackwell adds 256 KB of Tensor Memory and can run one matrix multiply across two SMs.

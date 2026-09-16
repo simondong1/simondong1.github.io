@@ -8,11 +8,11 @@
     <lastBuildDate>Wed, 16 Sep 2026 10:35:39 +0000</lastBuildDate>
     <atom:link href="https://simondong1.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>How to Set the Four GRPO Batch Knobs</title>
+      <title>Choosing Batch Sizes for LLM Reinforcement Learning</title>
       <link>https://simondong1.github.io/grpo-batch-knobs.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/grpo-batch-knobs.html</guid>
       <pubDate>Tue, 15 Sep 2026 00:00:00 +0000</pubDate>
-      <description>128 prompts × eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism.</description>
+      <description>Batch variables, accounting constraints, published DeepSeek and Tencent configurations, and a practical method for balancing learning efficiency with training throughput.</description>
     </item>
     <item>
       <title>RL Losses in 2026: From PPO to SAPO</title>

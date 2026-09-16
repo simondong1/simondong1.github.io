@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>How to Set the Four GRPO Batch Knobs</title>
-<meta content="128 prompts × eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism." name="description"/>
+<title>Choosing Batch Sizes for LLM Reinforcement Learning</title>
+<meta content="Batch variables, accounting constraints, published DeepSeek and Tencent configurations, and a practical method for balancing learning efficiency with training throughput." name="description"/>
 <meta content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" name="robots"/>
 <link href="https://simondong1.github.io/grpo-batch-knobs.html" rel="canonical"/>
 <link href="https://simondong1.github.io/feed.xml" rel="alternate" title="Simon Dong Blog" type="application/rss+xml"/>
 <link href="https://simondong1.github.io/llms.txt" rel="alternate" title="llms.txt" type="text/plain"/>
-<meta content="How to Set the Four GRPO Batch Knobs" property="og:title"/>
-<meta content="128 prompts × eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism." property="og:description"/>
+<meta content="Choosing Batch Sizes for LLM Reinforcement Learning" property="og:title"/>
+<meta content="Batch variables, accounting constraints, published DeepSeek and Tencent configurations, and a practical method for balancing learning efficiency with training throughput." property="og:description"/>
 <meta content="article" property="og:type"/>
 <meta content="https://simondong1.github.io/grpo-batch-knobs.html" property="og:url"/>
 <meta content="Simon Dong" property="og:site_name"/>
 <meta content="en_US" property="og:locale"/>
-<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=3" property="og:image"/>
-<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=3" property="og:image:secure_url"/>
+<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=4" property="og:image"/>
+<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=4" property="og:image:secure_url"/>
 <meta content="image/png" property="og:image:type"/>
 <meta content="1200" property="og:image:width"/>
 <meta content="630" property="og:image:height"/>
@@ -24,20 +24,20 @@
 <meta content="summary_large_image" name="twitter:card"/>
 <meta content="@dongsixiang" name="twitter:site"/>
 <meta content="@dongsixiang" name="twitter:creator"/>
-<meta content="How to Set the Four GRPO Batch Knobs" name="twitter:title"/>
-<meta content="128 prompts × eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism." name="twitter:description"/>
-<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=3" name="twitter:image"/>
+<meta content="Choosing Batch Sizes for LLM Reinforcement Learning" name="twitter:title"/>
+<meta content="Batch variables, accounting constraints, published DeepSeek and Tencent configurations, and a practical method for balancing learning efficiency with training throughput." name="twitter:description"/>
+<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=4" name="twitter:image"/>
 <meta content="Qwen3.5-4B: 128 prompts with eight answers each supply four disjoint optimizer updates of 256 responses." name="twitter:image:alt"/>
 <meta content="Simon Dong" name="author"/>
-<meta content="How to Set the Four GRPO Batch Knobs" name="citation_title"/>
+<meta content="Choosing Batch Sizes for LLM Reinforcement Learning" name="citation_title"/>
 <meta content="Dong, Simon" name="citation_author"/>
 <meta content="2026/09/15" name="citation_publication_date"/>
 <meta content="https://simondong1.github.io/grpo-batch-knobs.html" name="citation_fulltext_html_url"/>
 <script type="application/ld+json">{
   "@context": "https://schema.org",
   "@type": "TechArticle",
-  "headline": "How to Set the Four GRPO Batch Knobs",
-  "description": "128 prompts \u00d7 eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism.",
+  "headline": "Choosing Batch Sizes for LLM Reinforcement Learning",
+  "description": "Batch variables, accounting constraints, published DeepSeek and Tencent configurations, and a practical method for balancing learning efficiency with training throughput.",
   "author": {
     "@type": "Person",
     "name": "Simon Dong",
@@ -47,7 +47,7 @@
   "dateModified": "2026-09-16",
   "mainEntityOfPage": "https://simondong1.github.io/grpo-batch-knobs.html",
   "image": [
-    "https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=3"
+    "https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=4"
   ],
   "keywords": [
     "GRPO",
@@ -190,35 +190,46 @@ footer a{color:var(--ink-soft)}
 <body>
 <header class="hero"><div class="wrap">
 <p class="eyebrow">Reinforcement learning · Part 3</p>
-<h1 class="title">How to Set the Four GRPO Batch Knobs</h1>
-<p class="subtitle">A concrete recipe for Qwen3.5-4B: 128 prompts, eight answers each, four updates of 256 responses. Two math runs test how it learns; separate benchmarks test how to run it faster.</p>
+<h1 class="title">Choosing Batch Sizes for LLM Reinforcement Learning</h1>
+<p class="subtitle">Define the rollout and optimizer batches, learn from published training configurations, and choose settings that improve time to a validation target.</p>
 <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span aria-hidden="true">·</span><span>Updated <time datetime="2026-09-16">September 16, 2026</time></span></div>
 </div></header>
 <main class="wrap">
-<p><strong>Choose the optimizer batch for learning, then tune GPU packing separately.</strong> We trained the March 2026 <a href="https://huggingface.co/Qwen/Qwen3.5-4B">Qwen3.5-4B</a> model for 131,072 responses on each of GSM8K and DAPO-MATH-17K, with learning rate (LR) <code>1e-6</code>.</p>
-<p><strong>These are two learning trajectories of one recipe, not a search for the best tuple.</strong> The evidence supports the results below at this budget. It cannot establish that four updates beat one, that eight answers beat sixteen, or that another training seed would give the same result. DAPO required checkpoint recovery after several worker interruptions; its discarded work is accounted for below.</p>
-<p><strong>Group Relative Policy Optimization (GRPO)</strong> compares the rewards of several answers to the same problem. A <strong>rollout</strong> collects those answers using one version of the model; the optimizer then updates the parameters using the collected responses.</p>
-<a class="background-link" href="rl-surrogates-2026.html"><span class="kicker">Background · Part 2</span><strong>RL Losses in 2026: From PPO to SAPO ↗</strong><span>How rewards, advantages, probability ratios, and clipping produce a training gradient.</span></a>
+<p><strong>Choose the optimizer batch and learning rate together, then size rollout collection and GPU execution around them.</strong> In LLM reinforcement learning, “batch size” can mean prompts sent to a generator, responses used in one optimizer update, or work processed on one GPU. Those quantities control different parts of training.</p>
+<p><strong>Group Relative Policy Optimization (GRPO)</strong> estimates an answer’s advantage by comparing its reward with other answers to the same prompt. A rollout collects responses; an optimizer update changes the model parameters using their policy gradients. The important design choice is how much data to collect, how to divide it into updates, and when to refresh the generating policy.</p>
+<p>This guide combines published DeepSeek-R1, DAPO, and Tencent batch-scaling results with two Qwen3.5-4B training runs and separate GPU benchmarks. The local runs measure one configuration on two math tasks; the published studies supply the broader evidence for choosing and scaling batches.</p>
+<a class="background-link" href="rl-surrogates-2026.html"><span class="kicker">Background · Part 2</span><strong>RL Losses in 2026: From PPO to SAPO ↗</strong><span>Rewards, advantages, probability ratios, and policy-gradient objectives.</span></a>
 <nav class="toc" aria-label="Table of contents"><div class="toc-title">On this page</div><ol>
-<li><a href="#knobs">One collection, four updates</a></li><li><a href="#learning">What the two runs learned</a></li>
-<li><a href="#hardware">How GPUs changed the time</a></li><li><a href="#papers">What the papers actually use</a></li>
-<li><a href="#recipe">How to choose the settings</a></li><li><a href="#methods">Methods and limits</a></li>
-<li><a href="#references">Sources and reproduction</a></li></ol></nav>
+<li><a href="#knobs">Batch variables and accounting</a></li>
+<li><a href="#papers">Published training configurations</a></li>
+<li><a href="#scaling">Tencent’s batch-scaling results</a></li>
+<li><a href="#recipe">Selecting batch sizes</a></li>
+<li><a href="#learning">Qwen3.5-4B learning results</a></li>
+<li><a href="#hardware">GPU parallelism and throughput</a></li>
+<li><a href="#summary">Recommended starting configuration</a></li>
+<li><a href="#methods">Experimental method and limitations</a></li>
+<li><a href="#references">References and reproducibility</a></li>
+</ol></nav>
 
-<section id="knobs"><h2>One collection, four updates</h2>
-<p>Generate eight answers to each of 128 problems. You now have 1,024 training responses. This example keeps those responses fixed and asks how to consume them: four updates of 256, or one update of 1,024.</p>
-<div class="table-scroll"><table class="ptable settings-table"><thead><tr><th>Miles setting</th><th>Symbol</th><th>Unit</th></tr></thead><tbody>
-<tr><td><code>--rollout-batch-size</code></td><td>\(P\)</td><td>Prompts per collection</td></tr>
-<tr><td><code>--n-samples-per-prompt</code></td><td>\(G\)</td><td>Responses per prompt</td></tr>
-<tr><td><code>--global-batch-size</code></td><td>\(B\)</td><td>Responses per optimizer update</td></tr>
-<tr><td><code>--num-steps-per-rollout</code></td><td>\(S\)</td><td>Updates per collection</td></tr>
+<section id="knobs"><h2>Batch variables and accounting</h2>
+<p>The table defines the quantities for a synchronous collection followed by training. Its example is the actual configuration used for both Qwen3.5-4B runs in this article. Counts refer to retained responses; a prompt can recur in a later collection with newly generated answers.</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Variable</th><th>Definition and role</th><th>Measured Qwen3.5-4B run</th></tr></thead><tbody>
+<tr><td>\(P\): prompt batch</td><td>Prompt groups per collection. At fixed group size, it controls the amount of new training data collected before updating the generator.</td><td>128 prompt groups</td></tr>
+<tr><td>\(G\): group size</td><td>Responses per prompt. These rewards define the within-prompt comparison used to calculate advantages.</td><td>8 responses per prompt</td></tr>
+<tr><td>\(R=PG\): rollout batch</td><td>Total retained responses in a collection. This is a response count, not a token count.</td><td>1,024 responses</td></tr>
+<tr><td>\(B\): optimizer batch</td><td>Responses contributing to one global optimizer update, summed across data-parallel workers and gradient accumulation.</td><td>256 responses per update</td></tr>
+<tr><td>\(S\): updates per collection</td><td>Optimizer updates completed before publishing new weights to the generator in this synchronous setup.</td><td>4 updates</td></tr>
+<tr><td>\(E\): policy epochs</td><td>Passes over the same saved responses. This is distinct from generating fresh responses to prompts seen in an earlier dataset epoch.</td><td>1 pass; no response replay</td></tr>
 </tbody></table></div>
-<p>The accounting rule makes every retained response fit into exactly one update:</p>
-<div class="formula featured">\[ P\times G=B\times S. \]</div>
-<p><strong>More inner steps partition the collection; they do not replay it.</strong> Each slice produces an accumulated gradient and an Adam optimizer update. The generator receives new weights only after all the slices finish. Later slices therefore train a model that has already moved away from the version that generated them.</p>
+<h3>The accounting invariant</h3>
+<p>With one pass, no discarded responses, and equal batches, the number collected must equal the number consumed:</p>
+<div class="formula featured">\[R=PG=BS.\]</div>
+<p>For the measured run, \(128\times8=256\times4=1{,}024\). Each response contributes to one update. The four updates use disjoint slices; they are <strong>not four policy epochs</strong>. With \(E\) complete passes over the same collection, the accounting becomes \(EPG=BS\), where \(S\) then counts all optimizer updates.</p>
+<p>These are constraints, not optimization rules. With \(G\) and \(E=1\) fixed, \(P\) and \(B\) remain two independent choices; \(S=PG/B\) follows and must be an integer. After the first update, later slices are evaluated by a policy that has moved away from the generator’s snapshot. Subdividing a collection therefore changes both update frequency and the policy mismatch encountered within that collection.</p>
+<p>Filtering requires separate counters for generated and retained responses. The identity above describes the retained training batch, while cost accounting must include rejected responses. In asynchronous systems, a collection boundary can contain responses from different policy versions; policy age needs a separate measurement.</p>
 <div class="panel" id="batch-calculator">
-<p class="panel-title">Choose three batch settings</p>
-<p class="panel-sub">The fourth must make every generated response fit into exactly one optimizer update.</p>
+<p class="panel-title">Batch accounting calculator</p>
+<p class="panel-sub">Assumes one pass over retained responses, equal optimizer batches, and no response filtering.</p>
 <div class="controls">
 <label>Calculate
       <select aria-label="Setting to calculate" id="kb-derived">
@@ -236,10 +247,10 @@ footer a{color:var(--ink-soft)}
 <label>S · updates / rollout<input disabled="" id="kb-steps" min="1" step="1" type="number" value="4"/></label>
 </div>
 <div aria-label="Batch presets" class="controls">
-<button data-kb-preset="32,8,256,1" type="button">One small update</button>
-<button data-kb-preset="128,8,256,4" type="button">Our four-update recipe</button>
-<button data-kb-preset="128,8,1024,1" type="button">One large update</button>
-<button data-kb-preset="512,16,512,16" type="button">R1 / DAPO batch shape</button>
+<button data-kb-preset="32,8,256,1" type="button">Miles example: 32 × 8</button>
+<button data-kb-preset="128,8,256,4" type="button">Measured run: 128 × 8</button>
+<button data-kb-preset="128,8,1024,1" type="button">Single update: B = 1,024</button>
+<button data-kb-preset="512,16,512,16" type="button">R1 / DAPO: 512 × 16</button>
 </div>
 <p aria-live="polite" class="readout" id="kb-result"></p>
 <div aria-label="Responses consumed by each optimizer update" class="kb-slices" id="kb-slices"></div>
@@ -303,15 +314,72 @@ footer a{color:var(--ink-soft)}
   update();
 })();
 </script>
-<p><strong>Fixing group size still leaves two independent choices:</strong> how many prompts to collect, and how many responses to use per optimizer update. The number of updates follows. If the optimizer batch is fixed too, a larger collection necessarily means more inner updates.</p>
-<p>A <strong>microbatch</strong> is the part processed at once before gradients are accumulated. Tune <code>--micro-batch-size</code> or <code>--max-tokens-per-gpu</code> for GPU memory and throughput. That preserves the intended optimizer batch, apart from numerical effects. Increasing <code>--global-batch-size</code> changes the learning algorithm.</p>
+<h3>Execution variables and fixed learning settings</h3>
+<p>A <strong>microbatch</strong> is processed in one forward/backward pass. With uniform response-count microbatches, \(D\) data-parallel workers, \(m\) responses per worker, and \(A\) accumulation steps give \(B=DmA\). Dynamic token packing uses variable microbatch sizes, so the implementation must preserve the intended global response weighting across those batches.</p>
+<p><strong>Generation concurrency</strong> counts in-flight responses and is constrained by the live-token KV cache. It can differ from \(R\), especially with streaming generation. <strong>Tensor parallelism</strong> divides supported model operations; it does not multiply the number of independent responses contributing to \(B\).</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Additional variable</th><th>Meaning</th><th>Qwen3.5-4B setting</th></tr></thead><tbody>
+<tr><td>\(\eta\): learning rate</td><td>Optimizer step-size setting; retune when changing the global optimizer batch.</td><td>\(10^{-6}\)</td></tr>
+<tr><td>\(L_{\max}\): response limit</td><td>Maximum generated output length; changes the task and its compute cost.</td><td>16,384 output tokens</td></tr>
+<tr><td>\(T_{\mathrm{pack}}\): packing target</td><td>Token allowance used to form GPU microbatches; independent of the response limit.</td><td>8,192 tokens; a longer response remains intact</td></tr>
+</tbody></table></div>
+<p>The measured runs keep the reward, advantage normalization, loss reduction, optimizer, clipping, and decoding settings fixed. Their exact values appear in <a href="#methods">Experimental method and limitations</a>. Changing only packing can preserve the learning configuration, provided loss weighting is maintained; changing \(B\), \(G\), or response reuse changes the statistical experiment.</p>
 <details><summary>Miles implementation boundaries</summary>
 <p>In our <a href="#ref-miles">pinned Miles version</a>, supplying the number of inner steps derives the optimizer batch by integer floor division. This is not a general, exact “set any three” solver. Our launcher validates all four positive integers and rejects any shape where the products differ.</p>
 <p><code>--num-rollout</code> counts outer generate-then-train cycles. <code>--balance-data</code> reorders responses for token load; group members need not occupy the same update because their advantages have already been calculated. Oversampling and dynamic filtering can generate extra groups: the equality describes what survives to training, while timing must count the discarded work too. Our comparison uses no filtering.</p>
 <p>With one answer per prompt, Miles disables division by the group standard deviation. Group centering subtracts the average reward; with one answer, it subtracts that answer’s reward from itself, yielding zero policy advantage. A one-answer algorithm needs a different baseline or objective.</p>
 </details></section>
 
-<section id="learning"><h2>What the two runs learned</h2>
+<section id="papers"><h2>Published training configurations</h2>
+<p>Published frontier-model training provides concrete precedents, but the numbers describe a particular model, objective, and training stage. The following configurations distinguish retained rollout volume from the optimizer batch.</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Model and source</th><th>Retained collection</th><th>Optimizer updates</th><th>Learning rate</th></tr></thead><tbody>
+<tr><td><a href="#ref-r1">DeepSeek-R1, first RL stage</a></td><td>\(G=16\), \(R=8{,}192\); \(P=512\) derived from \(R/G\)</td><td>\(B=512,\ S=16,\ E=1\)</td><td>\(3\times10^{-6}\)</td></tr>
+<tr><td><a href="#ref-dapo">DAPO, Qwen2.5-32B</a></td><td>\(P=512,\ G=16,\ R=8{,}192\); additional generation can be filtered out</td><td>\(B=512,\ S=16\)</td><td>\(10^{-6}\), with 20-rollout-step warm-up</td></tr>
+<tr><td><a href="#ref-hunyuan-batch-scaling">Tencent, Qwen3-30B-A3B-Instruct-2507</a></td><td>Reference \(P=128,\ G=8,\ R=1{,}024\)</td><td>\(B=1{,}024,\ S=1,\ E=1\)</td><td>Reference \(10^{-6}\); scaled with batch size</td></tr>
+<tr><td><a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/scripts/run-qwen3.5-4B.sh">Miles Qwen3.5-4B example</a></td><td>\(P=32,\ G=8,\ R=256\)</td><td>\(B=256,\ S=1\)</td><td>\(10^{-6}\)</td></tr>
+<tr><td><a href="#learning">Qwen3.5-4B runs in this article</a></td><td>\(P=128,\ G=8,\ R=1{,}024\)</td><td>\(B=256,\ S=4,\ E=1\)</td><td>\(10^{-6}\)</td></tr>
+</tbody></table></div>
+<h3>Worked example: DeepSeek-R1</h3>
+<p>The <a href="#ref-r1">primary paper</a> reports 16 responses per question and 8,192 outputs per rollout in the first RL stage. Those counts imply 512 prompt groups. The collection is randomly divided into 16 mini-batches of 512 responses, trained for one inner epoch:</p>
+<div class="formula">\[512\ \text{prompts}\times16\ \text{responses}=16\ \text{updates}\times512\ \text{responses}.\]</div>
+<p>Here, a “training step” consumes 512 responses; it does not mean collecting a fresh 8,192-response rollout. The large collection amortizes generation, while the smaller optimizer batch allows more frequent parameter updates. This stage also uses a reference-policy penalty and its own reward and clipping settings, so copying only its batch sizes does not reproduce R1.</p>
+<p>Group size also varies across published work. <a href="#ref-deepseek-math">DeepSeekMath</a> uses 64 responses per question. <a href="#ref-gspo">GSPO</a> and <a href="#ref-sapo">SAPO</a> report four mini-batches in their reasoning experiments. These are useful starting points for experiments, rather than evidence that a single group size or update count is best across models.</p>
+</section>
+
+<section id="scaling"><h2>Batch-size invariance in Tencent’s scaling study</h2>
+<p><a href="#ref-hunyuan-batch-scaling">When Do Larger Batches Help Scale LLM Reinforcement Learning?</a> separates learning efficiency from execution throughput. Its term <strong>batch-size invariance</strong> means approximately matching learning curves at equal cumulative training samples after retuning. Unlike \(PG=BS\), this is an empirical property with a limited range, not an accounting identity.</p>
+<h3>Learning-rate retuning and the range of invariance</h3>
+<p>For GRPO on Qwen3-30B-A3B-Instruct-2507, the paper fixes \(G=8\) and takes one optimizer step per retained batch. It varies \(P\) from 64 to 4,096, starting from \(P_0=128\), \(B_0=1{,}024\), and \(\eta_0=10^{-6}\). Adam learning rates use the square-root rule:</p>
+<div class="formula featured">\[\eta(B)=\eta_0\sqrt{B/B_0}.\]</div>
+<p>For example, doubling \(P\) from 128 to 256 also doubles \(B\) from 1,024 to 2,048 because \(S=1\). The candidate learning rate becomes approximately \(1.414\times10^{-6}\). The paper’s retuned curves align approximately for \(P=64\)–1,024 over the measured window; the largest settings, 2,048 and 4,096, depart from that family. Holding the learning rate fixed while doubling the batch instead increases samples to the target by 67% in its reported GRPO comparison.</p>
+<p>This supports square-root scaling as an initial candidate with a fixed-rate control. It does not establish a universal critical batch, and the study retunes only the learning rate; broader retuning could change the observed boundary.</p>
+<h3>Generation throughput and time to a validation target</h3>
+<p>Let \(N^*\) be retained training responses required to reach a fixed validation target, and \(q\) the end-to-end throughput over that run. Then \(T=N^*/q\). Relative to a baseline, a larger batch is faster only when</p>
+<div class="formula">\[\frac{q_{\mathrm{candidate}}}{q_{\mathrm{baseline}}}>\frac{N^*_{\mathrm{candidate}}}{N^*_{\mathrm{baseline}}}.\]</div>
+<p>At the paper’s 77% validation target, measured as mean@32 averaged over AIME 2024 and 2025, its GRPO accounting reports <strong>11.90 hours</strong> for the reference prompt batch of 128 and <strong>8.42 hours</strong> for the retuned batch of 1,024: approximately <strong>29% less time</strong>. Increasing the prompt batch further to 2,048 takes 14.68 hours because the additional samples needed outweigh the throughput gain. These are reported results from Tencent’s workload.</p>
+<p>Its separate PPO experiment with an internal Hunyuan model reports up to <strong>2.29× generation throughput</strong> on fixed hardware. This is a generation-stage measurement on a different workload; it is not a 2.29× end-to-end GRPO speedup.</p>
+<p>Both workloads use asynchronous partial rollouts and streaming generation, with generation-side batch \(B_{\mathrm{gen}}=2B_{\mathrm{train}}\). Their one-update comparisons do not determine the best number of disjoint updates in our synchronous Miles runs. Increasing our \(P\) while holding \(B=256\) fixed increases \(S\); it does not trigger the same optimizer-batch scaling experiment.</p>
+</section>
+
+<section id="recipe"><h2>Selecting rollout and optimizer batch sizes</h2>
+<p>Begin with a working model-specific optimizer batch and group size. Define a validation target or a fixed training budget before comparing alternatives. Keep the reward, loss, response limit, data distribution, and evaluation decoding fixed during a batch comparison.</p>
+<h3>Group size and reward variation</h3>
+<p>For the Qwen3.5-4B setup, \(G=8\) is a documented starting point. Measure how often a group contains both correct and incorrect answers. With outcome rewards and centered advantages, all-correct and all-incorrect groups produce no relative reward signal. Increasing \(G\) can reveal more variation, but at fixed \(R\) it reduces the number of prompt groups. A persistently low mixed-group fraction also warrants checking task difficulty and the reward function.</p>
+<h3>Optimizer-batch scaling and rollout subdivision</h3>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Question</th><th>What changes</th><th>What to compare</th></tr></thead><tbody>
+<tr><td>Would a larger optimizer batch help?</td><td>Vary \(B\); keep \(G\) and \(S\) fixed, deriving \(P=BS/G\). Compare candidate learning rates.</td><td>Learning at equal retained samples, response lengths, and time to the same validation target.</td></tr>
+<tr><td>Would less frequent generation help?</td><td>Hold \(B\), \(G\), and learning rate fixed; increase \(P\), hence \(S\).</td><td>Complete-cycle throughput and policy-ratio, clipping, or effective-sample-size diagnostics by inner update.</td></tr>
+<tr><td>Would more responses per prompt help?</td><td>Vary \(G\) at fixed \(R\) and \(B\); derive \(P=R/G\).</td><td>Mixed-group rate, prompt coverage, and held-out learning; advantage normalization must be specified.</td></tr>
+<tr><td>Can the same learning configuration run faster?</td><td>Hold \(P,G,B,S,E\) fixed; vary microbatch packing, parallelism, or rollout concurrency.</td><td>Memory, complete elapsed time, and numerical/quality checks under the intended loss weighting.</td></tr>
+</tbody></table></div>
+<p>For Adam, test square-root learning-rate scaling alongside the current learning rate when changing \(B\). Do not scale the learning rate merely because \(S\) increases while \(B\) stays fixed. Validate integer batch accounting and the framework’s data-parallel divisibility constraints before launching.</p>
+<p>For multiple inner updates, inspect policy-ratio distributions, clipping, approximate KL, and effective sample size by update position. The trainer/rollout log-probability difference at identical weights instead measures disagreement between execution engines; it does not measure drift caused by intervening optimizer updates.</p>
+<h3>Validation quality under a fixed hardware budget</h3>
+<p>Increase generation concurrency while memory and policy-age constraints permit, and measure complete execution time including weight transfer, evaluation, and checkpointing. Compare learning against retained responses and tokens as well as elapsed time. Response counts alone can hide a shift toward longer answers.</p>
+<p>Retain a larger batch only if its measured throughput gain compensates for any extra samples needed to reach the target. Choose the training horizon in advance: <a href="#ref-scalerl">ScaleRL</a> shows that a batch ranking can change with training duration. A short screening winner therefore needs confirmation at the intended budget, ideally across training seeds.</p>
+</section>
+
+<section id="learning"><h2>Qwen3.5-4B learning results</h2>
+<p>We trained the full text backbone of <a href="https://huggingface.co/Qwen/Qwen3.5-4B">Qwen3.5-4B</a> on GSM8K and DAPO-MATH-17K with \(P=128,G=8,B=256,S=4,E=1\) and learning rate \(10^{-6}\). These are two training trajectories of one configuration; they do not compare batch alternatives.</p>
 <p>Each task's retained training path contains <strong>128 rollouts and 512 Adam updates</strong>. Every rollout supplied 1,024 fresh training responses, consumed once in four disjoint batches. We evaluated 512 validation questions before training and after every 8,192 responses.</p>
 <p>The table reports the fixed-budget endpoint on held-out test questions. The initial model and endpoint each answer every question once using greedy decoding and the same 16,384-token response cap. Changes are in percentage points (pp).</p>
 <p>We also keep a <strong>validation-selected checkpoint</strong>: the best of five predeclared candidates according to validation accuracy. Test results never determine that choice.</p>
@@ -359,7 +427,7 @@ footer a{color:var(--ink-soft)}
 </details>
 </section>
 
-<section id="hardware"><h2>How GPUs changed the time</h2>
+<section id="hardware"><h2>GPU parallelism and training throughput</h2>
 <p><strong>Data parallelism (DP)</strong> puts a full model replica on each training GPU and divides the batch between them. <strong>Tensor parallelism (TP)</strong> divides supported operations within a model across GPUs. TP2/DP4 means four replicas, each split across two GPUs. Because the 4B model fit on one NVIDIA B200 GPU, we measured both approaches before choosing the main allocation.</p>
 <p>This benchmark replays the same 256 saved responses for four updates from initial weights. It is a systems measurement, not a learning experiment. Each training phase includes old-policy probability scoring and optimization.</p>
 <figure><a class="plot-open" href="assets/grpo-qwen35-parallelism.svg" aria-label="Open GPU parallelism chart with exact point values"><picture><source media="(max-width:600px)" srcset="assets/grpo-qwen35-parallelism-mobile.svg"><img src="assets/grpo-qwen35-parallelism.svg" alt="Training phase time for data and tensor parallel configurations on one to eight B200 GPUs" loading="lazy"></picture></a><figcaption>Qwen3.5-4B using the bfloat16 (BF16) numeric format and an 8,192-token packing allowance. Intermediate activations are stored rather than recomputed during backpropagation. Each dot averages phases 2–4 within one job; these are not three independent job repetitions. All arms use the same 2,052,264 input-plus-output tokens per phase. Open the SVG to inspect exact values on hover.</figcaption></figure>
@@ -367,7 +435,7 @@ footer a{color:var(--ink-soft)}
 <p>Qwen3.5 combines conventional attention with recurrent blocks that compress context into a fixed-size state. The pinned <a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/miles_plugins/models/hf_attention.py#L194-L202">attention wrapper</a> and <a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/miles_plugins/models/qwen3_5.py">Qwen3.5 implementation</a> replicate those recurrent blocks across tensor-parallel ranks. Increasing TP therefore does not divide every operation. The initial gradient norms were within 0.006% across the DP arms; TP4 differed by about 3.2%. These are comparable measured workloads, not a claim of numerical identity.</p>
 <p>The complete short benchmark jobs include initialization and compilation. For example, DP8 took 413 seconds overall and TP2/DP4 took 257 seconds despite the latter's slower warm phases. Startup and cache state varied across these single jobs, so those totals do not isolate a topology-only effect. Repeated training amortizes overhead; fresh response lengths can still trigger more compilation.</p>
 
-<h3>The actual training allocation and time</h3>
+<h3>Training allocation and elapsed time</h3>
 <p>A generation engine serves requests using its own model replica; each TP1 engine here uses one GPU. GSM8K used two worker machines (nodes), with four GPUs training and four generating responses. DAPO began with eight GPUs per role, temporarily resumed with four per role after worker losses, then used eight training GPUs and eight generation GPUs across three nodes. Its final segment used 8 training GPUs and 4 generation engines across 2 nodes. Both tasks were synchronous: the generator waited during training, and trainers waited during generation.</p>
 
 <div class="table-scroll"><table class="ptable"><thead><tr><th>Task</th><th>Training + generation</th><th>Complete job</th><th>Output tokens</th></tr></thead><tbody>
@@ -384,38 +452,17 @@ footer a{color:var(--ink-soft)}
 </details>
 <p>Generation favored more engines in a separate DAPO inference probe: approximately <strong>143 seconds on four engines versus 101 seconds on eight</strong> for 128 prompts × eight answers. These were single trials with different sampled outputs. The four-engine trial shared CPU resources with a replay on separate GPUs; complete jobs were nearly tied at 240 versus 236 seconds.</p>
 <p>We also tested packing with real long responses. An 8,192-token target took 12.26 seconds in its warm phase and reached 131.4 GiB on the logging rank; a 16,384-token target took 17.14 seconds and reached 142.8 GiB. We kept 8,192. A single response longer than that target stays intact; it is not truncated to fit the packing target.</p>
-<details><summary>Easy optimizations kept in the frozen runs</summary><p>BF16 weights, efficient attention, CUDA graphs that replay recurring GPU operations during generation, dynamic token packing, stored activations, bounded CPU thread counts, cached models, and periodic validation/checkpointing. For this pinned hybrid-model stack, disabling the prefix cache in SGLang, our generation engine, enables its scheduler to overlap CPU preparation and GPU execution. That runtime choice is separate from changing the learning batch.</p><p>Memory figures record the logging rank's observed peak, not the maximum across every GPU. Runtime pins, timings, and all eight TP/DP arms are in the companion artifacts.</p></details>
+<details><summary>Runtime settings in the measured runs</summary><p>BF16 weights, efficient attention, CUDA graphs that replay recurring GPU operations during generation, dynamic token packing, stored activations, bounded CPU thread counts, cached models, and periodic validation/checkpointing. For this pinned hybrid-model stack, disabling the prefix cache in SGLang, our generation engine, enables its scheduler to overlap CPU preparation and GPU execution. That runtime choice is separate from changing the learning batch.</p><p>Memory figures record the logging rank's observed peak, not the maximum across every GPU. Runtime pins, timings, and all eight TP/DP arms are in the companion artifacts.</p></details>
 </section>
 
-<section id="papers"><h2>What the papers actually use</h2>
-<p>There are several coherent recipes. A large collection followed by many smaller updates is common, but a single larger update is also studied. The optimizer, objective, response length, and total training budget affect which choice works.</p>
-<div class="table-scroll"><table class="ptable"><thead><tr><th>Primary source</th><th>Reported configuration</th><th>What it supports</th></tr></thead><tbody>
-<tr><td><a href="#ref-r1">DeepSeek-R1</a></td><td>8,192 responses; 16 disjoint updates of 512; LR 3e-6.</td><td>Amortize generation while keeping smaller optimizer batches.</td></tr>
-<tr><td><a href="#ref-dapo">DAPO</a></td><td>512 prompts × 16; 16 updates of 512; LR 1e-6 plus warm-up.</td><td>The same batch shape, alongside filtering and other algorithm changes.</td></tr>
-<tr><td><a href="#ref-deepseek-math">DeepSeekMath</a></td><td>64 answers per question; one update after each exploration stage.</td><td>Eight or sixteen answers is a starting range, not a universal rule.</td></tr>
-<tr><td><a href="#ref-gspo">GSPO</a> / <a href="#ref-sapo">SAPO</a></td><td>Four mini-batches in their reasoning experiments.</td><td>Moderate subdivision also appears with different policy objectives.</td></tr>
-<tr><td><a href="#ref-hunyuan-batch-scaling">Hunyuan batch scaling</a></td><td>One update per retained batch; square-root LR scaling over a bounded range.</td><td>Compare equal samples, then ask whether throughput gains outweigh sample-efficiency losses.</td></tr>
-<tr><td><a href="#ref-scalerl">ScaleRL</a></td><td>48 prompts × 16 = 768 responses per update; larger batches can win later.</td><td>Training horizon can reverse a short-run ranking.</td></tr>
-<tr><td><a href="#ref-brorl">BroRL</a> / <a href="#ref-isocompute">IsoCompute Playbook</a></td><td>Study broader per-prompt sampling as compute scales.</td><td>More answers per prompt can help, but their extra work must be accounted for.</td></tr>
-</tbody></table></div>
-<p>Hunyuan's implementation uses asynchronous partial rollouts and streaming generation. Its learning-rate result is useful evidence, but it does not directly validate our synchronous setup. Nor does its one-update experiment say how many disjoint inner updates we should take.</p>
-<p>Our <code>128 × 8 = 256 × 4</code> choice keeps the pinned Miles Qwen3.5 example's group size, optimizer batch, and learning rate, while collecting four optimizer batches before publishing weights. The papers motivate this recipe; the two main runs measure its behavior. We did not directly compare it against the example's one-update recipe.</p>
+<section id="summary"><h2>Recommended starting configuration</h2>
+<p><strong>For this Qwen3.5-4B/Miles workload, start with \(B=256\) responses per optimizer update, \(G=8\) responses per prompt, and learning rate \(10^{-6}\).</strong> With those choices fixed, derive the prompt batch from the desired update count:</p>
+<div class="formula">\[P=\frac{BS}{G}=32S.\]</div>
+<p>The pinned Miles example uses \(S=1\), giving 32 prompts and 256 responses per collection. The two measured runs here use \(S=4\), giving 128 prompts and 1,024 responses. The measured configuration improves held-out accuracy on both tasks at the fixed endpoint, but the study does not establish that four updates outperform one.</p>
+<p><strong>To increase the optimizer batch, retune the learning rate and compare equal-sample learning before judging speed.</strong> To improve hardware utilization while keeping that batch fixed, tune packing, concurrency, and parallelism. For this model on B200s, the measured training phases favor TP1 with data parallelism. The final choice should minimize time to the required validation quality within the memory and compute budget.</p>
 </section>
 
-<section id="recipe"><h2>How to choose the settings</h2>
-<ol>
-<li><strong>Start with the reward groups.</strong> Use eight responses per prompt as a practical baseline. Track the fraction of groups containing both correct and incorrect answers. An all-correct or all-wrong group has zero centered reward advantage. More responses can reveal variation, but at fixed total responses they reduce the number of different prompts. A low mixed-group fraction can also mean that the task has become too easy.</li>
-<li><strong>Choose the optimizer batch and learning rate together.</strong> For this Qwen3.5-4B setup, 256 responses and LR 1e-6 are the measured starting point. The 512-response batches in R1 and DAPO are precedents, not a reason to override a working smaller-model configuration.</li>
-<li><strong>Choose how much to generate before publishing weights.</strong> Here, 128 prompts × eight answers supplies 1,024 responses. Measure generation and complete-cycle time on your engines. Larger collections can keep more requests active, but later inner updates may use answers from a model version further behind the current one.</li>
-<li><strong>Derive the inner steps and validate the integers.</strong> Divide 1,024 by 256 to get four disjoint updates. Also check that the optimizer batch divides across the data-parallel workers. Do not multiply the learning rate by four just because there are four updates.</li>
-<li><strong>Tune memory packing and parallelism separately.</strong> Our B200 measurements favor TP1 plus more data-parallel replicas. A smaller-memory GPU or a larger model may need tensor parallelism or recomputation. Those choices require another systems measurement.</li>
-</ol>
-<p>If instead you choose <strong>one update per collection</strong>, increasing generation volume also increases the optimizer batch. Square-root learning-rate scaling is a reasonable candidate from the batch-scaling literature, with a fixed-rate control. Stop increasing batch size when sample efficiency deteriorates enough to erase the measured time saving.</p>
-<p>For several inner updates, inspect clipping, policy probability changes, and effective sample size—the diagnostic for how concentrated the importance weights become—by update position. Our companion records include all four positions. The trainer/rollout log-probability difference diagnoses disagreement between the two engines; it is not itself a measurement of drift across inner updates.</p>
-<p><strong>Decide whether to train longer from late held-out progress.</strong> A positive late trend can motivate a predeclared extension; a noisy interval containing zero cannot establish a plateau. Our fixed endpoint is 131,072 responses. We report what the second half added, without extrapolating a best eventual score.</p>
-</section>
-
-<section id="methods"><h2>Methods and limits</h2>
+<section id="methods"><h2>Experimental method and limitations</h2>
 <p>We trained all parameters of the model’s text backbone with GRPO and centered, standard-deviation-normalized advantages; sequence-mean loss; lower/upper policy clipping 0.2/0.28; Adam with betas 0.9/0.98 and weight decay 0.1; gradient norm cap 1. No penalty against a frozen reference model, entropy bonus, dynamic filtering, asynchronous policy generation, or response replay was enabled. This is GRPO on DAPO's data, not the complete DAPO algorithm.</p>
 <p>Training used temperature 1. Evaluation used greedy decoding. Both used non-thinking chat mode, prompts requesting step-by-step answers, and a 16,384-token response cap. This template setting did not prevent long reasoning or generated thinking delimiters. A small validation pilot compared mode, cap, and cache settings jointly; it does not isolate a causal advantage for non-thinking mode. Its 8K cap truncated 28.9% of responses; the chosen 16K setup truncated none of that pilot's 128 responses.</p>
 <div class="table-scroll"><table class="ptable"><thead><tr><th>Source</th><th>Train</th><th>Validation</th><th>Test</th></tr></thead><tbody><tr><td>GSM8K</td><td>6,961</td><td>512</td><td>1,319 official test</td></tr><tr><td>DAPO-MATH-17K</td><td>15,640</td><td>512</td><td>1,024 held out</td></tr></tbody></table></div>
@@ -426,25 +473,19 @@ footer a{color:var(--ink-soft)}
 <div class="artifact-links"><a href="experiments/grpo-batch-knobs-qwen35/README.md">Reproduction guide ↗</a><a href="experiments/grpo-batch-knobs-qwen35/main-analysis.json">Learning and timing records ↗</a><a href="experiments/grpo-batch-knobs-qwen35/test-analysis.json">Paired test analysis ↗</a></div>
 </section>
 
-<section id="references"><h2>Sources and reproduction</h2>
-<p>Primary papers and pinned runtime sources, checked September 15, 2026. The companion files include measured training hooks and portable argument lists.</p>
-<ol class="sources"><li id="ref-hunyuan-batch-scaling"><a href="https://arxiv.org/html/2608.29296v1">When Do Larger Batches Help Scale LLM Reinforcement Learning?</a>.</li>
+<section id="references"><h2>References and reproducibility</h2>
+<p>Primary papers and pinned runtime sources; DeepSeek-R1, DAPO, and Tencent’s batch-scaling paper rechecked September 16, 2026. The companion files include measured training hooks and portable argument lists.</p>
+<ol class="sources"><li id="ref-hunyuan-batch-scaling"><a href="https://arxiv.org/html/2608.29296v1">When Do Larger Batches Help Scale LLM Reinforcement Learning?</a> Tencent Hunyuan, 2026; Sections 3–5.</li>
 <li id="ref-deepseek-math"><a href="https://arxiv.org/html/2402.03300v3">DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models</a>.</li>
 <li id="ref-dapo"><a href="https://arxiv.org/html/2503.14476v2">DAPO: An Open-Source LLM Reinforcement Learning System at Scale</a>.</li>
-<li id="ref-dr-grpo"><a href="https://arxiv.org/html/2503.20783v2">Understanding R1-Zero-Like Training: A Critical Perspective</a>.</li>
 <li id="ref-gspo"><a href="https://arxiv.org/html/2507.18071v2">Group Sequence Policy Optimization</a>.</li>
 <li id="ref-sapo"><a href="https://arxiv.org/html/2511.20347">Soft Adaptive Policy Optimization</a>.</li>
-<li id="ref-cispo"><a href="https://arxiv.org/html/2506.13585">MiniMax-M1: Scaling Test-Time Compute Efficiently with Lightning Attention</a>.</li>
 <li id="ref-scalerl"><a href="https://arxiv.org/html/2510.13786">The Art of Scaling Reinforcement Learning Compute for LLMs</a>.</li>
-<li id="ref-dppo"><a href="https://arxiv.org/html/2602.04879">Rethinking the Trust Region in LLM Reinforcement Learning</a>.</li>
-<li id="ref-isocompute"><a href="https://arxiv.org/html/2603.12151">IsoCompute Playbook: Optimally Scaling Sampling Compute for LLM RL</a>.</li>
-<li id="ref-brorl"><a href="https://arxiv.org/html/2510.01180">BroRL: Scaling Reinforcement Learning via Broadened Exploration</a>.</li>
-<li id="ref-r1"><a href="https://arxiv.org/html/2501.12948v2">DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning</a>.</li>
+<li id="ref-r1"><a href="https://arxiv.org/html/2501.12948v2">DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning</a>, v2; first-stage RL configuration.</li>
 <li id="ref-miles">Miles runtime <code>7e03b728faf9</code>: <a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/miles/utils/arguments.py#L2317-L2325">batch derivation</a>, <a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/miles/ray/rollout/train_data_conversion.py#L108-L117">group centering</a>, and <a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/miles/backends/training_utils/loss_hub/losses.py#L306-L325">log-probability mismatch diagnostic</a>.</li>
-<li id="ref-trl"><a href="https://huggingface.co/docs/trl/main/en/grpo_trainer">TRL GRPO trainer documentation</a> and <a href="https://github.com/huggingface/trl/blob/03ad26d2c56974b2e72e57fcb7e5002b47b55ca5/trl/trainer/grpo_config.py">configuration source</a>, accessed September 15, 2026.</li>
 <li><a href="https://huggingface.co/Qwen/Qwen3.5-4B">Qwen3.5-4B</a>; <a href="https://huggingface.co/datasets/openai/gsm8k">GSM8K</a>; <a href="https://huggingface.co/datasets/BytedTsinghua-SIA/DAPO-Math-17k">official DAPO-MATH-17K</a>. Exact revisions and split hashes are in the companion manifests.</li><li><a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/scripts/run-qwen3.5-4B.sh">Pinned Miles Qwen3.5-4B example</a>: 32 prompts × eight responses, one 256-response optimizer batch, LR 1e-6.</li></ol>
 <details><summary>How to cite this post</summary><pre><code>@misc{dong2026grpobatchknobs,
-  title = {How to Set the Four GRPO Batch Knobs},
+  title = {Choosing Batch Sizes for LLM Reinforcement Learning},
   author = {Dong, Simon},
   year = {2026},
   url = {https://simondong1.github.io/grpo-batch-knobs.html}
