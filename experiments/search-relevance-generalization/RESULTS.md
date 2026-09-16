@@ -225,9 +225,13 @@ The 0.6B classifier uses `torch.compile(mode=reduce-overhead, dynamic=True)`, FP
 
 The predeclared full-validation gate **passed**: accuracy changed by **-0.0020 percentage points** and NLL by **0.000110**, within the absolute 0.002 limits on 496,477 pairs. This is an engineering tolerance, not a statistical equivalence test. The first two shape families took approximately 115 and 108 seconds including compilation; warm figures exclude that setup. Two compiled graphs and multiple CUDA-graph shapes were recorded. Full validation inference took 70.6 seconds after compilation. Serving should bucket/pad shapes and measure cold starts and concurrency explicitly. [Measurements and quality gate](experiments/search-relevance-generalization/compiled-serving.json).
 
+### Serving check on the selected 1M checkpoint
+
+The exact selected 0.6B/1M checkpoint separately **passed** the same full-validation quality gate. Compiled minus eager: **0.0024 percentage points** accuracy and **0.000033** NLL. Both timing paths now use this identical checkpoint: batch-1 p50 is **21.93 → 3.55 ms** and batch-360 p50 is **147.96 → 51.59 ms** at 88 padded tokens. The standalone-latency exclusions above apply. [Same-checkpoint timings and full-validation gate](experiments/search-relevance-generalization/compiled-selected-model.json).
+
 ### Larger-expert mixture
 
-A second registered mixture combines the full-data width-384 feature model with the 1.7B text model and removes item dimension from the gate, so routing uses directly replayable inputs. On the same internal query audit, the text expert reaches **81.32%** shared-five accuracy and **0.4968** NLL; the soft mixture reaches **82.05%** and **0.4750**. This is a recipe extension with multiple changed ingredients, not a single-factor architecture claim. Its total serving parameters remain below 4B. [Full aggregate results](experiments/search-relevance-generalization/fusion-v2-results.json).
+A second registered mixture combines the full-data width-384 feature model with the 1.7B text model and removes item dimension from the gate, so routing uses directly replayable inputs. On the same internal query audit, the text expert reaches **81.32%** shared-five accuracy and **0.4968** NLL; the soft mixture reaches **82.05%** and **0.4750**. This is a recipe extension with multiple changed ingredients, not a single-factor architecture claim. The two reranking experts together remain below 4B parameters. Existing embedding services are outside this parameter and latency boundary; their end-to-end footprint is not established here. [Full aggregate results](experiments/search-relevance-generalization/fusion-v2-results.json).
 
 ### Reannotation bridge for future traffic
 

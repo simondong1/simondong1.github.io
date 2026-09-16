@@ -1,0 +1,46 @@
+{
+  "registered_at": 1789567311.5834656,
+  "reason": "The older 0.6B checkpoint configs have model/mode but not the later-added backbone field. They were incorrectly sent to the feature-model loader and failed before inference.",
+  "original_scorer_sha256": "df8e6efc7aafa49636a24f1ea3052570a7a02346c7b1ba052778b09a0e63b3b2",
+  "replacement_scorer_sha256": "e337ae20b8c6741b31a26d585441204ea9e60a236a02cf116e24f65be6738383",
+  "preserved_results": {
+    "size-8953912-ce10-2ep-s173": {
+      "probabilities.npy": "ded929538780a4d5490eaf041d6613db91100ea74a25bc06895901e729ce0f20",
+      "query_metrics.parquet": "5b4270709b4a421cb4fba30de324dfc61cdcd15efb63a084fbb5a7783eb5229c",
+      "metrics.json": "ca683bddd62e0cb1e08cb94b6de620711f0fcb4cca2a68d326c72803383515f9"
+    },
+    "production-v67": {
+      "probabilities.npy": "2c459ed460500dc0d08ab2f9650e24daacc2757d7eacac2eda2fdc8d89a35c32",
+      "query_metrics.parquet": "e6ced5ad87f862859b0442c0ea94717be40e9fa55e3352fd580d8580d01dea87",
+      "metrics.json": "1d9314798d86824560cb82d6c0023f150502aa8bdb1306ca422bb064b9a21fe2"
+    },
+    "confirm-full-ce10-2ep-s271": {
+      "probabilities.npy": "68aa77ef592896c57df5e9a1361a8030031db6ad8bdc65dcde19879fe0f0a2e1",
+      "query_metrics.parquet": "1a7140dd5a32054ef75e518f5e676c3ebf0f5b78fcc881247cbf48eb1df0ac99",
+      "metrics.json": "9a5f9ef70064e4db97330a9cfa1e4203cd13ed3f0341aa2fad61989ea642fa9f"
+    },
+    "confirm-full-ce10-2ep-s811": {
+      "probabilities.npy": "00b8818842e9f9e31441ee93b11b814bfc3a6a0cf77153f8f72a944a3d81a47a",
+      "query_metrics.parquet": "9563b23e2fc0868e82f3761ab23ee53c7fa07bead885c32ccafae9d328104ea1",
+      "metrics.json": "5b1115686a4c0c49ae1f20e399a90979245c2e2c3db675b9d74b9b655e007431"
+    },
+    "architecture-full-wide-ce10-2ep-s173": {
+      "probabilities.npy": "86ee8b0ef27085423a122564ecb0efa2226a475c1192bff313f5538c60be5ba7",
+      "query_metrics.parquet": "8ae669bcc58f8284b5591650b3f96ef3c8733f96b700215d51c24b487964bf83",
+      "metrics.json": "fa04e032fa9622963939e955e9317babc0690da332f1173606da68125568a144"
+    }
+  },
+  "changes": [
+    "Detect text checkpoints from existing model and mode fields",
+    "Verify and skip the five completed feature/production results",
+    "Use distinct recovery tracking IDs and record this recovery manifest"
+  ],
+  "unchanged": [
+    "Checkpoints and checkpoint hashes",
+    "Data and label membership",
+    "Inference precision and batch size",
+    "Output probability and scoring semantics",
+    "Finalist selection and all registered contrasts",
+    "Calibration and cascade thresholds"
+  ]
+}

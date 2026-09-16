@@ -1,0 +1,855 @@
+{
+  "registration": {
+    "registered_at": 1789567099.6082277,
+    "model": "llm-qwen3-06b-classifier-1m-1ep-s173",
+    "training_recipe_registration": "private/llm-data-scaling-stage.json",
+    "primary_temporal_metrics_already_observed": true,
+    "scope": "Supplement the fixed 1M data-scaling recipe with later-traffic evaluation. No model, LR, epoch, head, gate, or threshold may change. Preserve the original five-model temporal predictions and main audit. Report this timing explicitly.",
+    "run_after": "GPU0 completes sealed final-test scoring",
+    "secondary_sensitivity": "Whole requests with all image states snapshot_url or current_catalog_Completed; no partial-page ranking."
+  },
+  "pairs": 10493,
+  "requests": 267,
+  "uncertain_image_pairs": 57,
+  "uncertain_image_requests": 21,
+  "metrics": {
+    "size-8953912-ce10-2ep-s173": {
+      "both_dates_pooled": {
+        "pairs": 10493,
+        "requests": 267,
+        "accuracy5": {
+          "estimate": 0.6024630519074093,
+          "low": 0.5502230006162612,
+          "high": 0.6418426249184499,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 1.0738852220236064,
+          "low": 0.966401502240929,
+          "high": 1.2119717285264235,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.8742348896636953,
+          "low": 0.853610264606563,
+          "high": 0.8916540976047773,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "queries_unseen_in_full_training": {
+        "pairs": 2696,
+        "requests": 72,
+        "accuracy5": {
+          "estimate": 0.5411032219568767,
+          "low": 0.49251780428477787,
+          "high": 0.5860193653992579,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 1.2245295948653463,
+          "low": 1.09077899326609,
+          "high": 1.3739109836320593,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.8090674536120737,
+          "low": 0.7541920032541926,
+          "high": 0.8510651254363966,
+          "clusters": 15,
+          "resamples": 2000
+        }
+      },
+      "all_images_completed_or_snapshot_requests": {
+        "pairs": 9513,
+        "requests": 246,
+        "accuracy5": {
+          "estimate": 0.5962765250747414,
+          "low": 0.5363637740347023,
+          "high": 0.64076910548337,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 1.0797364887337677,
+          "low": 0.958769249187285,
+          "high": 1.2354986158659198,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.8779234769266011,
+          "low": 0.8559708249209418,
+          "high": 0.895434873940237,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "2026-08-22": {
+        "pairs": 5665,
+        "requests": 141,
+        "accuracy5": {
+          "estimate": 0.608919012552114,
+          "low": 0.5274836429320214,
+          "high": 0.6681614414759072,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 1.052768012453541,
+          "low": 0.903655698712897,
+          "high": 1.2502955781710499,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.8739594538383153,
+          "low": 0.8479551353098779,
+          "high": 0.8916848859546416,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      },
+      "2026-09-08": {
+        "pairs": 4828,
+        "requests": 126,
+        "accuracy5": {
+          "estimate": 0.5922185890598219,
+          "low": 0.540598444106374,
+          "high": 0.6369056877480822,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 1.107394482812347,
+          "low": 0.957935912037975,
+          "high": 1.2740748409876126,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.8746593530529213,
+          "low": 0.8398136125555274,
+          "high": 0.9053462988906047,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      }
+    },
+    "llm-qwen3-06b-classifier-250k-1ep-s173": {
+      "both_dates_pooled": {
+        "pairs": 10493,
+        "requests": 267,
+        "accuracy5": {
+          "estimate": 0.7466527137837202,
+          "low": 0.712887823662023,
+          "high": 0.7762055493194002,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.6684216009089621,
+          "low": 0.6159109700935081,
+          "high": 0.7257905034671066,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9229763924696148,
+          "low": 0.9116947544876353,
+          "high": 0.9333561912993775,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "queries_unseen_in_full_training": {
+        "pairs": 2696,
+        "requests": 72,
+        "accuracy5": {
+          "estimate": 0.7262300405511826,
+          "low": 0.6807154496183531,
+          "high": 0.7640482882336086,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.6973069499104692,
+          "low": 0.61318139303113,
+          "high": 0.7754084725763822,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.8885794600545964,
+          "low": 0.8637569140103192,
+          "high": 0.9115943050173456,
+          "clusters": 15,
+          "resamples": 2000
+        }
+      },
+      "all_images_completed_or_snapshot_requests": {
+        "pairs": 9513,
+        "requests": 246,
+        "accuracy5": {
+          "estimate": 0.7509144649397247,
+          "low": 0.7093087759878942,
+          "high": 0.7873916074473782,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.6631942917831279,
+          "low": 0.5975486807290015,
+          "high": 0.7333226454583637,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9252287006596086,
+          "low": 0.9137902466241007,
+          "high": 0.9357698149165211,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "2026-08-22": {
+        "pairs": 5665,
+        "requests": 141,
+        "accuracy5": {
+          "estimate": 0.7298094456701398,
+          "low": 0.6752647061695551,
+          "high": 0.7732441163387536,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.7137516276497491,
+          "low": 0.6329534782227376,
+          "high": 0.8087625728262321,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9286603820964469,
+          "low": 0.9153262777599289,
+          "high": 0.9420214533177291,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      },
+      "2026-09-08": {
+        "pairs": 4828,
+        "requests": 126,
+        "accuracy5": {
+          "estimate": 0.7733799886104433,
+          "low": 0.7501440106035692,
+          "high": 0.7968519702841705,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.5964908999052255,
+          "low": 0.5444806507682655,
+          "high": 0.6430583994118964,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9142170181289652,
+          "low": 0.894494415981967,
+          "high": 0.93364926849674,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      }
+    },
+    "llm-qwen3-17b-classifier-250k-1ep-s173": {
+      "both_dates_pooled": {
+        "pairs": 10493,
+        "requests": 267,
+        "accuracy5": {
+          "estimate": 0.7637058514347606,
+          "low": 0.7324996212594105,
+          "high": 0.7909047992090883,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.6169978508089343,
+          "low": 0.5727707636457123,
+          "high": 0.667747365135782,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9251020971063095,
+          "low": 0.9142507648718772,
+          "high": 0.9364140384642442,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "queries_unseen_in_full_training": {
+        "pairs": 2696,
+        "requests": 72,
+        "accuracy5": {
+          "estimate": 0.759543118181675,
+          "low": 0.7315019687472559,
+          "high": 0.7835379718481283,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.605979118891905,
+          "low": 0.5564479582259093,
+          "high": 0.660854445213759,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.8993921166292791,
+          "low": 0.8715094408645443,
+          "high": 0.9209220386087255,
+          "clusters": 15,
+          "resamples": 2000
+        }
+      },
+      "all_images_completed_or_snapshot_requests": {
+        "pairs": 9513,
+        "requests": 246,
+        "accuracy5": {
+          "estimate": 0.7681392438758112,
+          "low": 0.7301712347111692,
+          "high": 0.800726928402293,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.609057041496782,
+          "low": 0.5541434261445858,
+          "high": 0.6719889825225493,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9267738316887454,
+          "low": 0.9162608644254661,
+          "high": 0.9377733609270857,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "2026-08-22": {
+        "pairs": 5665,
+        "requests": 141,
+        "accuracy5": {
+          "estimate": 0.7465119943107411,
+          "low": 0.6949850702939762,
+          "high": 0.78605832829222,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.6583151162559572,
+          "low": 0.5961814043608851,
+          "high": 0.7372109049933762,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9284527069312499,
+          "low": 0.9140249589797583,
+          "high": 0.943505434467334,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      },
+      "2026-09-08": {
+        "pairs": 4828,
+        "requests": 126,
+        "accuracy5": {
+          "estimate": 0.7909894487500913,
+          "low": 0.7671505117802868,
+          "high": 0.8153860751283558,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.5514346892393056,
+          "low": 0.5026125591517787,
+          "high": 0.5984172188126248,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9199386032132938,
+          "low": 0.903985628595708,
+          "high": 0.937710567229407,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      }
+    },
+    "llm-qwen3-06b-classifier-1m-1ep-s173": {
+      "both_dates_pooled": {
+        "pairs": 10493,
+        "requests": 267,
+        "accuracy5": {
+          "estimate": 0.774840059469892,
+          "low": 0.7496522375092632,
+          "high": 0.7996931159665361,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.5903412319365253,
+          "low": 0.5378183414516857,
+          "high": 0.6503535727031955,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9347271686484904,
+          "low": 0.921985594720082,
+          "high": 0.9463517927493083,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "queries_unseen_in_full_training": {
+        "pairs": 2696,
+        "requests": 72,
+        "accuracy5": {
+          "estimate": 0.7596864778142576,
+          "low": 0.7278714485782946,
+          "high": 0.7933418314162989,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.6292100415028576,
+          "low": 0.5470929886075468,
+          "high": 0.716971780798981,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9226992406663515,
+          "low": 0.8963859229821097,
+          "high": 0.9433101663825314,
+          "clusters": 15,
+          "resamples": 2000
+        }
+      },
+      "all_images_completed_or_snapshot_requests": {
+        "pairs": 9513,
+        "requests": 246,
+        "accuracy5": {
+          "estimate": 0.7814364666441475,
+          "low": 0.7490459014554153,
+          "high": 0.8113342981740026,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.5815556934841098,
+          "low": 0.5154230311268512,
+          "high": 0.6561443935547315,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9392403172627427,
+          "low": 0.9268680700156523,
+          "high": 0.9499907894062446,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "2026-08-22": {
+        "pairs": 5665,
+        "requests": 141,
+        "accuracy5": {
+          "estimate": 0.7579084765754001,
+          "low": 0.7190992651809066,
+          "high": 0.7932357313555298,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.6351867292400047,
+          "low": 0.5603420776459044,
+          "high": 0.7271363547354535,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9403679828162422,
+          "low": 0.9244832409865771,
+          "high": 0.9548473473787026,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      },
+      "2026-09-08": {
+        "pairs": 4828,
+        "requests": 126,
+        "accuracy5": {
+          "estimate": 0.8017074741676168,
+          "low": 0.7737265318628306,
+          "high": 0.8307709999661759,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.5191793930885911,
+          "low": 0.45453541359297894,
+          "high": 0.5838636933596779,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "page_ndcg10": {
+          "estimate": 0.9260343303209654,
+          "low": 0.903559468388967,
+          "high": 0.9486418163870153,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      }
+    }
+  },
+  "paired_vs_17b": {
+    "size-8953912-ce10-2ep-s173": {
+      "both_dates_pooled": {
+        "accuracy5": {
+          "estimate": -0.1612427995273511,
+          "low": -0.1999849501757743,
+          "high": -0.12816724274246286,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.456887371386139,
+          "low": 0.36305917077849686,
+          "high": 0.577835236820849,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "queries_unseen_in_full_training": {
+        "accuracy5": {
+          "estimate": -0.21843989622479823,
+          "low": -0.27715623953107305,
+          "high": -0.15950965702779357,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.6185504775588779,
+          "low": 0.4479825982008863,
+          "high": 0.7970213291250594,
+          "clusters": 15,
+          "resamples": 2000
+        }
+      },
+      "all_images_completed_or_snapshot_requests": {
+        "accuracy5": {
+          "estimate": -0.1718627188010698,
+          "low": -0.2129901438717282,
+          "high": -0.13659356623629332,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.47067944721783206,
+          "low": 0.376032086143972,
+          "high": 0.5984139785358139,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "2026-08-22": {
+        "accuracy5": {
+          "estimate": -0.13759298175862703,
+          "low": -0.18648339717017165,
+          "high": -0.09243342117861338,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.3944528964196654,
+          "low": 0.2783598663249659,
+          "high": 0.5435262318148701,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      },
+      "2026-09-08": {
+        "accuracy5": {
+          "estimate": -0.19877085969026934,
+          "low": -0.2621666028409455,
+          "high": -0.14020468392024027,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.5559597936641921,
+          "low": 0.3835664887910759,
+          "high": 0.7420762647406026,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      }
+    },
+    "llm-qwen3-06b-classifier-250k-1ep-s173": {
+      "both_dates_pooled": {
+        "accuracy5": {
+          "estimate": -0.017053137651040298,
+          "low": -0.0253437585030613,
+          "high": -0.009860130242070298,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.05142374999930213,
+          "low": 0.02945684036363377,
+          "high": 0.074085764953759,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "queries_unseen_in_full_training": {
+        "accuracy5": {
+          "estimate": -0.033313077630492335,
+          "low": -0.06947365931843098,
+          "high": -0.008913451649505827,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.09132783070344995,
+          "low": 0.02626912513774668,
+          "high": 0.15810830543613516,
+          "clusters": 15,
+          "resamples": 2000
+        }
+      },
+      "all_images_completed_or_snapshot_requests": {
+        "accuracy5": {
+          "estimate": -0.0172247789360865,
+          "low": -0.027472911567185558,
+          "high": -0.008596950886557143,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.05413725018849839,
+          "low": 0.02969777529674528,
+          "high": 0.08112149540170162,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "2026-08-22": {
+        "accuracy5": {
+          "estimate": -0.01670254864060125,
+          "low": -0.02772350240218656,
+          "high": -0.007084055839519099,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.055436511355394485,
+          "low": 0.020965611780445755,
+          "high": 0.08983310950629311,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      },
+      "2026-09-08": {
+        "accuracy5": {
+          "estimate": -0.017609460139647967,
+          "low": -0.030479363018599555,
+          "high": -0.006564333706692211,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.04505621046629067,
+          "low": 0.02481521808165948,
+          "high": 0.06693414842156001,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      }
+    },
+    "llm-qwen3-17b-classifier-250k-1ep-s173": {
+      "both_dates_pooled": {
+        "accuracy5": {
+          "estimate": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "queries_unseen_in_full_training": {
+        "accuracy5": {
+          "estimate": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "clusters": 15,
+          "resamples": 2000
+        }
+      },
+      "all_images_completed_or_snapshot_requests": {
+        "accuracy5": {
+          "estimate": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "2026-08-22": {
+        "accuracy5": {
+          "estimate": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      },
+      "2026-09-08": {
+        "accuracy5": {
+          "estimate": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.0,
+          "low": 0.0,
+          "high": 0.0,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      }
+    },
+    "llm-qwen3-06b-classifier-1m-1ep-s173": {
+      "both_dates_pooled": {
+        "accuracy5": {
+          "estimate": 0.011134208035131498,
+          "low": 0.0018881675511012164,
+          "high": 0.02184262742594096,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": -0.026656618754467558,
+          "low": -0.05243314207065725,
+          "high": 0.0004707946817024106,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "queries_unseen_in_full_training": {
+        "accuracy5": {
+          "estimate": 0.00014335963258264953,
+          "low": -0.02382392865214955,
+          "high": 0.02348560820959707,
+          "clusters": 15,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": 0.02323092326203513,
+          "low": -0.04293297349886393,
+          "high": 0.10150060580756194,
+          "clusters": 15,
+          "resamples": 2000
+        }
+      },
+      "all_images_completed_or_snapshot_requests": {
+        "accuracy5": {
+          "estimate": 0.013297222768336224,
+          "low": 0.005657321269018721,
+          "high": 0.022080411761546716,
+          "clusters": 16,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": -0.027501347893826897,
+          "low": -0.054328059694383216,
+          "high": 0.001953309314113766,
+          "clusters": 16,
+          "resamples": 2000
+        }
+      },
+      "2026-08-22": {
+        "accuracy5": {
+          "estimate": 0.011396482264659034,
+          "low": -0.0010638464042176986,
+          "high": 0.027453516643137204,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": -0.02312838675454807,
+          "low": -0.06415777292577819,
+          "high": 0.015986734289258023,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      },
+      "2026-09-08": {
+        "accuracy5": {
+          "estimate": 0.0107180254175255,
+          "low": -0.00010394079122471941,
+          "high": 0.0227280025802799,
+          "clusters": 8,
+          "resamples": 2000
+        },
+        "nll5": {
+          "estimate": -0.03225529626042348,
+          "low": -0.059210441711368376,
+          "high": -0.008861693718390268,
+          "clusters": 8,
+          "resamples": 2000
+        }
+      }
+    }
+  }
+}

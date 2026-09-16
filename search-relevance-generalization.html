@@ -28,7 +28,21 @@ img{max-width:100%;height:auto}
 <body><header><a href="/">Simon Dong · Research notes</a><span>Study v1.3 · September 2026</span></header>
 <div class="layout"><aside aria-label="Contents"><strong>Contents</strong><div class="toc">
 <ul>
-<li><a href="#generalization-to-later-traffic">Generalization to later traffic</a></li>
+<li><a href="#held-out-test-findings">Held-out test findings</a><ul>
+<li><a href="#registered-paired-comparisons">Registered paired comparisons</a></li>
+<li><a href="#repeated-seeds-and-held-out-slices">Repeated seeds and held-out slices</a></li>
+<li><a href="#item-type-and-embedding-availability">Item type and embedding availability</a></li>
+</ul>
+</li>
+<li><a href="#generalization-to-later-traffic">Generalization to later traffic</a><ul>
+<li><a href="#supplementary-1m-recipe-and-image-state-sensitivity">Supplementary 1M recipe and image-state sensitivity</a></li>
+</ul>
+</li>
+<li><a href="#reproducibility-and-resource-accounting">Reproducibility and resource accounting</a></li>
+<li><a href="#what-the-study-supports">What the study supports</a><ul>
+<li><a href="#boundaries-and-next-experiments">Boundaries and next experiments</a></li>
+</ul>
+</li>
 </ul>
 </div>
 <div class="toc">
@@ -44,6 +58,7 @@ img{max-width:100%;height:auto}
 <li><a href="#class-token-output-versus-a-ranking-score">Class-token output versus a ranking score</a></li>
 <li><a href="#measured-serving-cost">Measured serving cost</a></li>
 <li><a href="#quality-checked-inference-compilation">Quality-checked inference compilation</a></li>
+<li><a href="#serving-check-on-the-selected-1m-checkpoint">Serving check on the selected 1M checkpoint</a></li>
 <li><a href="#larger-expert-mixture">Larger-expert mixture</a></li>
 <li><a href="#reannotation-bridge-for-future-traffic">Reannotation bridge for future traffic</a></li>
 <li><a href="#failed-attempts-retained">Failed attempts retained</a></li>
@@ -103,9 +118,9 @@ img{max-width:100%;height:auto}
 </aside><main><h1 id="what-makes-a-relevance-model-generalize">What Makes a Relevance Model Generalize?</h1>
 <p id="a-controlled-study-of-data-composition-model-capacity-supervision-and-serving-cost" class="muted">A controlled study of data composition, model capacity, supervision, and serving cost</p>
 <p><strong>Simon Dong · Research study v1.3 · 16 September 2026</strong></p>
-<p><strong>Status:</strong> production replay, data audit, source/feature/optimization screens, architecture controls, matched LLM heads, pretraining controls, three-seed confirmations, model fusion, temporal evaluation, and quality-checked serving compilation are complete. The 1M text-data scaling run precedes sealed final-test selection. Sections 1–7 retain the broader research agenda; the measured run registry and <code>FINAL_SELECTION.md</code> define executed work and the bounded closing stage. Proposed follow-ups are not represented as completed experiments.</p>
+<p><strong>Status:</strong> the bounded offline study is complete: 85 quality training runs plus six systems/pilot processes, 12 sealed checkpoints and eight frozen mixture policies evaluated on the 500,551-pair test, later-traffic evaluation, selected-checkpoint serving verification, and durable artifact verification. Sections 1–7 preserve the broader research agenda; executed work and explicitly deferred follow-ups are distinguished in the results.</p>
 
-<div class="status"><strong>Research in progress.</strong> 85 quality training runs complete. Later-traffic results and serving compilation are available. Finalists sealed; test preparation/scoring in progress.</div>
+<div class="status"><strong>Registered offline evaluations complete.</strong> 85 quality training runs, held-out test, later-traffic audit, and quality-checked serving compilation are reported below. Human agreement and online effects remain unmeasured.</div>
 <div class="facts"><div><strong>9.95M</strong>final labeled pairs</div><div><strong>6.31M</strong>production model parameters</div><div><strong>&lt;4B</strong>LM serving parameter limit</div></div>
 <p><a href="experiments/search-relevance-generalization/PROTOCOL.md">Download protocol</a> · <a href="experiments/search-relevance-generalization/FINAL_SELECTION.md">Final-test selection rules</a> · <a href="experiments/search-relevance-generalization/run-registry.json">Run registry</a> · <a href="experiments/search-relevance-generalization/aggregate-audit.json">Aggregate audit</a></p>
 <section class="lab" aria-labelledby="mixture-tool"><h3 id="mixture-tool">Explore feasible data mixtures</h3>
@@ -121,9 +136,274 @@ img{max-width:100%;height:auto}
 <tr><td>Production validation replay</td><td>Completed; 496,477 pairs, 64.38% exact total accuracy</td></tr>
 <tr><td>GPU infrastructure pilot</td><td>Completed on an allocated B200; full optimizer updates verified</td></tr>
 <tr><td>Controlled training experiments</td><td>85 completed; all measured recipes are listed below</td></tr>
-<tr><td>Locked test</td><td>Finalists sealed; test preparation/scoring in progress</td></tr>
+<tr><td>Locked test</td><td>Completed; frozen models and paired query-cluster analysis</td></tr>
 <tr><td>Later traffic</td><td>Completed; 267 full pages, weighted estimates and file-cluster intervals</td></tr>
 <tr><td>Serving measurements</td><td>Eager CPU/B200 complete; compiled 0.6B passed full-validation quality gate</td></tr></tbody></table>
+<h2 id="held-out-test-findings">Held-out test findings</h2>
+<p>The sealed evaluation contains <strong>500,551 pairs and 233,731 queries</strong>. Checkpoint and analysis hashes were recorded before model scoring. The primary endpoint is common-five negative log likelihood (NLL); accuracy is secondary. These measure agreement with the Gemini rubric, not human preference or business impact.</p>
+<table>
+<thead>
+<tr>
+<th>Frozen recipe</th>
+<th style="text-align: right;">Common-five accuracy</th>
+<th style="text-align: right;">Common-five NLL ↓</th>
+<th style="text-align: right;">Original-score MAE ↓</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Operational production v67</td>
+<td style="text-align: right;">68.69%</td>
+<td style="text-align: right;">0.8406</td>
+<td style="text-align: right;">0.9335</td>
+</tr>
+<tr>
+<td>Feature DCN, 6.31M, full data</td>
+<td style="text-align: right;">73.04%</td>
+<td style="text-align: right;">0.7032</td>
+<td style="text-align: right;">0.7084</td>
+</tr>
+<tr>
+<td>Feature DCN, width 384, full data</td>
+<td style="text-align: right;">73.64%</td>
+<td style="text-align: right;">0.6867</td>
+<td style="text-align: right;">0.6895</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B classifier, 250k</td>
+<td style="text-align: right;">79.46%</td>
+<td style="text-align: right;">0.5515</td>
+<td style="text-align: right;">0.5353</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B classifier, 1M</td>
+<td style="text-align: right;">82.04%</td>
+<td style="text-align: right;">0.4798</td>
+<td style="text-align: right;">0.4598</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B restricted token</td>
+<td style="text-align: right;">79.40%</td>
+<td style="text-align: right;">0.5526</td>
+<td style="text-align: right;">0.5409</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B full-vocabulary token</td>
+<td style="text-align: right;">79.36%</td>
+<td style="text-align: right;">0.5527</td>
+<td style="text-align: right;">0.5406</td>
+</tr>
+<tr>
+<td>Qwen3-1.7B classifier, 250k</td>
+<td style="text-align: right;">81.33%</td>
+<td style="text-align: right;">0.4964</td>
+<td style="text-align: right;">0.4735</td>
+</tr>
+<tr>
+<td>0.6B + feature soft mixture</td>
+<td style="text-align: right;">80.54%</td>
+<td style="text-align: right;">0.5189</td>
+<td style="text-align: right;">0.5143</td>
+</tr>
+<tr>
+<td>1.7B + width-384 feature soft mixture</td>
+<td style="text-align: right;">82.09%</td>
+<td style="text-align: right;">0.4746</td>
+<td style="text-align: right;">0.4652</td>
+</tr>
+</tbody>
+</table>
+<p>The selected small-model recipe was <strong>Qwen3-0.6B classifier, 1M</strong>, selected solely by full-validation NLL among the registered learning-rate, epoch, and data-size candidates. No test labels tuned a model, temperature, gate, or threshold. Production v67 is an operational reference with unknown historical training overlap and a different historical rubric.</p>
+<h3 id="registered-paired-comparisons">Registered paired comparisons</h3>
+<p>Differences are treatment minus reference. Negative NLL and positive accuracy differences favor the treatment. Brackets are 95% query-cluster bootstrap intervals for fixed checkpoints; they do not include training-seed uncertainty. Holm-adjusted p-values apply to the registered family of primary NLL contrasts.</p>
+<table>
+<thead>
+<tr>
+<th>Treatment versus reference</th>
+<th style="text-align: right;">Δ NLL [95% interval]</th>
+<th style="text-align: right;">Holm p</th>
+<th style="text-align: right;">Δ accuracy, percentage points [95% interval]</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Width-384 versus production-size feature model</td>
+<td style="text-align: right;">-0.0165 [-0.0175, -0.0156]</td>
+<td style="text-align: right;">&lt;1e-6</td>
+<td style="text-align: right;">0.598 [0.524, 0.673]</td>
+</tr>
+<tr>
+<td>0.6B text versus feature model</td>
+<td style="text-align: right;">-0.1517 [-0.1565, -0.1465]</td>
+<td style="text-align: right;">&lt;1e-6</td>
+<td style="text-align: right;">6.419 [6.192, 6.638]</td>
+</tr>
+<tr>
+<td>1.7B versus 0.6B, matched 250k</td>
+<td style="text-align: right;">-0.0551 [-0.0577, -0.0527]</td>
+<td style="text-align: right;">&lt;1e-6</td>
+<td style="text-align: right;">1.865 [1.742, 1.983]</td>
+</tr>
+<tr>
+<td>Validation-selected versus original 0.6B</td>
+<td style="text-align: right;">-0.0717 [-0.0742, -0.0693]</td>
+<td style="text-align: right;">&lt;1e-6</td>
+<td style="text-align: right;">2.574 [2.445, 2.712]</td>
+</tr>
+<tr>
+<td>Classifier versus full-vocabulary token</td>
+<td style="text-align: right;">-0.0012 [-0.0022, -0.0002]</td>
+<td style="text-align: right;">0.01279</td>
+<td style="text-align: right;">0.101 [0.031, 0.169]</td>
+</tr>
+<tr>
+<td>1.7B/feature soft mixture versus 1.7B</td>
+<td style="text-align: right;">-0.0218 [-0.0237, -0.0201]</td>
+<td style="text-align: right;">&lt;1e-6</td>
+<td style="text-align: right;">0.761 [0.684, 0.843]</td>
+</tr>
+</tbody>
+</table>
+<p>The text-versus-feature contrast changes inputs, pretraining, capacity, data count, and compute together. The matched text-head comparison isolates output formulation more closely. The mixture comparison includes validation-fitted calibration and gating as part of the recipe.</p>
+<h3 id="repeated-seeds-and-held-out-slices">Repeated seeds and held-out slices</h3>
+<table>
+<thead>
+<tr>
+<th>Recipe, three separately deployable seeds</th>
+<th style="text-align: right;">Mean test accuracy</th>
+<th style="text-align: right;">Sample SD, percentage points</th>
+<th style="text-align: right;">Mean test NLL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Production-size feature DCN</td>
+<td style="text-align: right;">73.04%</td>
+<td style="text-align: right;">0.008</td>
+<td style="text-align: right;">0.7026</td>
+</tr>
+<tr>
+<td>Qwen3-1.7B classifier</td>
+<td style="text-align: right;">81.39%</td>
+<td style="text-align: right;">0.078</td>
+<td style="text-align: right;">0.4968</td>
+</tr>
+</tbody>
+</table>
+<p>Each seed uses the same fixed training subset. These are not ensembles: a three-model 1.7B ensemble exceeds the sub-4B total-serving limit.</p>
+<table>
+<thead>
+<tr>
+<th>Seed-173 recipe</th>
+<th style="text-align: right;">Head proxy</th>
+<th style="text-align: right;">Tail proxy</th>
+<th style="text-align: right;">Unknown frequency</th>
+<th style="text-align: right;">Natural</th>
+<th style="text-align: right;">Balanced</th>
+<th style="text-align: right;">Random 3D</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Feature DCN, 6.31M, full data</td>
+<td style="text-align: right;">80.15%</td>
+<td style="text-align: right;">72.33%</td>
+<td style="text-align: right;">67.97%</td>
+<td style="text-align: right;">72.08%</td>
+<td style="text-align: right;">65.97%</td>
+<td style="text-align: right;">93.99%</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B classifier, 250k</td>
+<td style="text-align: right;">80.60%</td>
+<td style="text-align: right;">78.73%</td>
+<td style="text-align: right;">78.89%</td>
+<td style="text-align: right;">77.37%</td>
+<td style="text-align: right;">78.20%</td>
+<td style="text-align: right;">96.74%</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B classifier, 1M</td>
+<td style="text-align: right;">83.24%</td>
+<td style="text-align: right;">81.27%</td>
+<td style="text-align: right;">81.43%</td>
+<td style="text-align: right;">80.31%</td>
+<td style="text-align: right;">80.63%</td>
+<td style="text-align: right;">96.98%</td>
+</tr>
+<tr>
+<td>Qwen3-1.7B classifier, 250k</td>
+<td style="text-align: right;">82.23%</td>
+<td style="text-align: right;">80.46%</td>
+<td style="text-align: right;">80.95%</td>
+<td style="text-align: right;">79.45%</td>
+<td style="text-align: right;">80.00%</td>
+<td style="text-align: right;">97.22%</td>
+</tr>
+<tr>
+<td>1.7B + width-384 feature soft mixture</td>
+<td style="text-align: right;">83.77%</td>
+<td style="text-align: right;">81.05%</td>
+<td style="text-align: right;">81.19%</td>
+<td style="text-align: right;">80.50%</td>
+<td style="text-align: right;">80.08%</td>
+<td style="text-align: right;">97.28%</td>
+</tr>
+</tbody>
+</table>
+<p>All cells use the common-five target. Frequency boundaries are frozen from training queries (positive median 291 and p90 22,159 views); zero-frequency rows remain unknown. The downloadable results include slice counts, 2D/3D metrics, original embedding availability, sampled-list ranking, and actual cascade call fractions. Balanced-pool sampled-list NDCG has too few multi-item queries to establish long-tail ranking quality.</p>
+<p><a href="experiments/search-relevance-generalization/final-test-results.json">Complete test metrics and contrasts</a> · <a href="experiments/search-relevance-generalization/finalist-registration.json">Checkpoint and analysis hashes</a></p>
+<h3 id="item-type-and-embedding-availability">Item type and embedding availability</h3>
+<table>
+<thead>
+<tr>
+<th>Recipe</th>
+<th style="text-align: right;">2D accuracy</th>
+<th style="text-align: right;">3D accuracy</th>
+<th style="text-align: right;">All embeddings present</th>
+<th style="text-align: right;">All embeddings zero</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Feature DCN, 6.31M, full data</td>
+<td style="text-align: right;">61.54%</td>
+<td style="text-align: right;">75.43%</td>
+<td style="text-align: right;">81.01%</td>
+<td style="text-align: right;">62.53%</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B classifier, 250k</td>
+<td style="text-align: right;">69.35%</td>
+<td style="text-align: right;">81.41%</td>
+<td style="text-align: right;">81.64%</td>
+<td style="text-align: right;">77.26%</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B classifier, 1M</td>
+<td style="text-align: right;">71.74%</td>
+<td style="text-align: right;">84.02%</td>
+<td style="text-align: right;">84.40%</td>
+<td style="text-align: right;">79.18%</td>
+</tr>
+<tr>
+<td>Qwen3-1.7B classifier, 250k</td>
+<td style="text-align: right;">71.17%</td>
+<td style="text-align: right;">83.28%</td>
+<td style="text-align: right;">83.59%</td>
+<td style="text-align: right;">78.75%</td>
+</tr>
+<tr>
+<td>1.7B + width-384 feature soft mixture</td>
+<td style="text-align: right;">71.58%</td>
+<td style="text-align: right;">84.13%</td>
+<td style="text-align: right;">85.09%</td>
+<td style="text-align: right;">78.75%</td>
+</tr>
+</tbody>
+</table>
+<p>The test contains 73,709 2D, 416,248 3D, and 10,594 unknown-dimension pairs. Original embedding availability gives 223,305 all-present and 57,133 all-zero pairs. These descriptive slices differ in label/source composition; they are not causal missing-feature interventions or individual significance claims.</p>
+<p>A scoring-loader failure occurred after the five feature/production models completed: older 0.6B checkpoints lacked a later-added model-type field. Recovery corrected type detection, verified and preserved all five completed outputs by hash, and continued with separate tracking IDs. No language-model test predictions existed before the failure. Checkpoints, data, precision, selection and analysis rules stayed fixed. The original sealed scorer and <a href="experiments/search-relevance-generalization/final-test-recovery.json">recovery record</a> are retained.</p>
 <h2 id="generalization-to-later-traffic">Generalization to later traffic</h2>
 <p>Frozen predictions cover <strong>10,493 pairs in 267 complete displayed pages</strong> from August 22 and September 8, after training-source traffic ended August 13. Two teacher content-filter responses excluded one entire 30-item request. Inverse inclusion weights account for the two-stage file/request sample; intervals resample file clusters within each date. Only eight files per date were sampled, so uncertainty remains coarse.</p>
 <table>
@@ -224,7 +504,59 @@ img{max-width:100%;height:auto}
 </table>
 <p>The unseen-query subset contains 72 requests and 2,696 pairs. The mixture's pooled paired change versus 1.7B alone is <strong>0.113 [-0.306, 0.454] percentage points</strong> in accuracy, <strong>-0.0048 [-0.0082, -0.0011]</strong> NLL, and <strong>0.00157 [0.00003, 0.00304]</strong> page NDCG. Accuracy is not clearly separated. These temporal comparisons and sensitivity slices are secondary, not additional multiplicity-corrected primary tests.</p>
 <p>Image availability remains imperfect: <strong>28</strong> evaluable pairs explicitly used an unavailable-image placeholder, affecting <strong>10</strong> requests. Another 29 fetched images had catalog Pending/Blocked status and may be service placeholders despite decodable bytes. Snapshot URLs were re-fetched at study time; current-catalog fallbacks do not guarantee request-time image identity. The downloadable audit reports states and the complete-request sensitivity excluding explicit unavailable placeholders. The reannotation bridge below checks rubric continuity; it does not establish human accuracy.</p>
-<p><a href="experiments/search-relevance-generalization/temporal-results.json">Per-date results, uncertainty, image sensitivity, and frozen cascade use</a></p><h2 id="measured-training-results">Measured training results</h2>
+<p><a href="experiments/search-relevance-generalization/temporal-results.json">Per-date results, uncertainty, image sensitivity, and frozen cascade use</a></p>
+<p>The frozen cascade's cost control does not transfer unchanged: the policy calibrated for 50% LM calls routes <strong>90.9%</strong> of weighted future pairs to the 1.7B model; the 75% policy routes every future pair. Feature availability and uncertainty shift, so a fixed gate threshold does not enforce a fixed serving budget. Any hard per-request capacity policy needs its own evaluation.</p>
+<h3 id="supplementary-1m-recipe-and-image-state-sensitivity">Supplementary 1M recipe and image-state sensitivity</h3>
+<p>The 1M training recipe was fixed before initial temporal results, but these predictions were added afterward. This is a supplemental evaluation of an unchanged recipe, without refitting or choosing hyperparameters from later traffic. Original temporal predictions and results are preserved.</p>
+<table>
+<thead>
+<tr>
+<th>Text recipe</th>
+<th style="text-align: right;">Pooled accuracy %, 95% interval</th>
+<th style="text-align: right;">Pooled NLL, 95% interval ↓</th>
+<th style="text-align: right;">Page NDCG</th>
+<th style="text-align: right;">Accuracy on requests with completed/snapshot images</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qwen3-0.6B classifier, 250k</td>
+<td style="text-align: right;">74.67 [71.29, 77.62]</td>
+<td style="text-align: right;">0.6684 [0.6159, 0.7258]</td>
+<td style="text-align: right;">0.9230</td>
+<td style="text-align: right;">75.09%</td>
+</tr>
+<tr>
+<td>Qwen3-1.7B classifier, 250k</td>
+<td style="text-align: right;">76.37 [73.25, 79.09]</td>
+<td style="text-align: right;">0.6170 [0.5728, 0.6677]</td>
+<td style="text-align: right;">0.9251</td>
+<td style="text-align: right;">76.81%</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B classifier, 1M</td>
+<td style="text-align: right;">77.48 [74.97, 79.97]</td>
+<td style="text-align: right;">0.5903 [0.5378, 0.6504]</td>
+<td style="text-align: right;">0.9347</td>
+<td style="text-align: right;">78.14%</td>
+</tr>
+</tbody>
+</table>
+<p>The 1M model's paired difference versus 1.7B is <strong>1.113 [0.189, 2.184] percentage points</strong> accuracy and <strong>-0.0267 [-0.0524, 0.0005]</strong> NLL. The stricter image sensitivity excludes whole requests containing any Pending/Blocked/unavailable state and retains 246 requests and 9,513 pairs. Successful re-fetches still do not prove historical image identity. These are secondary comparisons with coarse file-cluster uncertainty. <a href="experiments/search-relevance-generalization/temporal-1m-supplement.json">Supplementary results</a>.</p>
+<h2 id="reproducibility-and-resource-accounting">Reproducibility and resource accounting</h2>
+<p>The 91 completed training/pilot processes consumed <strong>2.09 GPU-hours in optimizer loops</strong> and <strong>3.73 GPU-hours of per-run wall time</strong> including their loading, evaluation, saving and uploads. The two-GPU capacity window from study start to the accounting record is <strong>6.94 GPU-hours</strong>; it includes data preparation, separate evaluations and idle allocation. It is not a scheduler invoice. B200 training-time comparisons do not imply A100 serving speed.</p>
+<p>Final responses from temporal annotation and the reannotation bridge record approximately 27.23M prompt tokens and 4.43M completion tokens. This excludes unrecorded timeout usage and superseded attempts and is not a billing total. No GPU/API price was assumed. The accounting artifact retains per-run times and actual saved token counts.</p>
+<p>W&amp;B histories and S3 checkpoint/prediction sizes are verified separately from a successful process exit. A private source-history bundle and evidence archive retain manifests, raw update logs, failure/recovery records and exact checkpoint hashes. Six intermediate source versions were reconstructed from recorded patches/formatter versions and accepted only when their SHA-256 matched the original manifests; all 491 audited execution-file references have recoverable bytes. Raw examples, images and checkpoints remain private.</p>
+<p><a href="experiments/search-relevance-generalization/study-accounting.json">Resource accounting</a></p>
+<p>Standalone safetensors exports for the selected 0.6B/1M and the 1.7B/250k classifiers include tokenizer files, model configuration, the exact input instruction and a standalone loader example. Every tensor matches the training checkpoint exactly; FP32 weight files are 2.38 GB and 6.88 GB respectively. Full optimizer checkpoints remain available separately in the private study store. <a href="experiments/search-relevance-generalization/serving-exports.json">Export contracts and file hashes</a>.</p>
+<h2 id="what-the-study-supports">What the study supports</h2>
+<p>Data composition is an objective choice. At 2M pairs and a fixed update budget, moving from natural-only to 70/20/10 natural/balanced/random improves overall validation NLL from 0.7471 to 0.7319 and random-pool NLL from 0.4747 to 0.2417, while natural NLL worsens from 0.7416 to 0.7523. More balanced coverage slightly helps the balanced population in some controls, but a universal head/tail win is not established. Heavy random sampling produces an easy negative specialist and degrades natural relevance. Preserve each source and evaluate against the intended serving population instead of optimizing a mixture's aggregate accuracy alone.</p>
+<p>Capacity and optimization interact. Larger unique feature datasets continue improving at two passes; fixed-update gains flatten after a few million examples. The 250k model is severely overconfident after approximately 41 passes. Width-384 DCN improves full-data validation, while parameter-matched MLP and feature transformer controls do not overturn the feature DCN under their tested budget. These measurements do not fit a universal scaling exponent or establish globally optimal hyperparameters.</p>
+<p>Raw-text adaptation and feature availability both matter. Pretrained full-parameter language models outperform the finite-budget frozen and random-initialized controls. Their aggregate advantage over the feature model is largest when frozen embeddings are unavailable. Predictive ablations do not establish causal effects of clicks, purchases, or exposure; refreshed feature coverage is the next discriminating experiment.</p>
+<p>For serving, retain probability distributions and an expected relevance score. Matched classifier and token heads are close in quality, while emitting only a class coarsens ranking. The compact feature model occupies the lowest measured latency region. Compilation makes 0.6B more practical at the measured shapes. At matched 250k data, 1.7B improves quality; giving 0.6B one million examples offers another path and prevents a simple recommendation to scale parameters first. Compare these recipes across both held-out populations. A cascade reduces text calls, but request grouping and varying batch sizes require a full service benchmark before translating call fraction into latency savings.</p>
+<h3 id="boundaries-and-next-experiments">Boundaries and next experiments</h3>
+<p>The completed bounded study covers final test, temporal evaluation, serving checks, artifact verification, and publication. Earlier protocol sections retain the broader research agenda; not every candidate idea was executed. Direct multimodal post-training, end-to-end fusion heads, expert distillation, shuffled-feature counterfactuals, exhaustive data-by-capacity grids, and broad architecture families remain follow-up work. Golden and long-tail legacy collections were audited but not silently remapped across incompatible rubrics.</p>
+<p>The next deployment decision needs a serving SLA and a human-labeled relevance bridge, followed by a separate online trial. The 898 upstream exclusions, historical production overlap, event-time semantics beyond partition dates, and temporal image/cache identity remain unresolved. No result here establishes human preference, purchase lift, or an end-to-end production latency guarantee.</p><h2 id="measured-training-results">Measured training results</h2>
 <p><strong>85 controlled quality runs complete</strong>, plus systems checks. Results below are exploratory validation measurements; individual seeds are recorded in the complete table. They are not deployment recommendations or final-test results. Each training row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.</p>
 <table>
 <thead>
@@ -1440,8 +1772,10 @@ img{max-width:100%;height:auto}
 </tbody>
 </table>
 <p>The predeclared full-validation gate <strong>passed</strong>: accuracy changed by <strong>-0.0020 percentage points</strong> and NLL by <strong>0.000110</strong>, within the absolute 0.002 limits on 496,477 pairs. This is an engineering tolerance, not a statistical equivalence test. The first two shape families took approximately 115 and 108 seconds including compilation; warm figures exclude that setup. Two compiled graphs and multiple CUDA-graph shapes were recorded. Full validation inference took 70.6 seconds after compilation. Serving should bucket/pad shapes and measure cold starts and concurrency explicitly. <a href="experiments/search-relevance-generalization/compiled-serving.json">Measurements and quality gate</a>.</p>
+<h3 id="serving-check-on-the-selected-1m-checkpoint">Serving check on the selected 1M checkpoint</h3>
+<p>The exact selected 0.6B/1M checkpoint separately <strong>passed</strong> the same full-validation quality gate. Compiled minus eager: <strong>0.0024 percentage points</strong> accuracy and <strong>0.000033</strong> NLL. Both timing paths now use this identical checkpoint: batch-1 p50 is <strong>21.93 → 3.55 ms</strong> and batch-360 p50 is <strong>147.96 → 51.59 ms</strong> at 88 padded tokens. The standalone-latency exclusions above apply. <a href="experiments/search-relevance-generalization/compiled-selected-model.json">Same-checkpoint timings and full-validation gate</a>.</p>
 <h3 id="larger-expert-mixture">Larger-expert mixture</h3>
-<p>A second registered mixture combines the full-data width-384 feature model with the 1.7B text model and removes item dimension from the gate, so routing uses directly replayable inputs. On the same internal query audit, the text expert reaches <strong>81.32%</strong> shared-five accuracy and <strong>0.4968</strong> NLL; the soft mixture reaches <strong>82.05%</strong> and <strong>0.4750</strong>. This is a recipe extension with multiple changed ingredients, not a single-factor architecture claim. Its total serving parameters remain below 4B. <a href="experiments/search-relevance-generalization/fusion-v2-results.json">Full aggregate results</a>.</p>
+<p>A second registered mixture combines the full-data width-384 feature model with the 1.7B text model and removes item dimension from the gate, so routing uses directly replayable inputs. On the same internal query audit, the text expert reaches <strong>81.32%</strong> shared-five accuracy and <strong>0.4968</strong> NLL; the soft mixture reaches <strong>82.05%</strong> and <strong>0.4750</strong>. This is a recipe extension with multiple changed ingredients, not a single-factor architecture claim. The two reranking experts together remain below 4B parameters. Existing embedding services are outside this parameter and latency boundary; their end-to-end footprint is not established here. <a href="experiments/search-relevance-generalization/fusion-v2-results.json">Full aggregate results</a>.</p>
 <h3 id="reannotation-bridge-for-future-traffic">Reannotation bridge for future traffic</h3>
 <p>The current combined teacher reannotated <strong>128</strong> deterministic validation pairs: title agreement <strong>97.66%</strong>, thumbnail agreement <strong>93.75%</strong>, exact-total agreement <strong>92.19%</strong>, and shared-five agreement <strong>93.75%</strong>. All used a stored snapshot URL, with newly fetched image bytes recorded by hash. This small bridge supports rubric continuity but does not prove identical historical prompt/model/image bytes, human agreement, or an accuracy ceiling. <a href="experiments/search-relevance-generalization/teacher-bridge.json">Confusion matrices</a>.</p>
 <h3 id="failed-attempts-retained">Failed attempts retained</h3>
@@ -1472,7 +1806,7 @@ img{max-width:100%;height:auto}
 <p>The 1M-pair, 500-update FP32/BF16 systems check passed its predeclared absolute tolerance of 0.002 in common-five accuracy and NLL. BF16 minus FP32: <strong>0.058 percentage points</strong> accuracy and <strong>-0.00114</strong> NLL. This one-seed engineering check does not establish statistical equivalence.</p>
 <h3 id="language-model-infrastructure-check">Language-model infrastructure check</h3>
 <p>The Qwen3-0.6B classification-head pilot trained all <strong>596,057,095 parameters</strong>, with nonzero gradients and detected changes in all <strong>312 trainable tensors</strong>. It completed 16 updates on 1,024 training examples and a fixed 2,048-pair validation probe. This confirms the execution path; it is not a generalization result. The full head comparison is separately registered at 250k pairs, one epoch, batch 128, and LR 1e-5.</p><h2 id="abstract">Abstract</h2>
-<p>We study whether search relevance improves through more examples, different examples, a different model, or a different use of the available signals. The dataset contains approximately ten million Gemini-labeled query–item pairs from natural search exposure, query-balanced production coverage, and random unexposed 3D items. The deployed reference is a 6.31-million-parameter deep-and-cross reranker using frozen content embeddings and historical engagement. On query-disjoint validation, three-seed mean shared-five accuracy is 73.16% for a full-data feature model and 81.43% for a full-parameter Qwen3-1.7B classifier trained on 250k query/title pairs. These recipe comparisons differ in information, pretraining, capacity, and compute. Matched 0.6B classifier and token heads are nearly tied; exposing distributions preserves more ranking resolution than emitting only a class. Feature availability helps explain the raw-text advantage. On 267 weighted complete pages from later traffic, shared-five accuracy is 60.25% for the feature model, 74.67% for 0.6B, and 76.37% for 1.7B; the larger soft mixture reaches 76.48%, with an accuracy difference not clearly separated from the text expert. Compiled 0.6B inference reduces warm B200 latency to 3.52 ms at one pair and 51.55 ms at 360 pairs while passing a full-validation quality gate. These are teacher-agreement and standalone systems measurements; human preference, online impact, and end-to-end serving latency remain unmeasured. Sealed test results are reported separately after registered selection. Initial hypotheses and subsequent stage registrations are retained in version history; later amendments do not retroactively become preregistered hypotheses.</p>
+<p>We study how data composition, model capacity, supervision, feature availability and serving cost affect search relevance. The corpus contains 9.95M Gemini-labeled query–item pairs from natural exposure, query-balanced coverage and random unexposed 3D items. Across 85 quality runs, additional unique data helps, excessive repeated passes cause overconfidence, and random negatives improve rejection while trading off natural-traffic quality. On 500,551 query-disjoint held-out pairs, common-five accuracy is 73.04% for the full-data production-size feature model, 79.46% for a fully post-trained Qwen3-0.6B classifier on 250k query/title pairs, 81.33% for Qwen3-1.7B at matched data, and 82.04% for 0.6B on one million pairs. A frozen 1.7B/feature soft mixture reaches 82.09% and the lowest reported test NLL, 0.4746, versus 0.4798 for the compact 1M model. These recipe comparisons do not isolate representation, pretraining, capacity and compute. The matched classifier-versus-token contrast favors the classifier by 0.10 percentage points and 0.00122 NLL (Holm-adjusted p=0.0128 for NLL), a small practical effect. On 267 weighted complete pages from later traffic, the 1M model reaches 77.48% accuracy and 0.9347 page NDCG; a validation-calibrated 50% cascade routes 90.91% of future pairs to its LLM, exposing a budget-transfer failure. The selected 0.6B checkpoint passes a full-validation compilation gate while reducing warm batch-360 B200 latency from 147.96 to 51.59 ms. Statistical intervals, three-seed confirmations, feature-availability slices and recovery records accompany the results. These are teacher-agreement and standalone-system measurements; human preference, online effects and an end-to-end serving SLA remain unmeasured. Initial hypotheses and later registrations are retained in version history and are not retroactively presented as preregistered.</p>
 <h2 id="1-research-questions-and-falsifiable-hypotheses">1. Research questions and falsifiable hypotheses</h2>
 <table>
 <thead>
@@ -1532,7 +1866,7 @@ img{max-width:100%;height:auto}
 <p>The production configuration uses 69 numeric behavior signals: search and platform exposure, clicks and purchases at item/query/query–item levels, corrected behavior counts, and centrality/prominence measures. Each numeric signal uses a learned four-dimensional embedding of 32 percentile bins. Two scalar similarity scores and eight query–title lexical match features accompany four dense content vectors: item text (1024), item image (1152), query text/ROME (1024), and query image-space/SigLIP (1152).</p>
 <p>Each dense vector is reduced to 256 dimensions by a learned value network multiplied by a sigmoid gate. Concatenation produces <strong>1310 features</strong>. Two full-rank cross layers feed a ReLU MLP with widths <strong>256 → 128 → 32 → 10</strong> and dropout 0.15. The two cross matrices alone each have shape 1310 × 1310, making the cross network a substantial part of the parameter budget.</p>
 <p>For a full-rank cross layer, the implementation family is of the form <code>x_(l+1) = x_0 ⊙ (W_l x_l + b_l) + x_l</code>. The optimized adapter matches the exported module on validation shards with maximum absolute logit error 3.82 × 10⁻⁶; all 6,310,062 production parameters are covered. The formula is not a replacement for this parity test.</p>
-<p>The network learns from scratch <strong>on top of pretrained frozen embeddings</strong>. Calling the entire system “trained from scratch” would hide the contribution and serving cost of those encoders. A raw-text random-initialized model is a separate baseline.</p>
+<p>The network learns from scratch <strong>on top of pretrained frozen embeddings</strong>. Calling the entire system “trained from scratch” would hide the contribution and serving cost of those encoders. A raw-text random-initialized model is a separate baseline. Reported feature-model and hybrid parameter counts cover the reranking experts and assume existing embedding services; their full encoder footprint is not measured. The standalone 0.6B/1.7B text models include every parameter needed for their query/title scoring path and satisfy the sub-4B requirement directly.</p>
 <h3 id="22-optimization-and-serving-behavior">2.2 Optimization and serving behavior</h3>
 <table>
 <thead>
@@ -1867,7 +2201,7 @@ img{max-width:100%;height:auto}
 </tr>
 <tr>
 <td>GPU allocation/budget</td>
-<td>Two scheduler-reserved B200s verified; optimizer pilot passed on one; total study budget pending</td>
+<td>Two scheduler-reserved B200s verified; optimizer pilot passed on one; no total budget supplied; bounded stages completed</td>
 </tr>
 <tr>
 <td>Future feature cutoffs and human evaluation</td>
@@ -1921,16 +2255,16 @@ img{max-width:100%;height:auto}
 <p>The shared five-bin accuracy is <strong>68.74%</strong>; relevant-versus-irrelevant AUROC is <strong>0.9055</strong>. The model assigns <strong>5.44%</strong> of probability mass to unsupported classes 0, 1, and 9. At a validation-tuned threshold achieving 95% relevant recall, irrelevant false acceptance is <strong>40.67%</strong>. These are validation operating points, not test estimates. Only <strong>3.14%</strong> of random-pool pairs are relevant, so its high raw accuracy does not demonstrate strong discrimination.</p>
 <p>Natural-pool zero-based NDCG@10 is <strong>0.9570</strong>, over <strong>27,411</strong> multi-item queries with nonzero ideal gain. Of 141,510 natural queries, 111,090 are singletons. The query-balanced pool contains 98,955 queries but only <strong>25 multi-item queries</strong>. These sampled lists do not establish complete-result-list or robust long-tail ranking quality. Complete-list evaluation remains necessary.</p>
 <p>Item text/image vectors are all-zero for <strong>163,211</strong> validation rows; query text/image vectors are all-zero for <strong>169,370</strong> rows. Zero-vector slices are reported explicitly without assuming every zero scalar similarity is missing.</p>
-<p>The infrastructure pilot completed forward/backward and fused AdamW updates; all <strong>37 parameter tensors changed</strong>, with finite nonzero gradients. It used a repeated small training batch and therefore makes no generalization claim. On one B200, BF16 at batch 4096 reached approximately <strong>939k examples/s</strong> over 20 timed updates after five warmup updates, excluding input preparation; peak allocated GPU memory was 0.60 GB. FP32 at batch 512 reached approximately 110k/s and BF16 at the same batch reached 119k/s. Larger batch speed is not a matched statistical-quality comparison. Full-data loading and held-out precision comparisons are still required.</p>
+<p>The infrastructure pilot completed forward/backward and fused AdamW updates; all <strong>37 parameter tensors changed</strong>, with finite nonzero gradients. It used a repeated small training batch and therefore makes no generalization claim. On one B200, BF16 at batch 4096 reached approximately <strong>939k examples/s</strong> over 20 timed updates after five warmup updates, excluding input preparation; peak allocated GPU memory was 0.60 GB. FP32 at batch 512 reached approximately 110k/s and BF16 at the same batch reached 119k/s. Larger batch speed is not a matched statistical-quality comparison. Subsequent full-data runs and a registered held-out precision comparison were completed; their measured results are reported above.</p>
 <p>The initially available PyTorch 2.10/CUDA 13 environment failed cuBLAS matrix multiplication. A pre-existing PyTorch <strong>2.11/CUDA 13</strong> environment passed matrix multiplication and the optimizer pilot; the failed attempt is retained in the run journal. The feature cache preserves float32 values and row provenance; production replay and rubric/metric tests passed before training preparation.</p>
 <h2 id="10-stage-amendments-and-temporal-evaluation-progress">10. Stage amendments and temporal evaluation progress</h2>
 <p>The 500k source-mixture screen uses 500 optimizer updates after the size screen exposed severe repeated-pass overconfidence at 2510 updates. The amendment preceded source-mixture outcomes. Six 2M follow-ups preserve 2510 updates and span natural-only, 75/25/0, 70/20/10, 50/25/25, 50/50/0, and 25/50/25 mixtures. Three-seed confirmation fixes the full-data production-size recipe and subset while changing initialization/minibatch seeds to 173, 271, and 811.</p>
 <p>Parameter-matched architecture controls use a 6.29M-parameter cross-free MLP and a 6.23M-parameter feature-token transformer against the 6.31M DCN. The transformer retains the numeric bins and gated semantic reducers, with 69 numeric tokens, ten auxiliary tokens, four semantic tokens, a classification token, and four width-256 attention layers. Its optimizer pilot completed nonzero finite gradients and parameter changes before the main run. The full-data width-384 model is a separate intermediate-capacity point; the original 2M wide model uses width 512.</p>
-<p>The next LM controls use the same 250k input pairs and classification head. A frozen-backbone linear probe uses LR 1e-3; a random-initialized matched backbone uses LR 1e-4. These declared learning-rate differences acknowledge different optimization scales and do not establish fully optimized limits for either control. The full-parameter pretrained screen uses LR 5e-6, 1e-5, and 2e-5, plus a two-pass control. The 1.7B one-pass recipe receives seeds 271 and 811 after its first scaling result. A random-initialization dtype failure was caught before training; explicit FP32 parameter initialization, a new optimizer pilot, and a separate retry ID preserve the intended precision contract.</p>
+<p>The completed LM controls use the same 250k input pairs and classification head. A frozen-backbone linear probe uses LR 1e-3; a random-initialized matched backbone uses LR 1e-4. These declared learning-rate differences acknowledge different optimization scales and do not establish fully optimized limits for either control. The full-parameter pretrained screen uses LR 5e-6, 1e-5, and 2e-5, plus a two-pass control. The 1.7B one-pass recipe receives seeds 271 and 811 after its first scaling result. A random-initialization dtype failure was caught before training; explicit FP32 parameter initialization, a new optimizer pilot, and a separate retry ID preserve the intended precision contract.</p>
 <p>The upstream build manifests identify August 12 partitions for D2Q, platform D2Q, Q2D, and item features, and August 13 for the main feature snapshot. These precede both temporal evaluation dates. This resolves the recorded partition-cutoff uncertainty; it does not independently prove the event-time semantics of every source table.</p>
 <p>Future requests are sampled from August 22 and September 8. Eight files per date are selected by deterministic hash from 8192 daily files, then 32 raw rows per file are selected uniformly without replacement. Eligibility is applied after sampling; inclusion probabilities and file cluster identities are retained for weighted estimates and cluster uncertainty. The result contains 268 eligible requests and 10,523 displayed pairs. All 268 requests have complete displayed-item coverage in the serialized relevance inputs. These include multiple model batches in some requests, so concatenated model inputs must be aligned by explicit item key, not list position.</p>
 <p>Numeric and query-embedding inputs come from the actual request logs. Item vectors are retrieved by explicit key from a fixed June 25 serving cache; only selected byte ranges are fetched, approximately 67 MB from two arrays totaling 20.67 GB, in addition to the 152 MB ID index. This predates both evaluation dates. Exact historical deployment identity is still unverified and will limit claims about end-to-end production replay. Current repository cache configuration refers to preprocessor version 3 under the version-9 package, whereas the available cache files are under preprocessor version 9; actual object discovery is recorded rather than trusting the stale constant.</p>
-<p>The temporal teacher uses the repository's exact combined-request builder, combined prompt plus output format, Gemini 3.1 Pro preview alias, temperature zero, and the existing 3800-token cap. A 16-pair pilot succeeded before the full job. Every fetched thumbnail is saved by content hash and fetch time. Missing snapshot thumbnails are resolved from the current catalog; unavailable images are explicitly marked and use the prompt's title-based fallback policy. Therefore temporal visual agreement is not guaranteed to represent the original image at request time. A deterministic 128-pair reannotation bridge from the existing validation set estimates current-versus-original teacher disagreement; its findings will accompany future-traffic scores.</p>
+<p>The temporal teacher uses the repository's exact combined-request builder, combined prompt plus output format, Gemini 3.1 Pro preview alias, temperature zero, and the existing 3800-token cap. A 16-pair pilot succeeded before the full job. Every fetched thumbnail is saved by content hash and fetch time. Missing snapshot thumbnails are resolved from the current catalog; unavailable images are explicitly marked and use the prompt's title-based fallback policy. Therefore temporal visual agreement is not guaranteed to represent the original image at request time. A deterministic 128-pair reannotation bridge from the existing validation set estimates current-versus-original teacher disagreement; its findings accompany the future-traffic scores.</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Wang et al. <strong>DCN V2: Improved Deep &amp; Cross Network and Practical Lessons for Web-scale Learning to Rank Systems.</strong> <a href="https://arxiv.org/abs/2008.13535">arXiv:2008.13535</a>. Motivation for explicit feature interactions and capacity controls.</li>

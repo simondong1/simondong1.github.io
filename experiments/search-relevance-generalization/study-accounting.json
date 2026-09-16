@@ -1,0 +1,757 @@
+{
+  "recorded_at": 1789568503.7488432,
+  "study_goal_started_at": 1789556009,
+  "reserved_gpus": 2,
+  "elapsed_study_hours": 3.470763567553626,
+  "allocated_capacity_gpu_hours_over_study_window": 6.941527135107252,
+  "completed_optimizer_loop_gpu_hours": 2.09295493022086,
+  "completed_training_process_wall_gpu_hours": 3.728069568754872,
+  "completed_training_processes": 91,
+  "per_run": [
+    {
+      "id": "architecture-2m-cross4-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 14.310685866046697,
+      "wall_seconds": 44.50620935112238,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "architecture-2m-feature-transformer-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 137.7407107888721,
+      "wall_seconds": 181.67192618688568,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "architecture-2m-large-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 22.23460751073435,
+      "wall_seconds": 59.44395172223449,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "architecture-2m-mlp-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.19069460267201,
+      "wall_seconds": 41.85714927688241,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "architecture-2m-mlp-matched-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 11.613062383141369,
+      "wall_seconds": 42.62515236530453,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "architecture-2m-small-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.651020457968116,
+      "wall_seconds": 41.6758659039624,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "architecture-2m-wide-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.729947745334357,
+      "wall_seconds": 46.00864372681826,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "architecture-ft-pilot-50u-s173",
+      "kind": "infrastructure-pilot",
+      "training_seconds": 4.351219504140317,
+      "wall_seconds": 28.590067646000534,
+      "examples_consumed": 204800,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "architecture-full-cross4-ce10-2ep-s173",
+      "kind": "controlled-training",
+      "training_seconds": 25.017055885866284,
+      "wall_seconds": 83.57352695800364,
+      "examples_consumed": 17907824,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "architecture-full-wide-ce10-2ep-s173",
+      "kind": "controlled-training",
+      "training_seconds": 25.196413304191083,
+      "wall_seconds": 85.79757332615554,
+      "examples_consumed": 17907824,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "confirm-full-ce10-2ep-s271",
+      "kind": "controlled-training",
+      "training_seconds": 23.33060925314203,
+      "wall_seconds": 81.66285107610747,
+      "examples_consumed": 17907824,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "confirm-full-ce10-2ep-s811",
+      "kind": "controlled-training",
+      "training_seconds": 23.225958376657218,
+      "wall_seconds": 81.0546385422349,
+      "examples_consumed": 17907824,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "confirm-qwen3-17b-classifier-250k-1ep-s271",
+      "kind": "language-model-training",
+      "training_seconds": 740.2613609652035,
+      "wall_seconds": 1134.1285919332877,
+      "examples_consumed": 250000,
+      "nonpadding_tokens_consumed": 20705046
+    },
+    {
+      "id": "confirm-qwen3-17b-classifier-250k-1ep-s811",
+      "kind": "language-model-training",
+      "training_seconds": 732.8348862328567,
+      "wall_seconds": 1126.9905842151493,
+      "examples_consumed": 250000,
+      "nonpadding_tokens_consumed": 20705046
+    },
+    {
+      "id": "epochs-2m-ce10-1ep-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.912325793877244,
+      "wall_seconds": 30.574018360115588,
+      "examples_consumed": 2000000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "epochs-2m-ce10-4ep-s173",
+      "kind": "controlled-training",
+      "training_seconds": 10.803768642712384,
+      "wall_seconds": 41.32806866662577,
+      "examples_consumed": 8000000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-behavior_only-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.02085339045152,
+      "wall_seconds": 43.5029509938322,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-lexical_only-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.73719333903864,
+      "wall_seconds": 42.98005797481164,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-no_clicks-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.90764069184661,
+      "wall_seconds": 43.52346281800419,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-no_corrected_behavior-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.445043962914497,
+      "wall_seconds": 42.92981332913041,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-no_exposures-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.196811757516116,
+      "wall_seconds": 44.35994211258367,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-no_legacy_behavior-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.388778548222035,
+      "wall_seconds": 44.15517711592838,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-no_platform-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.004416862037033,
+      "wall_seconds": 43.94363677408546,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-no_purchases-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.604733258951455,
+      "wall_seconds": 43.280643473844975,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-no_similarity-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.682229291647673,
+      "wall_seconds": 43.54066660767421,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-semantic_lexical-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.428198892623186,
+      "wall_seconds": 43.47168348124251,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-semantic_only-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.827725329436362,
+      "wall_seconds": 43.24625779688358,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "feature-2m-text_semantic_lexical-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.900603283196688,
+      "wall_seconds": 44.676771115045995,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "label-1m-ce5-2510u-s173-r2",
+      "kind": "controlled-training",
+      "training_seconds": 13.682202856056392,
+      "wall_seconds": 40.789861200843006,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "label-1m-ce7-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.651738340500742,
+      "wall_seconds": 39.711337625049055,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "label-1m-components-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 14.246591969858855,
+      "wall_seconds": 40.699446535203606,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "label-1m-joint16-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.925877171568573,
+      "wall_seconds": 40.299193513114005,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "llm-qwen3-06b-classifier-1m-1ep-s173",
+      "kind": "language-model-training",
+      "training_seconds": 1415.350648292806,
+      "wall_seconds": 1660.7951271329075,
+      "examples_consumed": 1000000,
+      "nonpadding_tokens_consumed": 82824630
+    },
+    {
+      "id": "llm-qwen3-06b-classifier-250k-1ep-s173",
+      "kind": "language-model-training",
+      "training_seconds": 353.6298627210781,
+      "wall_seconds": 599.4385962570086,
+      "examples_consumed": 250000,
+      "nonpadding_tokens_consumed": 20705046
+    },
+    {
+      "id": "llm-qwen3-06b-classifier-250k-2ep-s173",
+      "kind": "language-model-training",
+      "training_seconds": 708.3620125730522,
+      "wall_seconds": 953.0415784330107,
+      "examples_consumed": 500000,
+      "nonpadding_tokens_consumed": 41410092
+    },
+    {
+      "id": "llm-qwen3-06b-classifier-250k-frozen-lr1e-3-s173",
+      "kind": "language-model-training",
+      "training_seconds": 114.67878903215751,
+      "wall_seconds": 339.3366451221518,
+      "examples_consumed": 250000,
+      "nonpadding_tokens_consumed": 20705046
+    },
+    {
+      "id": "llm-qwen3-06b-classifier-250k-lr2e-5-s173",
+      "kind": "language-model-training",
+      "training_seconds": 354.07677329098806,
+      "wall_seconds": 598.778140203096,
+      "examples_consumed": 250000,
+      "nonpadding_tokens_consumed": 20705046
+    },
+    {
+      "id": "llm-qwen3-06b-classifier-250k-lr5e-6-s173",
+      "kind": "language-model-training",
+      "training_seconds": 365.041973462794,
+      "wall_seconds": 609.3435191749595,
+      "examples_consumed": 250000,
+      "nonpadding_tokens_consumed": 20705046
+    },
+    {
+      "id": "llm-qwen3-06b-classifier-250k-random-lr1e-4-s173-r2",
+      "kind": "language-model-training",
+      "training_seconds": 354.222435307689,
+      "wall_seconds": 603.3770982977003,
+      "examples_consumed": 250000,
+      "nonpadding_tokens_consumed": 20705046
+    },
+    {
+      "id": "llm-qwen3-06b-classifier-pilot-s173",
+      "kind": "language-model-optimizer-pilot",
+      "training_seconds": 3.4683942571282387,
+      "wall_seconds": 42.916352822910994,
+      "examples_consumed": 1024,
+      "nonpadding_tokens_consumed": 80701
+    },
+    {
+      "id": "llm-qwen3-06b-random-dtype-pilot-s173",
+      "kind": "language-model-optimizer-pilot",
+      "training_seconds": 3.2203764729201794,
+      "wall_seconds": 47.49786184495315,
+      "examples_consumed": 2048,
+      "nonpadding_tokens_consumed": 161431
+    },
+    {
+      "id": "llm-qwen3-06b-restricted-250k-1ep-s173",
+      "kind": "language-model-training",
+      "training_seconds": 352.97192363254726,
+      "wall_seconds": 597.7153609800152,
+      "examples_consumed": 250000,
+      "nonpadding_tokens_consumed": 20705046
+    },
+    {
+      "id": "llm-qwen3-06b-token-250k-1ep-s173",
+      "kind": "language-model-training",
+      "training_seconds": 354.0308170961216,
+      "wall_seconds": 601.4188611600548,
+      "examples_consumed": 250000,
+      "nonpadding_tokens_consumed": 20705046
+    },
+    {
+      "id": "llm-qwen3-17b-classifier-250k-1ep-s173",
+      "kind": "language-model-training",
+      "training_seconds": 723.456251102034,
+      "wall_seconds": 1118.8762187338434,
+      "examples_consumed": 250000,
+      "nonpadding_tokens_consumed": 20705046
+    },
+    {
+      "id": "llm-qwen3-17b-classifier-pilot-s173",
+      "kind": "language-model-optimizer-pilot",
+      "training_seconds": 6.257419800851494,
+      "wall_seconds": 109.53709982195869,
+      "examples_consumed": 2048,
+      "nonpadding_tokens_consumed": 161431
+    },
+    {
+      "id": "mix-2m-100-0-0-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.84775283979252,
+      "wall_seconds": 44.31075666891411,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-2m-25-50-25-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.548363856039941,
+      "wall_seconds": 44.331634626258165,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-2m-50-25-25-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.585169011261314,
+      "wall_seconds": 43.577419706154615,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-2m-50-50-0-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.67267052968964,
+      "wall_seconds": 44.93477186514065,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-2m-70-20-10-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.655796558596194,
+      "wall_seconds": 43.2614326630719,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-2m-75-25-0-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.16904883692041,
+      "wall_seconds": 42.73574891965836,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-0-0-100-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.7904736502096057,
+      "wall_seconds": 24.88235583109781,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-0-100-0-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.99357615923509,
+      "wall_seconds": 25.230148565024137,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-0-25-75-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.975155219901353,
+      "wall_seconds": 24.649208185262978,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-0-50-50-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 3.0452939900569618,
+      "wall_seconds": 25.376736310776323,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-0-75-25-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.9523426326923072,
+      "wall_seconds": 24.081846698652953,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-100-0-0-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 3.0685867741703987,
+      "wall_seconds": 25.426848738919944,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-25-0-75-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.9838307863101363,
+      "wall_seconds": 24.49165834719315,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-25-25-50-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.8259016019292176,
+      "wall_seconds": 24.72342881374061,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-25-50-25-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.7847937969490886,
+      "wall_seconds": 24.700081973336637,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-25-75-0-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.8438540888018906,
+      "wall_seconds": 24.64915453689173,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-50-0-50-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.9480752698145807,
+      "wall_seconds": 24.612803130876273,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-50-25-25-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.9649110403843224,
+      "wall_seconds": 24.59445889899507,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-50-50-0-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.9756542090326548,
+      "wall_seconds": 24.592295000795275,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-70-20-10-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 3.0298260552808642,
+      "wall_seconds": 24.624829556792974,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-75-0-25-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.770365023985505,
+      "wall_seconds": 24.549862070009112,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "mix-500k-75-25-0-ce10-500u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.8705167211592197,
+      "wall_seconds": 24.85240564821288,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-adamw-noamsgrad-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.537527215201408,
+      "wall_seconds": 43.06491285888478,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-ce7-control-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.60772557882592,
+      "wall_seconds": 43.294647241942585,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-ce7-emd-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 14.539386519696563,
+      "wall_seconds": 45.765026139095426,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-dropout0-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.879410455469042,
+      "wall_seconds": 43.48613954987377,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-dropout03-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.608283911831677,
+      "wall_seconds": 43.56660207407549,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-logweight-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.63532630354166,
+      "wall_seconds": 44.2681418559514,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-lr1e-3-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.48573863459751,
+      "wall_seconds": 45.84184272587299,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-lr1e-4-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.304719176143408,
+      "wall_seconds": 44.200641924049705,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-ordinal-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 14.77340840222314,
+      "wall_seconds": 44.56317286007106,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-sqrtweight-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.838677048217505,
+      "wall_seconds": 42.80435789516196,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-wd0-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.85404483275488,
+      "wall_seconds": 44.1145488251932,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "optimization-2m-wd01-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.822765994351357,
+      "wall_seconds": 44.79846167098731,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "size-1000000-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.463178707286716,
+      "wall_seconds": 40.358954595867544,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "size-1000000-ce10-2ep-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.9320734310895205,
+      "wall_seconds": 26.933277434669435,
+      "examples_consumed": 2000000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "size-2000000-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.882824847940356,
+      "wall_seconds": 44.36824336089194,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "size-2000000-ce10-2ep-s173",
+      "kind": "controlled-training",
+      "training_seconds": 5.545449506025761,
+      "wall_seconds": 34.722531385254115,
+      "examples_consumed": 4000000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "size-250000-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.688509815372527,
+      "wall_seconds": 38.012165712192655,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "size-250000-ce10-2ep-s173",
+      "kind": "controlled-training",
+      "training_seconds": 1.1305369162000716,
+      "wall_seconds": 22.64972687093541,
+      "examples_consumed": 500000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "size-4000000-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 13.569657083135098,
+      "wall_seconds": 50.234585301950574,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "size-4000000-ce10-2ep-s173",
+      "kind": "controlled-training",
+      "training_seconds": 9.63859152700752,
+      "wall_seconds": 47.449274346232414,
+      "examples_consumed": 8000000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "size-8953912-ce10-2510u-s173",
+      "kind": "controlled-training",
+      "training_seconds": 12.593441531527787,
+      "wall_seconds": 71.6839620936662,
+      "examples_consumed": 10280960,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "size-8953912-ce10-2ep-s173",
+      "kind": "controlled-training",
+      "training_seconds": 22.11569880321622,
+      "wall_seconds": 80.97581183724105,
+      "examples_consumed": 17907824,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "systems-1m-500u-bf16-s173",
+      "kind": "controlled-training",
+      "training_seconds": 2.979703785851598,
+      "wall_seconds": 28.95047003030777,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    },
+    {
+      "id": "systems-1m-500u-fp32-s173",
+      "kind": "controlled-training",
+      "training_seconds": 3.0864668139256537,
+      "wall_seconds": 27.08088046265766,
+      "examples_consumed": 2048000,
+      "nonpadding_tokens_consumed": 0
+    }
+  ],
+  "teacher_successes": {
+    "bridge": 128,
+    "temporal": 10385
+  },
+  "teacher_usage_saved_final_responses": {
+    "bridge": {
+      "prompt_tokens": 331834,
+      "completion_tokens": 47898,
+      "total_tokens": 379732
+    },
+    "temporal": {
+      "prompt_tokens": 26900034,
+      "completion_tokens": 4385340,
+      "total_tokens": 31285374
+    }
+  },
+  "notes": "Two GPUs were reserved for this study. Capacity-window hours include preparation, evaluation, uploads and idle allocation, measured from the goal ledger start to this record; they are not a scheduler invoice. Optimizer-loop and per-run wall totals cover completed single-GPU training jobs only and exclude separate compilation/serving/temporal/test jobs. Teacher usage counts saved final responses; timeouts, filtered replies and superseded retries can undercount billed usage. No GPU or API prices were assumed."
+}

@@ -32,7 +32,7 @@
   {
     "id": "final-test-comparison-v1",
     "kind": "sealed-test-analysis",
-    "state": "pending"
+    "state": "complete"
   },
   {
     "id": "temporal-complete-page-audit-v1",
