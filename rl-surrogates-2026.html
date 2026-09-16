@@ -103,10 +103,6 @@ strong,b{font-weight:650}
 code{font-family:"JetBrains Mono",monospace;font-size:.83em;background:#eef0f3;padding:.12em .3em;border-radius:4px;overflow-wrap:anywhere}
 pre{background:#f0f2f5;border:1px solid var(--line);border-radius:8px;padding:1rem;overflow:auto;font-size:.82rem;line-height:1.65}
 pre code{background:none;padding:0}
-.takeaways{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:1.35rem 0;margin-bottom:1.7rem}
-.takeaways .kicker{margin:0 0 .8rem}
-.takeaways ul{margin:0}
-.takeaways li{margin:.7rem 0;line-height:1.55}
 .background-link{display:block;padding:1.1rem 1.3rem;background:var(--accent-soft);border-radius:8px}
 .background-link:hover{text-decoration:none;background:#e9ebff}
 .background-link span,.background-link strong{display:block}
@@ -185,7 +181,7 @@ figcaption{font-size:.79rem;line-height:1.55;color:var(--ink-soft);margin-top:.7
 footer{border-top:1px solid var(--line);margin-top:4rem;padding:2rem 0 3rem;font-size:.85rem;color:var(--muted)}
 footer a{color:var(--ink-soft)}
 @media(min-width:1300px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 48rem)/2 - 14rem);width:12rem;max-height:calc(100vh - 7rem);overflow-y:auto;border:0;padding:0;margin:0}nav.toc ol{display:block}nav.toc li{font-size:.78rem;margin:.35rem 0}}
-@media(max-width:640px){.wrap{padding:0 1.25rem}header.hero{padding:3rem 0 2rem}h1.title{font-size:2.6rem}.subtitle{font-size:1.08rem}h2{font-size:1.6rem}h3{font-size:1.15rem}section{margin-top:3rem}section+section{padding-top:2.3rem}.takeaways{padding:1rem 0}.takeaways li{font-size:.96rem}.background-link{padding:1rem}.example,.caveat{padding:1rem}.formula{font-size:.87rem}.notation{grid-template-columns:1fr}.notation div{padding:.45rem 0}.notation dt{min-width:4rem}.reward-example{gap:.35rem}.reward-example code{font-size:.77rem}.reward-example div span{font-size:.65rem}.comparison{gap:.6rem}.comparison>div{padding-left:.6rem}.comparison strong{font-size:1.08rem}.comparison span{font-size:.74rem}table.ptable{font-size:.8rem}table.ptable th,table.ptable td{padding:.6rem .35rem}table.ptable th{font-size:.6rem;letter-spacing:.025em}.overview td:first-child{width:25%}.overview td:last-child{width:29%}.panel{padding:1rem .75rem}.controls{gap:.65rem}.controls label:last-child{flex:1 1 100%}.controls input[type=range]{width:100%}.controls button{font-size:.71rem}figcaption{font-size:.76rem}.caveat li{font-size:.88rem}.settings-table th{width:24%}.artifact-links{flex-direction:column;gap:.7rem}}
+@media(max-width:640px){.wrap{padding:0 1.25rem}header.hero{padding:3rem 0 2rem}h1.title{font-size:2.6rem}.subtitle{font-size:1.08rem}h2{font-size:1.6rem}h3{font-size:1.15rem}section{margin-top:3rem}section+section{padding-top:2.3rem}.background-link{padding:1rem}.example,.caveat{padding:1rem}.formula{font-size:.87rem}.notation{grid-template-columns:1fr}.notation div{padding:.45rem 0}.notation dt{min-width:4rem}.reward-example{gap:.35rem}.reward-example code{font-size:.77rem}.reward-example div span{font-size:.65rem}.comparison{gap:.6rem}.comparison>div{padding-left:.6rem}.comparison strong{font-size:1.08rem}.comparison span{font-size:.74rem}table.ptable{font-size:.8rem}table.ptable th,table.ptable td{padding:.6rem .35rem}table.ptable th{font-size:.6rem;letter-spacing:.025em}.overview td:first-child{width:25%}.overview td:last-child{width:29%}.panel{padding:1rem .75rem}.controls{gap:.65rem}.controls label:last-child{flex:1 1 100%}.controls input[type=range]{width:100%}.controls button{font-size:.71rem}figcaption{font-size:.76rem}.caveat li{font-size:.88rem}.settings-table th{width:24%}.artifact-links{flex-direction:column;gap:.7rem}}
 .example-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.5rem;margin:1rem 0}
 .example-presets button{font:inherit;font-size:.76rem;font-weight:600;line-height:1.4;padding:.65rem .5rem;color:var(--ink-soft);background:#fff;border:1px solid var(--line);border-radius:7px;cursor:pointer}
 .example-presets button:hover{border-color:#a5a1f5}
@@ -216,19 +212,11 @@ footer a{color:var(--ink-soft)}
 <header class="hero"><div class="wrap">
 <p class="eyebrow">Reinforcement learning · Part 2</p>
 <h1 class="title">RL Surrogate Losses<br>in 2026</h1>
-<p class="subtitle">Seven ways to control a policy update. The math, worked examples, and twelve full-parameter training runs in Miles.</p>
+<p class="subtitle">PPO · DAPO · CISPO · GLM-5 · DPPO · SAPO · GSPO</p>
 <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span aria-hidden="true">·</span><time datetime="2026-09-15">September 15, 2026</time></div>
 </div></header>
 <main class="wrap">
 
-<aside class="takeaways" aria-label="Takeaways">
-<p class="kicker">Takeaways</p>
-<ul>
-<li><strong>Many methods share the same retained gradient.</strong> Their gates and weights decide which tokens contribute.</li>
-<li><strong>Advantages, clipping, and length normalization are separate choices.</strong> An algorithm name rarely specifies all three.</li>
-<li><strong>Headroom matters.</strong> GSM8K started above 95%; DAPO-Math exposed larger differences. One seed, fixed settings.</li>
-</ul>
-</aside>
 <a class="background-link" href="ppo.html"><span class="kicker">Background · Part 1</span><strong>Understanding PPO for Language Models <span aria-hidden="true">↗</span></strong><span>The rollout loop, advantages, and why the trainer recomputes log probabilities.</span></a>
 <nav class="toc" aria-label="Table of contents"><div class="toc-title">On this page</div><ol>
 <li><a href="#foundation">The shared gradient</a></li>
@@ -237,34 +225,72 @@ footer a{color:var(--ink-soft)}
 <li><a href="#dppo">Beyond ratio clipping</a></li>
 <li><a href="#explorer">Try the gradients</a></li>
 <li><a href="#aggregation">Weighting long responses</a></li>
-<li><a href="#experiments">Twelve training runs</a></li>
+<li><a href="#experiments">Real experiment</a></li>
 <li><a href="#references">Sources &amp; code</a></li>
 </ol></nav>
 
 <section id="foundation">
 <h2>The shared gradient</h2>
-<p>Reinforcement learning increases the probability of rewarded responses. The <strong>advantage</strong> says how much better a response was than its baseline; the <strong>surrogate</strong> turns that signal into a differentiable training objective.</p>
+<p>The RL loop is <strong>sample responses → score them → update the policy</strong>. The methods below change how the last step uses those samples.</p>
+
+<h3>Maximize expected reward</h3>
+<p>Let \(\pi_\theta\) be the model with parameters \(\theta\), \(x\) a prompt, and \(y\) its sampled response. With reward \(R(x,y)\), the objective is:</p>
+<div class="formula">\[ \max_\theta J(\theta),\qquad J(\theta)=\mathbb E_{x,y}[R(x,y)]. \]</div>
+<p>Writing the sampled reward as \(R\), the <strong>policy-gradient identity</strong> gives:</p>
+<div class="formula featured">\[ \nabla_\theta J=\mathbb E_{x,y}\!\left[R\,\nabla_\theta\log\pi_\theta(y\mid x)\right]. \]</div>
+<p>For \(L\) response tokens, with \(y_{&lt;t}\) denoting earlier tokens:</p>
+<div class="formula">\[ \log\pi_\theta(y\mid x)=\sum_{t=1}^{L}\log\pi_\theta(y_t\mid x,y_{&lt;t}). \]</div>
+<p>The grader supplies a number; backpropagation runs through the model’s token log probabilities. A response reward therefore weights every generated token’s gradient. The sampled tokens and reward stay fixed during backpropagation.</p>
+
+<h3>Turn rewards into advantages</h3>
+<p>An <strong>advantage</strong> measures reward relative to a baseline. <strong>Group Relative Policy Optimization (GRPO)</strong> compares responses to the same prompt, avoiding a learned value model.</p>
 <div class="example">
 <p class="kicker">One prompt · Four responses</p>
 <div class="reward-example"><div><span>Rewards</span><code>[1, 0, 1, 0]</code></div><span class="arrow" aria-hidden="true">→</span><div><span>Normalized advantages</span><code>[+1, −1, +1, −1]</code></div></div>
-<p>Subtract the mean reward, 0.5, then divide by the population standard deviation, 0.5.</p>
+<p>Compute the group mean \(\bar R\), standard deviation \(\sigma_R\), then each advantage:</p>
+<div class="formula">\[ \begin{aligned}
+\bar R&amp;=\frac{1+0+1+0}{4}=0.5,\\[6pt]
+\sigma_R&amp;=\sqrt{\frac{2(0.5)^2+2(-0.5)^2}{4}}=0.5,\\[6pt]
+A_{\text{correct}}&amp;=\frac{1-0.5}{0.5}=+1,\\[6pt]
+A_{\text{incorrect}}&amp;=\frac{0-0.5}{0.5}=-1.
+\end{aligned} \]</div>
+<p class="note">Population standard deviation for this example. The experiment uses sample standard deviation; the conversion is below.</p>
 </div>
-<p><strong>Group Relative Policy Optimization (GRPO)</strong> uses responses to the same prompt as the baseline, avoiding a learned value model. It can be paired with any of the token surrogates below.</p>
-<p>Now fix one sampled token and its preceding context:</p>
+<p>For response \(i\), with a small stabilizer \(\epsilon\):</p>
+<div class="formula">\[ A_i=\frac{R_i-\bar R}{\sigma_R+\epsilon}. \]</div>
+<p>Identical rewards give \(A_i=0\): the group provides no relative learning signal. <strong>Advantage estimation and the surrogate are separate choices.</strong> Our runs all use GRPO to estimate advantages and vary the surrogate.</p>
+
+<h3>Train on saved rollouts</h3>
+<p>The trainer updates \(\theta\) on responses already sampled by a rollout policy. A <strong>surrogate</strong> is the differentiable stand-in for expected reward that we optimize on this fixed batch.</p>
+<p>For one saved token and its preceding context:</p>
 <dl class="notation">
 <div><dt>\(q\)</dt><dd>Saved rollout probability</dd></div>
 <div><dt>\(p\)</dt><dd>Current trainer probability</dd></div>
 <div><dt>\(r=p/q\)</dt><dd>Importance ratio</dd></div>
 <div><dt>\(A\)</dt><dd>Fixed response advantage</dd></div>
 </dl>
-<p>For model parameters \(\theta\), the basic ascent objective \(j=rA\) gives:</p>
-<div class="formula featured">\[ \nabla_\theta j=\underbrace{Ar}_{c}\,\nabla_\theta\log p. \]</div>
-<p>We compare the coefficient <strong>\(c\)</strong>. Positive means reinforce the sampled token; negative means discourage it. Training minimizes \(-j\). Hold \(q\) and \(A\) fixed when differentiating.</p>
+<p>The ratio measures how the token’s probability changed since collection. The basic token surrogate \(j\) and the loss to minimize \(\ell\) are:</p>
+<div class="formula">\[ j=rA,\qquad \ell=-j. \]</div>
+<p>Hold \(q\) and \(A\) fixed. Only \(p\) depends on the current parameters:</p>
+<div class="formula featured">\[ \nabla_\theta j=\frac{A}{q}\nabla_\theta p=\underbrace{Ar}_{c}\,\nabla_\theta\log p. \]</div>
+<p>At \(p=q\), the coefficient is \(c=A\). As training changes \(p\), the ratio adjusts the saved token’s weight.</p>
+<p>Positive <strong>\(c\)</strong> reinforces the sampled token; negative \(c\) discourages it. The following surrogates clip, cap, gate, or soften this coefficient. Token averaging is a separate choice, covered in <a href="#aggregation">Weighting long responses</a>.</p>
 <p class="note">A zero coefficient removes this token’s local contribution. Other tokens and optimizer momentum can still move its probability.</p>
-<details><summary>GRPO normalization and the ratio anchor</summary>
-<p>For response reward \(R_i\), group mean \(\bar R\), and a small stabilizer \(\epsilon\):</p>
-<div class="formula">\[ A_i=\frac{R_i-\bar R}{\operatorname{std}(R)+\epsilon}. \]</div>
-<p>Identical group rewards give zero relative signal. Recipes differ in standard-deviation conventions and further normalization; our experiment uses the sample standard deviation.</p>
+<details><summary>Baseline, normalization, and ratio conventions</summary>
+<p>A prompt-dependent baseline \(b(x)\) leaves the expected on-policy gradient unchanged:</p>
+<div class="formula">\[ \mathbb E_{y\sim\pi_\theta}\!\left[b(x)\,\nabla_\theta\log\pi_\theta(y\mid x)\right]=0. \]</div>
+<p>GRPO’s mean and standard deviation depend on the sampled group. Its normalized estimator is a further choice, not the exact expected-reward gradient above.</p>
+<p>For \(G\) responses, population and sample standard deviations use different denominators:</p>
+<div class="formula">\[ \begin{aligned}
+\sigma_R^2&amp;=\frac1G\sum_i(R_i-\bar R)^2,\\
+s_R^2&amp;=\frac1{G-1}\sum_i(R_i-\bar R)^2.
+\end{aligned} \]</div>
+<p>Our experiment uses \(s_R\). For the four rewards above, ignoring the small \(\epsilon\):</p>
+<div class="formula">\[ \begin{aligned}
+s_R&amp;=\sqrt{\frac{4(0.5)^2}{3}}=\sqrt{\frac13},\\
+A_{\text{correct}}&amp;=\frac{0.5}{\sqrt{1/3}}\approx0.866,\\
+A_{\text{incorrect}}&amp;\approx-0.866.
+\end{aligned} \]</div>
 <p>The denominator must be explicit. Here \(q\) is the recorded rollout probability. Some recipes instead use a trainer snapshot and add a separate correction for inference mismatch. A token ratio alone does not fully correct the distribution of earlier prefixes.</p>
 </details>
 </section>
@@ -437,7 +463,7 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 </details>
 </section>
 <section id="experiments">
-<h2>Twelve full-parameter training runs</h2>
+<h2>Real experiment</h2>
 <p>We trained <a href="https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a">Qwen3.5-9B</a> in Miles on two B200s: <strong>six surrogates × two math datasets × one seed</strong>. Within each dataset, only the surrogate and its declared thresholds change.</p>
 <div class="table-scroll"><table class="ptable settings-table"><tbody>
 <tr><th scope="row">Compared</th><td>PPO clipping · CISPO · GLM-5 gating · DPPO · SAPO · GSPO</td></tr>
@@ -447,19 +473,20 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 <tr><th scope="row">Measured runtime</th><td>5.93 hours for all twelve jobs; peak sampled memory 177.8 GiB on one GPU</td></tr></tbody></table></div>
 <p class="note"><strong>GRPO with PPO clipping is the baseline; no critic.</strong> Actor–critic PPO changes the advantage estimator. DAPO’s similar clip-higher rule is a diagnostic; its full recipe also changes sampling. Thresholds are fixed, not equally tuned.</p>
 
-<h3>GSM8K: little headroom for this checkpoint</h3>
+<h3>GSM8K: already saturated</h3>
 <p><a href="https://huggingface.co/datasets/openai/gsm8k">GSM8K</a> contains grade-school arithmetic word problems. We use 7,409 training questions and a fixed 512-question subset of the official test set. Each arm sees 1,024 prompt presentations: <strong>256 updates, with a 1,536-token response cap</strong>.</p>
 <figure><picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-gsm8k-accuracy-mobile.svg"/><img src="assets/rl-surrogates-2026-gsm8k-accuracy.svg" width="828" height="324" alt="GSM8K training and held-out accuracy for six RL surrogates"/></picture><figcaption>Training: sampled accuracy at collection time, with faint raw values and a trailing five-collection mean. Held out: greedy accuracy on the same 512 questions. One seed; no confidence bands. Accuracy axes use different ranges.</figcaption></figure>
 <ul class="findings">
-<li><strong>The starting policy already scores 95.12%–95.70%.</strong> Final scores span 92.77%–95.31%.</li>
-<li><strong>Most groups provide no relative reward signal:</strong> 90.53%–92.97% have identical rewards, averaged over each run. This is a weak setting for choosing between surrogates.</li>
+<li><strong>There is little left to learn.</strong> The starting policy scores 95.12%–95.70%; final scores span 92.77%–95.31%. No arm ends above its own starting score.</li>
+<li><strong>Most groups supply no GRPO signal:</strong> 90.53%–92.97% have identical rewards. Similar scores here do not establish that the surrogates are equivalent.</li>
 </ul>
+<p class="note">Treat GSM8K as a saturation check for this already-trained checkpoint. These evaluations do not establish whether Qwen used the exact questions during pretraining or RL.</p>
 
 <h3>DAPO-Math-17K: more room to learn</h3>
 <p><a href="https://huggingface.co/datasets/BytedTsinghua-SIA/DAPO-Math-17k">DAPO-Math-17K</a> contains competition math with numeric answers. We deduplicate it and hold out questions before training: 16,088 training questions, with 512 fixed evaluation questions. Each arm sees 1,280 prompt presentations: <strong>320 updates, with a 4,096-token response cap</strong>.</p>
 <figure><picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-dapo-accuracy-mobile.svg"/><img src="assets/rl-surrogates-2026-dapo-accuracy.svg" width="828" height="324" alt="DAPO training and held-out accuracy for six RL surrogates"/></picture><figcaption>Training: sampled accuracy at collection time, with faint raw values and a trailing five-collection mean. Held out: greedy accuracy on the same 512 questions. One seed; no confidence bands. Accuracy axes use different ranges.</figcaption></figure>
 <ul class="findings">
-<li><strong>SAPO has the highest final score in this seed:</strong> 74.80%, versus 64.06% for PPO clipping.</li>
+<li><strong>The methods separate on the harder task.</strong> SAPO finishes at 74.80%, GLM-5 at 73.44%, and PPO clipping at 64.06%: a 10.74-percentage-point spread in this seed.</li>
 <li><strong>The response cap is part of the task.</strong> SAPO reaches it on 13.67% of final evaluation responses; PPO clipping on 28.91%.</li>
 </ul>
 
@@ -528,7 +555,7 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 <p>Before each collection’s updates, run-mean absolute trainer/inference log-probability differences are 0.0041–0.0064 natural-log units, averaging tokens within each response first. Token-level 99.9th percentiles are 0.185–0.217; the largest difference is 3.997, with 0 tokens above 5. Small averages do not imply identical engines. Optimization drift is logged separately.</p>
 <p>Analytic gradient checks cover the surrogates, and the custom PPO loss matches native Miles on randomized cases. A numerical guard clamps log ratios to [−20,20]; per-update activation is included in the records. Runtime includes setup, compilation, generation, evaluation, and checkpointing, so it is not a loss-kernel speed comparison.</p>
 </details>
-<div class="closing"><p><strong>Choose the gradient rule, then measure the learning signal.</strong> Reward variance, response budget, and evaluation repeatability determine what this comparison can reveal.</p>
+<div class="closing"><p><strong>DAPO-Math gives a useful follow-up: repeat SAPO and GLM-5 against PPO clipping across seeds.</strong> Their gains in this run justify that comparison. GSM8K’s saturation makes it a poor dataset for choosing the surrogate.</p>
 <div class="artifact-links"><a href="https://github.com/simondong1/simondong1.github.io/tree/main/experiments/rl-surrogates-2026-v2">Code &amp; reproduction ↗</a><a href="experiments/rl-surrogates-2026-v2/endpoints.csv">Final scores ↓</a><a href="experiments/rl-surrogates-2026-v2/results.json.gz">Measured records ↓</a></div></div></section>
 <section id="references"><h2>Sources &amp; code</h2>
 <details><summary>Primary papers and pinned implementations</summary>

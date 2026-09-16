@@ -32,9 +32,10 @@ contrast it with the current mechanism, and link the existing article.
 ## Writing
 
 - Use concise, serious language and short paragraphs.
-- Keep the primary reading path concise. Start with a short standfirst and at
-  most three takeaways; use descriptive headings, compact examples, and
-  comparison tables to break up technical explanations.
+- Keep the primary reading path concise. Start with a short standfirst, then
+  the prerequisite link or first section. Omit a standalone Takeaways block
+  unless requested; use descriptive headings, compact examples, and comparison
+  tables to break up technical explanations.
 - Link an earlier post for prerequisites instead of repeating its tutorial.
   Explain each mechanism once. Combine overlapping algorithm maps and avoid
   repeating the same result in an introduction, table, and conclusion.
@@ -48,6 +49,12 @@ contrast it with the current mechanism, and link the existing article.
 - Lead with the outcome, then show the evidence.
 - Define conventional math symbols immediately. Avoid invented shorthand and
   dense inline algebra.
+- Show arithmetic as typeset substitutions, not verbal instructions. For
+  normalization examples, show the inputs, mean, standard deviation, and
+  resulting normalized values; name the convention used by the experiment.
+- Give an unfamiliar objective enough context to connect the task's goal,
+  the gradient, and the implemented loss. Assume readers know gradients;
+  use equations and short transitions instead of a calculus tutorial.
 - A first-time reader must finish the lede without already knowing the
   hardware names. Write “matrix multiply-accumulate (MMA)” before using MMA;
   write “streaming multiprocessor (SM)” before using SM. After the expansion,
@@ -114,6 +121,9 @@ For RL learning curves:
   Keep response length, truncation and reward variance available as diagnostics.
 - Identify GRPO with PPO clipping separately from actor–critic PPO. Do not compare
   raw loss magnitudes between different surrogate formulations.
+- State what an experiment can distinguish. A saturated benchmark with little
+  reward variance cannot establish equivalence between algorithms. Distinguish
+  measured saturation from unverified claims about the model's training data.
 
 ## Site conventions
 
