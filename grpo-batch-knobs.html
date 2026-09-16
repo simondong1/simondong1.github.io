@@ -391,7 +391,7 @@ footer a{color:var(--ink-soft)}
 </tbody></table></div>
 <p class="note">Intervals resample paired test questions 20,000 times. They describe uncertainty across questions, conditional on these trained models. They do not measure variation across training seeds. DAPO uses our held-out split, not an official DAPO test benchmark.</p>
 <p>On GSM8K, mean test-answer length changed from 390 to 1224 output tokens; the selected checkpoint averaged 1135 tokens. 1.06% of endpoint answers hit the response cap. These generation costs use the same decoding settings for all checkpoints.</p><p>On DAPO-MATH-17K, mean test-answer length changed from 4796 to 6586 output tokens; the selected checkpoint averaged 7899 tokens. 5.08% of endpoint answers hit the response cap. These generation costs use the same decoding settings for all checkpoints.</p>
-<p><strong>Completion matters too.</strong> The frozen grader can credit a numeric answer before a response is cut off. A post hoc sensitivity check counts every unfinished response as incorrect, without changing checkpoint selection. On GSM8K, this reduces the endpoint gain to +1.21 pp, with an interval that includes zero. The selected checkpoint still improves by +2.50 pp [+1.29 pp, +3.71 pp].</p>
+<p><strong>Sensitivity to unfinished responses.</strong> The frozen grader can credit a numeric answer before a response is cut off. A post hoc sensitivity check counts every unfinished response as incorrect, without changing checkpoint selection. On GSM8K, this reduces the endpoint gain to +1.21 pp, with an interval that includes zero. The selected checkpoint still improves by +2.50 pp [+1.29 pp, +3.71 pp].</p>
 <p>On DAPO-MATH-17K, counting unfinished answers as incorrect gives an endpoint gain of +7.42 pp [+4.88 pp, +9.96 pp]. The validation-selected checkpoint gains +9.18 pp [+6.84 pp, +11.62 pp].</p>
 <p>The DAPO endpoint–selected test difference is -1.76 pp [-3.71 pp, +0.20 pp]. That interval includes zero, so this test does not establish that the selected checkpoint is more accurate. Its answers are longer.</p>
 <details><summary>Accuracy when unfinished responses count as incorrect</summary>
@@ -417,7 +417,7 @@ footer a{color:var(--ink-soft)}
 </tbody></table></div>
 <p>The <a href="experiments/grpo-batch-knobs-qwen35/main-analysis.json">numerical curves</a> also include generated output tokens, optimizer updates, elapsed job time, and measured active-phase time. Output tokens matter: equal response counts can require very different amounts of computation.</p>
 </details>
-<details><summary>Did later inner updates become heavily clipped?</summary>
+<details><summary>Clipping by optimizer-update position</summary>
 <p>Clipping limits how much a changed action probability can influence the policy objective. The table averages the logged clipping fraction at each update position across the run. Miles averages token indicators within each response, then averages responses.</p>
 <div class="table-scroll"><table class="ptable"><thead><tr><th>Task</th><th>Update 1</th><th>Update 2</th><th>Update 3</th><th>Update 4</th></tr></thead><tbody>
 <tr><td>GSM8K</td><td>0.000%</td><td>0.005%</td><td>0.008%</td><td>0.012%</td></tr><tr><td>DAPO-MATH-17K</td><td>0.000%</td><td>0.004%</td><td>0.007%</td><td>0.011%</td></tr>
