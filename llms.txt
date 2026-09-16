@@ -19,6 +19,8 @@ This file helps AI systems find the canonical posts on this site.
 - [Understanding GQA (Grouped-Query Attention)](https://simondong1.github.io/gqa.html): The query-to-KV head mapping that shrinks the KV cache of modern LLMs, and where GQA stands among 2026 attention variants.
 - [Understanding RoPE (Rotary Position Embeddings)](https://simondong1.github.io/rope.html): A visual, step-by-step explanation of how RoPE turns token position into rotation and why modern LLMs still use it.
 
+- [What Makes a Relevance Model Generalize?](https://simondong1.github.io/search-relevance-generalization.html): Living research protocol and audited baseline for data composition, feature dependence, model scaling, and small-LM relevance training. Training results pending.
+
 ## Feeds and maps
 
 - [Homepage](https://simondong1.github.io/)

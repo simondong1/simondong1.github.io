@@ -1,0 +1,26 @@
+[
+  {
+    "id": "access-audit-20260916",
+    "kind": "access/data audit",
+    "state": "completed",
+    "model_training": false
+  },
+  {
+    "id": "metadata-audit-20260916",
+    "kind": "full metadata audit",
+    "state": "completed",
+    "model_training": false
+  },
+  {
+    "id": "production-v67-replay",
+    "kind": "baseline evaluation",
+    "state": "planned",
+    "model_training": false
+  },
+  {
+    "id": "model-experiments",
+    "kind": "training",
+    "state": "awaiting allocation and data gates",
+    "completed_runs": 0
+  }
+]
