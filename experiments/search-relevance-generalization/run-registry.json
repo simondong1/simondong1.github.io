@@ -26,8 +26,8 @@
   {
     "id": "model-experiments",
     "kind": "training",
-    "state": "preparing controlled training; two allocated B200s verified",
-    "completed_runs": 58
+    "state": "running registered screens and confirmations on two allocated B200s",
+    "completed_runs": 78
   },
   {
     "id": "architecture-2m-cross4-ce10-2510u-s173",
@@ -36,6 +36,15 @@
     "size": 2000000,
     "objective": "ce10",
     "parameters": 9744882,
+    "seed": 173
+  },
+  {
+    "id": "architecture-2m-feature-transformer-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6226186,
     "seed": 173
   },
   {
@@ -57,6 +66,15 @@
     "seed": 173
   },
   {
+    "id": "architecture-2m-mlp-matched-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6288586,
+    "seed": 173
+  },
+  {
     "id": "architecture-2m-small-ce10-2510u-s173",
     "state": "complete",
     "kind": "controlled-training",
@@ -72,6 +90,69 @@
     "size": 2000000,
     "objective": "ce10",
     "parameters": 17763726,
+    "seed": 173
+  },
+  {
+    "id": "architecture-ft-pilot-50u-s173",
+    "state": "complete",
+    "kind": "infrastructure-pilot",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6226186,
+    "seed": 173
+  },
+  {
+    "id": "architecture-full-cross4-ce10-2ep-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 8953912,
+    "objective": "ce10",
+    "parameters": 9744882,
+    "seed": 173
+  },
+  {
+    "id": "architecture-full-wide-ce10-2ep-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 8953912,
+    "objective": "ce10",
+    "parameters": 11670414,
+    "seed": 173
+  },
+  {
+    "id": "confirm-full-ce10-2ep-s271",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 8953912,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 271
+  },
+  {
+    "id": "confirm-full-ce10-2ep-s811",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 8953912,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 811
+  },
+  {
+    "id": "epochs-2m-ce10-1ep-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "epochs-2m-ce10-4ep-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
     "seed": 173
   },
   {
@@ -228,7 +309,25 @@
     "seed": 173
   },
   {
+    "id": "llm-qwen3-06b-classifier-250k-frozen-lr1e-3-s173",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 596057095,
+    "seed": 173
+  },
+  {
     "id": "llm-qwen3-06b-classifier-pilot-s173",
+    "state": "complete",
+    "kind": "language-model-optimizer-pilot",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 596057095,
+    "seed": 173
+  },
+  {
+    "id": "llm-qwen3-06b-random-dtype-pilot-s173",
     "state": "complete",
     "kind": "language-model-optimizer-pilot",
     "size": 250000,
@@ -255,12 +354,75 @@
     "seed": 173
   },
   {
+    "id": "llm-qwen3-17b-classifier-250k-1ep-s173",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 1720589319,
+    "seed": 173
+  },
+  {
     "id": "llm-qwen3-17b-classifier-pilot-s173",
     "state": "complete",
     "kind": "language-model-optimizer-pilot",
     "size": 250000,
     "objective": "ce7",
     "parameters": 1720589319,
+    "seed": 173
+  },
+  {
+    "id": "mix-2m-100-0-0-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-2m-25-50-25-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-2m-50-25-25-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-2m-50-50-0-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-2m-70-20-10-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-2m-75-25-0-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
     "seed": 173
   },
   {
@@ -417,6 +579,24 @@
     "seed": 173
   },
   {
+    "id": "optimization-2m-ce7-control-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce7",
+    "parameters": 6309963,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-ce7-emd-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce7_emd",
+    "parameters": 6309963,
+    "seed": 173
+  },
+  {
     "id": "optimization-2m-dropout0-2510u-s173",
     "state": "complete",
     "kind": "controlled-training",
@@ -454,6 +634,24 @@
   },
   {
     "id": "optimization-2m-lr1e-4-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-ordinal-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ordinal",
+    "parameters": 6309771,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-sqrtweight-2510u-s173",
     "state": "complete",
     "kind": "controlled-training",
     "size": 2000000,
@@ -586,5 +784,15 @@
     "objective": "ce10",
     "parameters": 6310062,
     "seed": 173
+  },
+  {
+    "id": "label-1m-ce5-2510u-s173",
+    "state": "failed",
+    "reason": "TypeError: Got unsupported ScalarType BFloat16"
+  },
+  {
+    "id": "llm-qwen3-06b-classifier-250k-random-lr1e-4-s173",
+    "state": "failed",
+    "reason": "RuntimeError: mat1 and mat2 must have the same dtype, but got BFloat16 and Float"
   }
 ]

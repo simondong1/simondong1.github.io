@@ -1,12 +1,13 @@
 ## Measured training results
 
-**58 controlled quality runs complete**, plus systems checks. Results below are exploratory validation measurements from seed 173. They are not deployment recommendations or final-test results. Each row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.
+**78 controlled quality runs complete**, plus systems checks. Results below are exploratory validation measurements; individual seeds are recorded in the complete table. They are not deployment recommendations or final-test results. Each training row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.
 
 | Reference comparison | Unique training pairs | Common-five accuracy | Common-five NLL ↓ |
 |---|---:|---:|---:|
 | Qwen3-0.6B, classification head | 250,000 | 79.48% | 0.5503 |
 | Qwen3-0.6B, restricted token logits | 250,000 | 79.42% | 0.5512 |
 | Qwen3-0.6B, full-vocabulary token | 250,000 | 79.41% | 0.5509 |
+| Qwen3-1.7B, classification head | 250,000 | 81.38% | 0.4963 |
 | Feature DCN, full data, two epochs | 8,953,912 | 73.21% | 0.7007 |
 
 These reference rows are best-observed recipe comparisons with different input representations, training data counts, parameter counts, and compute. They do not isolate a single cause. The head-to-head LM comparison does freeze the backbone, examples, input serialization, batch order, and optimization recipe.
@@ -16,10 +17,18 @@ These reference rows are best-observed recipe comparisons with different input r
 | Run | Unique pairs | Parameters | Updates | Common-five accuracy | Common-five NLL ↓ | Original MAE ↓ | Train / total seconds |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | architecture-2m-cross4-ce10-2510u-s173 | 2,000,000 | 9,744,882 | 2,510 | 72.36% | 0.7295 | 0.7080 | 14.3 / 44.5 |
+| architecture-2m-feature-transformer-ce10-2510u-s173 | 2,000,000 | 6,226,186 | 2,510 | 71.04% | 0.7835 | 0.7285 | 137.7 / 181.7 |
 | architecture-2m-large-ce10-2510u-s173 | 2,000,000 | 56,620,878 | 2,510 | 72.42% | 0.7856 | 0.6741 | 22.2 / 59.4 |
 | architecture-2m-mlp-ce10-2510u-s173 | 2,000,000 | 2,875,242 | 2,510 | 70.52% | 0.7730 | 0.7692 | 12.2 / 41.9 |
+| architecture-2m-mlp-matched-ce10-2510u-s173 | 2,000,000 | 6,288,586 | 2,510 | 71.77% | 0.7418 | 0.7275 | 11.6 / 42.6 |
 | architecture-2m-small-ce10-2510u-s173 | 2,000,000 | 1,250,062 | 2,510 | 70.96% | 0.7592 | 0.7628 | 12.7 / 41.7 |
 | architecture-2m-wide-ce10-2510u-s173 | 2,000,000 | 17,763,726 | 2,510 | 72.58% | 0.7295 | 0.6933 | 13.7 / 46.0 |
+| architecture-full-cross4-ce10-2ep-s173 | 8,953,912 | 9,744,882 | 4,374 | 73.40% | 0.6945 | 0.7015 | 25.0 / 83.6 |
+| architecture-full-wide-ce10-2ep-s173 | 8,953,912 | 11,670,414 | 4,374 | 73.75% | 0.6848 | 0.6898 | 25.2 / 85.8 |
+| confirm-full-ce10-2ep-s271 | 8,953,912 | 6,310,062 | 4,374 | 73.13% | 0.7015 | 0.7052 | 23.3 / 81.7 |
+| confirm-full-ce10-2ep-s811 | 8,953,912 | 6,310,062 | 4,374 | 73.12% | 0.7008 | 0.6962 | 23.2 / 81.1 |
+| epochs-2m-ce10-1ep-s173 | 2,000,000 | 6,310,062 | 489 | 69.38% | 0.8040 | 0.8080 | 2.9 / 30.6 |
+| epochs-2m-ce10-4ep-s173 | 2,000,000 | 6,310,062 | 1,956 | 71.88% | 0.7368 | 0.7346 | 10.8 / 41.3 |
 | feature-2m-behavior_only-ce10-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 54.26% | 1.0944 | 1.1479 | 13.0 / 43.5 |
 | feature-2m-lexical_only-ce10-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 63.32% | 0.9847 | 1.1053 | 13.7 / 43.0 |
 | feature-2m-no_clicks-ce10-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 72.09% | 0.7352 | 0.7177 | 12.9 / 43.5 |
@@ -37,8 +46,16 @@ These reference rows are best-observed recipe comparisons with different input r
 | label-1m-components-2510u-s173 | 1,000,000 | 6,309,996 | 2,510 | 67.51% | 0.9357 | 0.7196 | 14.2 / 40.7 |
 | label-1m-joint16-2510u-s173 | 1,000,000 | 6,310,260 | 2,510 | 71.36% | 0.7713 | 0.7178 | 12.9 / 40.3 |
 | llm-qwen3-06b-classifier-250k-1ep-s173 | 250,000 | 596,057,095 | 1,954 | 79.48% | 0.5503 | 0.5361 | 353.6 / 599.4 |
+| llm-qwen3-06b-classifier-250k-frozen-lr1e-3-s173 | 250,000 | 596,057,095 | 1,954 | 50.23% | 1.2173 | 1.2822 | 114.7 / 339.3 |
 | llm-qwen3-06b-restricted-250k-1ep-s173 | 250,000 | 596,049,920 | 1,954 | 79.42% | 0.5512 | 0.5416 | 353.0 / 597.7 |
 | llm-qwen3-06b-token-250k-1ep-s173 | 250,000 | 596,049,920 | 1,954 | 79.41% | 0.5509 | 0.5414 | 354.0 / 601.4 |
+| llm-qwen3-17b-classifier-250k-1ep-s173 | 250,000 | 1,720,589,319 | 1,954 | 81.38% | 0.4963 | 0.4745 | 723.5 / 1118.9 |
+| mix-2m-100-0-0-ce10-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 71.29% | 0.7471 | 0.7497 | 12.8 / 44.3 |
+| mix-2m-25-50-25-ce10-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 71.47% | 0.7519 | 0.7297 | 13.5 / 44.3 |
+| mix-2m-50-25-25-ce10-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 71.79% | 0.7442 | 0.7193 | 12.6 / 43.6 |
+| mix-2m-50-50-0-ce10-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 71.05% | 0.7539 | 0.7569 | 13.7 / 44.9 |
+| mix-2m-70-20-10-ce10-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 72.13% | 0.7319 | 0.7194 | 12.7 / 43.3 |
+| mix-2m-75-25-0-ce10-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 71.27% | 0.7486 | 0.7482 | 13.2 / 42.7 |
 | mix-500k-0-0-100-ce10-500u-s173 | 500,000 | 6,310,062 | 500 | 54.40% | 1.7012 | 1.1723 | 2.8 / 24.9 |
 | mix-500k-0-100-0-ce10-500u-s173 | 500,000 | 6,310,062 | 500 | 65.63% | 0.8896 | 0.9339 | 3.0 / 25.2 |
 | mix-500k-0-25-75-ce10-500u-s173 | 500,000 | 6,310,062 | 500 | 64.06% | 0.9928 | 0.9469 | 3.0 / 24.6 |
@@ -56,11 +73,15 @@ These reference rows are best-observed recipe comparisons with different input r
 | mix-500k-75-0-25-ce10-500u-s173 | 500,000 | 6,310,062 | 500 | 69.08% | 0.8160 | 0.8032 | 2.8 / 24.5 |
 | mix-500k-75-25-0-ce10-500u-s173 | 500,000 | 6,310,062 | 500 | 68.73% | 0.8202 | 0.8380 | 2.9 / 24.9 |
 | optimization-2m-adamw-noamsgrad-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 72.17% | 0.7324 | 0.7170 | 12.5 / 43.1 |
+| optimization-2m-ce7-control-2510u-s173 | 2,000,000 | 6,309,963 | 2,510 | 72.26% | 0.7307 | 0.7142 | 13.6 / 43.3 |
+| optimization-2m-ce7-emd-2510u-s173 | 2,000,000 | 6,309,963 | 2,510 | 72.25% | 0.7310 | 0.7134 | 14.5 / 45.8 |
 | optimization-2m-dropout0-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 72.11% | 0.7318 | 0.7216 | 12.9 / 43.5 |
 | optimization-2m-dropout03-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 71.84% | 0.7422 | 0.7217 | 12.6 / 43.6 |
 | optimization-2m-logweight-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 71.54% | 0.7510 | 0.7440 | 13.6 / 44.3 |
 | optimization-2m-lr1e-3-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 72.41% | 0.7424 | 0.6955 | 13.5 / 45.8 |
 | optimization-2m-lr1e-4-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 70.45% | 0.7754 | 0.7703 | 13.3 / 44.2 |
+| optimization-2m-ordinal-2510u-s173 | 2,000,000 | 6,309,771 | 2,510 | 70.02% | 0.8746 | 0.7310 | 14.8 / 44.6 |
+| optimization-2m-sqrtweight-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 70.44% | 0.7793 | 0.7767 | 12.8 / 42.8 |
 | optimization-2m-wd0-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 72.13% | 0.7332 | 0.7163 | 12.9 / 44.1 |
 | optimization-2m-wd01-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 72.15% | 0.7321 | 0.7176 | 13.8 / 44.8 |
 | size-1000000-ce10-2510u-s173 | 1,000,000 | 6,310,062 | 2,510 | 71.29% | 0.7774 | 0.7234 | 13.5 / 40.4 |
@@ -94,6 +115,61 @@ Ablations retain the architecture while masking the registered inputs during bot
 ![Measured source-mixture outcomes](experiments/search-relevance-generalization/source-mixtures.png)
 
 Each dot is a completed run at a feasible mixture; there is no fitted interpolation. Pure-source controls sit at the corners. Color scales are population-specific. The 70/20/10 reference is the additional interior point.
+
+### Interpreting architecture, optimization, and labels
+
+The full-data two-pass DCN improves shared-five accuracy from the operational production baseline's 68.74% to 73.21%. Because the old production corpus and label regime differ, this is a recipe comparison. Under fixed updates, returns diminish after a few million unique pairs; under two passes, larger datasets receive additional optimization and keep improving. The 250k fixed-update run becomes severely overconfident after approximately 41 passes, which argues against using the same update budget indiscriminately at every data size.
+
+At 2M pairs, removing clicks or purchases individually changes accuracy little, while removing all behavior features has a larger effect. Correlated signals can replace one another: a small single-family ablation does not mean that family has no information. The semantic-only and behavior-only models both trail their combination. These observations support testing complementary branches and conditional routing.
+
+The first capacity screen confounds architecture and parameter count. A 6.29M-parameter MLP and a 6.23M-parameter feature-token transformer provide closer controls for the 6.31M-parameter DCN; their measured rows are included above as they finish. Equal parameters do not imply equal FLOPs, so training and serving cost remain separate axes. A full-data width-384 follow-up is an intermediate capacity point; it is not identical to the width-512 2M screen.
+
+The one-factor optimizer screen shows no clear one-seed benefit from AMSGrad or stronger weight decay. LR 1e-3 improves accuracy over 3.5e-4 while worsening NLL; selecting only accuracy would conceal that confidence tradeoff. Log and square-root traffic weighting worsen aggregate validation quality in this setting. The seven-class support control performs similarly to the ten-way head. Independent title/thumbnail heads underperform their joint target, consistent with a restrictive independence assumption; this is not evidence that component labels are uninformative.
+
+### Frequency and missing-feature slices
+
+| Model | Head proxy | Tail proxy | Zero-frequency unknown | All embeddings present | All embeddings zero |
+|---|---:|---:|---:|---:|---:|
+| Qwen3-0.6B, classification head | 80.44% | 79.76% | 77.69% | 81.76% | 77.36% |
+| Qwen3-0.6B, restricted token logits | 80.38% | 79.65% | 77.71% | 81.73% | 77.12% |
+| Qwen3-0.6B, full-vocabulary token | 80.43% | 79.61% | 77.68% | 81.70% | 77.15% |
+| Qwen3-1.7B, classification head | 81.99% | 81.48% | 80.35% | 83.66% | 78.98% |
+| Feature DCN, full data, two epochs | 80.25% | 70.51% | 66.19% | 81.30% | 62.80% |
+
+These are shared-five accuracies. Frequency groups use train-only positive-query median/p90 thresholds (291/22,159) in a logged 28-day query-view count. Zero counts remain unknown, not tail. This feature is constant within each query, but its historical cutoff is not yet verified; it is a frequency proxy. Missing-vector groups use original availability before any retraining masks. The raw-text LLM's advantage is particularly large where cached embeddings are absent; this helps explain the aggregate difference and motivates availability-aware fusion.
+
+### Combining feature and text models
+
+Temperature scaling and a constant or logistic mixture are fitted on 20% of validation queries. Another 20% sets cascade thresholds; the remaining 60% measures the policies. The partitions are deterministic and query-disjoint. Earlier recipe exploration used the full validation set, so this is an exploratory internal audit, not a pristine final test.
+
+The gate uses feature-model uncertainty, embedding availability, item dimension, and query length. It never uses the source sampling label, ground-truth relevance, or LLM outputs to decide whether to call the LLM. A cascade applies the feature model to every pair and conditionally replaces its distribution with the text model's output; a soft mixture evaluates both experts.
+
+| Policy | LLM fraction on audit pairs | Shared-five accuracy | Shared-five NLL ↓ |
+|---|---:|---:|---:|
+| Feature model | 0.0% | 72.97% | 0.7060 |
+| 0.6B text model | 100.0% | 79.45% | 0.5513 |
+| Constant soft mixture | 100.0% | 80.00% | 0.5373 |
+| Learned soft mixture | 100.0% | 80.49% | 0.5196 |
+| Cascade, 25% target | 25.1% | 77.10% | 0.6080 |
+| Cascade, 50% target | 49.8% | 79.34% | 0.5543 |
+| Cascade, 75% target | 74.8% | 79.98% | 0.5404 |
+
+![Conditional model use](experiments/search-relevance-generalization/cascade-quality.png)
+
+LM call fraction is not a measured speedup: preprocessing, small-batch utilization, request grouping, and gate errors all affect serving cost. Aggregate pair policies do not yet establish complete-page ranking performance. Query bootstrap intervals and source slices are available in the [fusion artifact](experiments/search-relevance-generalization/fusion-results.json); these intervals describe query sampling for fixed checkpoints, not training-seed variance.
+
+### Training-seed confirmation
+
+The full-data two-pass production-size feature recipe has 3 completed seeds. Shared-five accuracy is **73.16%**, with sample standard deviation **0.049 percentage points**; mean NLL is **0.7010**. Subset selection remains fixed, so this measures optimization/initialization variability rather than independently resampled datasets.
+
+### Failed attempts retained
+
+| Run | Recorded failure |
+|---|---|
+| label-1m-ce5-2510u-s173 | TypeError: Got unsupported ScalarType BFloat16 |
+| llm-qwen3-06b-classifier-250k-random-lr1e-4-s173 | RuntimeError: mat1 and mat2 must have the same dtype, but got BFloat16 and Float |
+
+The CE5 probability-projection autocast issue and random-backbone dtype initialization issue were corrected and retried under new run IDs. Failed attempts are excluded from quality comparisons and retained in the ledger.
 
 ### Precision check
 

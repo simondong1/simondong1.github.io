@@ -1,0 +1,12 @@
+[
+  {
+    "id": "label-1m-ce5-2510u-s173",
+    "state": "failed",
+    "reason": "TypeError: Got unsupported ScalarType BFloat16"
+  },
+  {
+    "id": "llm-qwen3-06b-classifier-250k-random-lr1e-4-s173",
+    "state": "failed",
+    "reason": "RuntimeError: mat1 and mat2 must have the same dtype, but got BFloat16 and Float"
+  }
+]
