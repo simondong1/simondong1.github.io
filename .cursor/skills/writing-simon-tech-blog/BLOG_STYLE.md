@@ -131,6 +131,17 @@ For RL learning curves:
 
 ## Site conventions
 
+Homepage cards use the existing date/category row, title, and at most one
+short summary line. Omit the summary if it cannot fit naturally on one line
+at desktop and 390 px; do not use clipping or ellipses to hide longer copy.
+Keep findings and study details in the article. The `.meta` paragraph is only
+for date/category/series information, never a second summary. When updating
+cards programmatically, select the summary explicitly with `p:not(.meta)`;
+never assume the first paragraph is the summary. Check the rendered card
+against its neighbors and remove obsolete claims from earlier revisions.
+Homepage copy may be shorter than article and feed metadata while describing
+the same current article.
+
 Every post needs:
 
 - title, description, canonical URL, author, robots;
