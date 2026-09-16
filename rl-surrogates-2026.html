@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>RL Surrogate Losses in 2026</title>
-<meta name="description" content="Clipping, capping, and rejecting token updates produce different learning curves: six surrogates compared in twelve full-parameter Miles runs on GSM8K and DAPO-Math." />
+<title>RL Losses in 2026: From PPO to SAPO</title>
+<meta name="description" content="Clip, cap, reject, or soften a policy gradient: seven RL surrogates explained, with a controlled Qwen3.5-9B comparison on GSM8K and DAPO-Math." />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href="https://simondong1.github.io/rl-surrogates-2026.html" />
 <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
 <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
-<meta property="og:title" content="RL Surrogate Losses in 2026" />
-<meta property="og:description" content="Clipping, capping, and rejecting token updates produce different learning curves: six surrogates compared in twelve full-parameter Miles runs on GSM8K and DAPO-Math." />
+<meta property="og:title" content="RL Losses in 2026: From PPO to SAPO" />
+<meta property="og:description" content="Clip, cap, reject, or soften a policy gradient: seven RL surrogates explained, with a controlled Qwen3.5-9B comparison on GSM8K and DAPO-Math." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://simondong1.github.io/rl-surrogates-2026.html" />
 <meta property="og:site_name" content="Simon Dong" />
 <meta property="og:locale" content="en_US" />
-<meta property="og:image" content="https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=2" />
-<meta property="og:image:secure_url" content="https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=2" />
+<meta property="og:image" content="https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=3" />
+<meta property="og:image:secure_url" content="https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=3" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -24,12 +24,12 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:site" content="@dongsixiang" />
 <meta name="twitter:creator" content="@dongsixiang" />
-<meta name="twitter:title" content="RL Surrogate Losses in 2026" />
-<meta name="twitter:description" content="Clipping, capping, and rejecting token updates produce different learning curves: six surrogates compared in twelve full-parameter Miles runs on GSM8K and DAPO-Math." />
-<meta name="twitter:image" content="https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=2" />
+<meta name="twitter:title" content="RL Losses in 2026: From PPO to SAPO" />
+<meta name="twitter:description" content="Clip, cap, reject, or soften a policy gradient: seven RL surrogates explained, with a controlled Qwen3.5-9B comparison on GSM8K and DAPO-Math." />
+<meta name="twitter:image" content="https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=3" />
 <meta name="twitter:image:alt" content="Clip, cap, reject, or soften the contribution of a sampled token." />
 <meta name="author" content="Simon Dong" />
-<meta name="citation_title" content="RL Surrogate Losses in 2026" />
+<meta name="citation_title" content="RL Losses in 2026: From PPO to SAPO" />
 <meta name="citation_author" content="Dong, Simon" />
 <meta name="citation_publication_date" content="2026/09/15" />
 <meta name="citation_fulltext_html_url" content="https://simondong1.github.io/rl-surrogates-2026.html" />
@@ -37,8 +37,8 @@
 {
   "@context": "https://schema.org",
   "@type": "TechArticle",
-  "headline": "RL Surrogate Losses in 2026",
-  "description": "Clipping, capping, and rejecting token updates produce different learning curves: six surrogates compared in twelve full-parameter Miles runs on GSM8K and DAPO-Math.",
+  "headline": "RL Losses in 2026: From PPO to SAPO",
+  "description": "Clip, cap, reject, or soften a policy gradient: seven RL surrogates explained, with a controlled Qwen3.5-9B comparison on GSM8K and DAPO-Math.",
   "author": {
     "@type": "Person",
     "name": "Simon Dong",
@@ -48,7 +48,7 @@
   "dateModified": "2026-09-16",
   "mainEntityOfPage": "https://simondong1.github.io/rl-surrogates-2026.html",
   "image": [
-    "https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=2"
+    "https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=3"
   ],
   "keywords": [
     "reinforcement learning",
@@ -211,7 +211,7 @@ footer a{color:var(--ink-soft)}
 <body>
 <header class="hero"><div class="wrap">
 <p class="eyebrow">Reinforcement learning · Part 2</p>
-<h1 class="title">RL Surrogate Losses<br>in 2026</h1>
+<h1 class="title">RL Losses in 2026:<br>From PPO to SAPO</h1>
 <p class="subtitle">PPO · DAPO · CISPO · GLM-5 · DPPO · SAPO · GSPO</p>
 <div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span aria-hidden="true">·</span><time datetime="2026-09-15">September 15, 2026</time></div>
 </div></header>
@@ -219,18 +219,18 @@ footer a{color:var(--ink-soft)}
 
 <a class="background-link" href="ppo.html"><span class="kicker">Background · Part 1</span><strong>Understanding PPO for Language Models <span aria-hidden="true">↗</span></strong><span>The rollout loop, advantages, and why the trainer recomputes log probabilities.</span></a>
 <nav class="toc" aria-label="Table of contents"><div class="toc-title">On this page</div><ol>
-<li><a href="#foundation">The shared gradient</a></li>
-<li><a href="#map">The 2026 landscape</a></li>
+<li><a href="#foundation">From rewards to gradients</a></li>
+<li><a href="#map">Seven surrogate rules</a></li>
 <li><a href="#ppo">Clip, cap, or reject</a></li>
-<li><a href="#dppo">Beyond ratio clipping</a></li>
-<li><a href="#explorer">Try the gradients</a></li>
-<li><a href="#aggregation">Weighting long responses</a></li>
+<li><a href="#dppo">Beyond token-ratio clipping</a></li>
+<li><a href="#explorer">Compare the gradients</a></li>
+<li><a href="#aggregation">Response length and weighting</a></li>
 <li><a href="#experiments">Real experiment</a></li>
 <li><a href="#references">Sources &amp; code</a></li>
 </ol></nav>
 
 <section id="foundation">
-<h2>The shared gradient</h2>
+<h2>From rewards to gradients</h2>
 <p>The RL loop is <strong>sample responses → score them → update the policy</strong>. The methods below change how the last step uses those samples.</p>
 
 <h3>Maximize expected reward</h3>
@@ -260,7 +260,7 @@ A_{\text{incorrect}}&amp;=\frac{0-0.5}{0.5}=-1.
 <div class="formula">\[ A_i=\frac{R_i-\bar R}{\sigma_R+\epsilon}. \]</div>
 <p>Identical rewards give \(A_i=0\): the group provides no relative learning signal. <strong>Advantage estimation and the surrogate are separate choices.</strong> Our runs all use GRPO to estimate advantages and vary the surrogate.</p>
 
-<h3>Train on saved rollouts</h3>
+<h3>Build a surrogate from saved rollouts</h3>
 <p>The trainer updates \(\theta\) on responses already sampled by a rollout policy. A <strong>surrogate</strong> is the differentiable stand-in for expected reward that we optimize on this fixed batch.</p>
 <p>For one saved token and its preceding context:</p>
 <dl class="notation">
@@ -274,7 +274,7 @@ A_{\text{incorrect}}&amp;=\frac{0-0.5}{0.5}=-1.
 <p>Hold \(q\) and \(A\) fixed. Only \(p\) depends on the current parameters:</p>
 <div class="formula featured">\[ \nabla_\theta j=\frac{A}{q}\nabla_\theta p=\underbrace{Ar}_{c}\,\nabla_\theta\log p. \]</div>
 <p>At \(p=q\), the coefficient is \(c=A\). As training changes \(p\), the ratio adjusts the saved token’s weight.</p>
-<p>Positive <strong>\(c\)</strong> reinforces the sampled token; negative \(c\) discourages it. The following surrogates clip, cap, gate, or soften this coefficient. Token averaging is a separate choice, covered in <a href="#aggregation">Weighting long responses</a>.</p>
+<p>Positive <strong>\(c\)</strong> reinforces the sampled token; negative \(c\) discourages it. The following surrogates clip, cap, gate, or soften this coefficient. Token averaging is a separate choice, covered in <a href="#aggregation">Response length and weighting</a>.</p>
 <p class="note">A zero coefficient removes this token’s local contribution. Other tokens and optimizer momentum can still move its probability.</p>
 <details><summary>Baseline, normalization, and ratio conventions</summary>
 <p>A prompt-dependent baseline \(b(x)\) leaves the expected on-policy gradient unchanged:</p>
@@ -296,8 +296,8 @@ A_{\text{incorrect}}&amp;\approx-0.866.
 </section>
 
 <section id="map">
-<h2>The 2026 landscape</h2>
-<p>These are prominent <strong>publicly documented</strong> methods. Model reports establish specific uses, not an industry-wide ranking.</p>
+<h2>Seven surrogate rules</h2>
+<p>These <strong>publicly documented</strong> methods appear in model reports, research papers, and RL frameworks. The sources identify where each is used; they do not establish an industry-wide ranking.</p>
 <div class="table-scroll"><table class="ptable overview"><thead><tr><th>Method</th><th>What changes</th><th>Public source</th></tr></thead><tbody>
 <tr><td><a href="#ppo">PPO / GRPO</a></td><td>Directional ratio clipping</td><td><a href="https://arxiv.org/abs/2402.03300">DeepSeekMath</a></td></tr>
 <tr><td><a href="#dapo">DAPO</a></td><td>More room for positive updates</td><td><a href="https://arxiv.org/abs/2503.14476">DAPO</a></td></tr>
@@ -320,7 +320,7 @@ A_{\text{incorrect}}&amp;\approx-0.866.
 
 <section id="ppo">
 <h2>Clip, cap, or reject</h2>
-<h3>PPO: stop pushing farther</h3>
+<h3>PPO: clip the policy ratio</h3>
 <p><strong>Proximal Policy Optimization (PPO)</strong> stops an update that has moved far enough in the advantage’s preferred direction. It keeps updates that would correct a move in the wrong direction.</p>
 <div class="example">
 <p class="kicker">Same token · Opposite advantages</p>
@@ -332,21 +332,21 @@ A_{\text{incorrect}}&amp;\approx-0.866.
 <p>The <code>min</code> makes clipping directional. Away from the boundaries:</p>
 <div class="formula">\[ c_{\rm PPO}=\begin{cases}0,&amp;A&gt;0\text{ and }r&gt;u,\\0,&amp;A&lt;0\text{ and }r&lt;l,\\Ar,&amp;\text{otherwise}.\end{cases} \]</div>
 
-<h3 id="dapo">DAPO: widen the positive side</h3>
+<h3 id="dapo">DAPO: raise the upper clip bound</h3>
 <p>DAPO’s <strong>clip-higher</strong> component uses the same formula with a larger upper bound. This gives low-probability tokens more room to grow before clipping.</p>
 <div class="example"><p>At \(r=1.25,\ A=+1\): PPO’s upper bound 1.2 gives <strong>\(c=0\)</strong>; DAPO’s 1.28 gives <strong>\(c=1.25\)</strong>.</p></div>
 <p class="note">Full DAPO also changes sampling, token aggregation, and overlong-response handling. Changing only the upper bound tests one component.</p>
-<details><summary>Dual-clip PPO: another hard boundary</summary>
+<details><summary>Dual-clip PPO: limit negative-advantage terms</summary>
 <p>Implemented in verl and SkyRL, dual-clip limits unusually large negative-advantage terms. For a constant \(\kappa&gt;1\):</p>
 <div class="formula">\[ j_{\rm dual}=\begin{cases}\max(j_{\rm PPO},\kappa A),&amp;A&lt;0,\\j_{\rm PPO},&amp;A\geq0.\end{cases} \]</div>
-<p>At \(r=4,\ A=-1,\ \kappa=3\), ordinary PPO keeps \(c=-4\). Dual-clip selects the constant objective \(-3\), so \(c=0\). Our runs use ordinary PPO.</p>
+<p>At \(r=4,\ A=-1,\ \kappa=3\), ordinary PPO clipping keeps \(c=-4\). Dual-clip selects the constant objective \(-3\), so \(c=0\). Our baseline uses ordinary clipping.</p>
 </details>
 
 <h3 id="weights">CISPO and GLM-5: cap versus reject</h3>
 <p>Both multiply log probability by a weight \(w\). <strong>Stop-gradient</strong>, written \(\operatorname{sg}\), freezes that weight during differentiation:</p>
 <div class="formula">\[ j=\operatorname{sg}(w)A\log p \quad\Longrightarrow\quad c=Aw. \]</div>
 <ul class="findings">
-<li><strong>CISPO caps \(w\).</strong> MiniMax-M1 keeps useful token gradients beyond the clipping boundary.</li>
+<li><strong>CISPO caps \(w\).</strong> MiniMax-M1’s Clipped Importance Sampling Policy Optimization keeps token gradients beyond the clipping boundary.</li>
 <li><strong>GLM-5 rejects extreme ratios.</strong> Its asynchronous agent surrogate distrusts tokens far from their recorded rollout probabilities, regardless of advantage sign.</li>
 </ul>
 <div class="example">
@@ -368,8 +368,8 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 </section>
 
 <section id="dppo">
-<h2>Beyond ratio clipping</h2>
-<h3>DPPO: measure probability mass</h3>
+<h2>Beyond token-ratio clipping</h2>
+<h3>DPPO: gate by divergence</h3>
 <p><strong>Divergence Proximal Policy Optimization (DPPO)</strong> questions whether a large ratio means a large change. A rare token can grow tenfold while moving little probability mass.</p>
 <div class="example">
 <p class="kicker">Two rewarded tokens · \(A=+1\)</p>
@@ -377,27 +377,27 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 <tr><td>0.001 → 0.01</td><td>10</td><td>0.009</td></tr>
 <tr><td>0.50 → 0.70</td><td>1.4</td><td>0.20</td></tr>
 </tbody></table></div>
-<p>GLM’s 0.5–5 interval rejects the rare token and keeps the common one. DPPO with a probability-mass threshold of 0.15 does the reverse.</p>
+<p>GLM-5’s 0.5–5 interval rejects the rare token and keeps the common one. DPPO with a probability-mass threshold of 0.15 does the reverse.</p>
 </div>
 <p><strong>Binary total variation (TV)</strong> groups the vocabulary into “sampled token” and “everything else.” The distance between \([q,1-q]\) and \([p,1-p]\) is simply \(|p-q|\).</p>
 <p>DPPO applies a directional gate \(m\), with thresholds \(\delta_+\) and \(\delta_-\):</p>
 <div class="formula">\[ m=\begin{cases}0,&amp;A&gt;0\text{ and }p-q&gt;\delta_+,\\0,&amp;A&lt;0\text{ and }q-p&gt;\delta_-,\\1,&amp;\text{otherwise}.\end{cases} \]</div>
 <div class="formula">\[ j_{\rm DPPO}=\operatorname{sg}(m)rA,\qquad c_{\rm DPPO}=Ar\,m. \]</div>
 <p><strong>Divergence changes the gate, not the retained weight.</strong> The rare token still gets \(c=10\). Binary TV cannot detect mass rearranged among the other vocabulary entries.</p>
-<details><summary>A negative advantage, and implementation variants</summary>
-<p>Take \(A=-1,\ q=0.90,\ p=0.74\). PPO keeps \(c\approx-0.822\), inside its 0.8–1.2 bounds. DPPO rejects it: the decrease of 0.16 exceeds 0.15. Mass-based gating can be stricter for common tokens.</p>
+<details><summary>Negative advantages and implementation variants</summary>
+<p>Take \(A=-1,\ q=0.90,\ p=0.74\). The ratio \(r\approx0.822\) is inside PPO’s 0.8–1.2 bounds, so \(c\approx-0.822\). DPPO rejects it: the decrease of 0.16 exceeds 0.15. Mass-based gating can be stricter for common tokens.</p>
 <p>The paper also studies binary Kullback–Leibler divergence and top-\(K\) approximations. Here DPPO means the binary-TV variant of <em>Divergence</em> PPO.</p>
 <p>The pinned verl path additionally caps a detached importance weight: \(c=A\min(r,C)m\), for cap \(C\). The pinned SkyRL path and our experiment use the uncapped coefficient above, subject to the numerical guard documented with our results.</p>
 </details>
 
-<h3 id="sapo">SAPO: soften the boundary</h3>
+<h3 id="sapo">SAPO: smooth the gradient weight</h3>
 <p><strong>Soft Adaptive Policy Optimization (SAPO)</strong> reduces influence smoothly as a ratio drifts. It uses the sigmoid \(\sigma(z)=1/(1+e^{-z})\), a smooth function between zero and one.</p>
 <div class="example"><p>At \(r=1.5,\ A=+1\), PPO clips to zero. With temperature \(\tau=1\), SAPO’s attenuation is about 0.94, giving <strong>\(c\approx1.5\times0.94=1.41\)</strong>.</p></div>
 <p>Define \(h=\sigma(\tau(r-1))\). Then:</p>
 <div class="formula">\[ j_{\rm SAPO}=\frac4\tau hA,\qquad c_{\rm SAPO}=Ar\,4h(1-h). \]</div>
 <p>At \(r=1\), attenuation is one. Larger \(\tau\) makes it decay faster; positive and negative advantages can use different temperatures. The attenuation is at most one; the coefficient \(c\) can still exceed the advantage in magnitude.</p>
 
-<h3 id="gspo">GSPO: decide for the whole response</h3>
+<h3 id="gspo">GSPO: clip whole responses</h3>
 <p><strong>Group Sequence Policy Optimization (GSPO)</strong> replaces noisy token-level decisions with one length-normalized sequence ratio.</p>
 <div class="example">
 <p>Two token ratios are 0.5 and 2.0, with \(A=+1\). Their geometric mean is \(\sqrt{0.5\times2}=1\), so GSPO keeps the response.</p>
@@ -410,7 +410,7 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 </section>
 
 <section id="explorer">
-<h2>Try the gradients</h2>
+<h2>Compare the gradients</h2>
 <p>Compare one token across six rules. Positive \(c\) reinforces the token; negative \(c\) discourages it. GSPO needs a whole response and is omitted here.</p>
 <div class="panel" id="gradient-explorer">
 <p class="panel-title">Policy-gradient coefficient</p>
@@ -441,7 +441,7 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 
 
 <section id="aggregation">
-<h2>Weighting long responses</h2>
+<h2>Response length and weighting</h2>
 <p>More tokens means more loss terms, not more optimizer steps. The reduction decides their relative weight.</p>
 <div class="example">
 <p class="kicker">One prompt · Responses of 10 and 90 tokens</p>
@@ -453,13 +453,13 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 <li><strong>Token mean:</strong> pool the whole batch. Prompts producing more tokens get more weight too.</li>
 </ul>
 <p>Fixed group sizes do not make these equivalent. Our experiment uses <strong>sequence mean</strong> throughout.</p>
-<details><summary>The exact denominators</summary>
+<details><summary>Token, response, and prompt averages</summary>
 <p>Let \(j_{igt}\) be token \(t\)’s objective in response \(g\) to prompt \(i\). There are \(B\) prompts, \(G\) responses per prompt, and \(L_{ig}\) valid tokens per response.</p>
 <div class="formula">\[ J_{\rm sequence}=\frac1{BG}\sum_{i,g}\frac{\sum_t j_{igt}}{L_{ig}}. \]</div>
 <div class="formula">\[ J_{\rm prompt}=\frac1B\sum_i\frac{\sum_{g,t}j_{igt}}{\sum_gL_{ig}}. \]</div>
 <div class="formula">\[ J_{\rm token}=\frac{\sum_{i,g,t}j_{igt}}{\sum_{i,g}L_{ig}}. \]</div>
 <p>A trajectory gradient naturally sums token terms. Dividing by length deliberately reweights it; equal reduction weights do not guarantee equal gradient norms. Check the denominator and distributed normalization, because library names vary.</p>
-<p>Other methods change different layers: <a href="https://arxiv.org/abs/2402.14740">RLOO</a> changes the reward baseline; <a href="https://arxiv.org/abs/2501.03262">REINFORCE++</a> changes baseline and normalization choices; <a href="https://arxiv.org/abs/2503.20783">Dr. GRPO</a> removes particular normalization biases.</p>
+<p>Other methods change different parts of the objective: <a href="https://arxiv.org/abs/2402.14740">RLOO</a> changes the reward baseline; <a href="https://arxiv.org/abs/2501.03262">REINFORCE++</a> changes baseline and normalization choices; <a href="https://arxiv.org/abs/2503.20783">Dr. GRPO</a> removes particular normalization biases.</p>
 </details>
 </section>
 <section id="experiments">
@@ -482,7 +482,7 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 </ul>
 <p class="note">Treat GSM8K as a saturation check for this already-trained checkpoint. These evaluations do not establish whether Qwen used the exact questions during pretraining or RL.</p>
 
-<h3>DAPO-Math-17K: more room to learn</h3>
+<h3>DAPO-Math-17K: the surrogates separate</h3>
 <p><a href="https://huggingface.co/datasets/BytedTsinghua-SIA/DAPO-Math-17k">DAPO-Math-17K</a> contains competition math with numeric answers. We deduplicate it and hold out questions before training: 16,088 training questions, with 512 fixed evaluation questions. Each arm sees 1,280 prompt presentations: <strong>320 updates, with a 4,096-token response cap</strong>.</p>
 <figure><picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-dapo-accuracy-mobile.svg"/><img src="assets/rl-surrogates-2026-dapo-accuracy.svg" width="828" height="324" alt="DAPO training and held-out accuracy for six RL surrogates"/></picture><figcaption>Training: sampled accuracy at collection time, with faint raw values and a trailing five-collection mean. Held out: greedy accuracy on the same 512 questions. One seed; no confidence bands. Accuracy axes use different ranges.</figcaption></figure>
 <ul class="findings">
@@ -504,7 +504,7 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 <li><strong>These are short, partial passes through the data.</strong> They do not establish convergence, performance on unseen domains, or long-horizon agent performance.</li>
 </ul></aside>
 
-<details><summary>Learning signal, truncation, and gate activation</summary>
+<details><summary>Reward variance, truncation, and gate activation</summary>
 <p>Longer outputs do not create more optimizer steps here. Every arm receives the same number of responses and updates; generated tokens and compute can differ as its policy changes.</p>
 <h4>GSM8K</h4><figure><picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-gsm8k-diagnostics-mobile.svg"/><img src="assets/rl-surrogates-2026-gsm8k-diagnostics.svg" width="828" height="324" alt="GSM8K truncation and reward variance for six RL surrogates"/></picture><figcaption>Share of responses reaching the cap and prompt groups with identical rewards. Every collection is shown.</figcaption></figure>
 <ul class="findings"><li><strong>68.36%–76.17% of minibatches have zero fresh gradient.</strong> Equal group rewards eliminate GRPO advantages; gating can remove further contributions. Adam momentum can still move the weights.</li></ul>
@@ -522,12 +522,13 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 <p>These are counting weights, not fractions of gradient norm. CISPO caps weights without zeroing them; SAPO usually changes their size smoothly. This diagnostic cannot predict an entire counterfactual training run. The <a href="experiments/rl-surrogates-2026-v2/gate-audit.csv">full audit</a> includes every trained policy and DAPO clipping.</p>
 </details>
 
-<details><summary>Evaluation variability and conditional uncertainty</summary>
-<p><strong>GSM8K:</strong> initial evaluations of the same checkpoint span 95.12%–95.70%. Mean pairwise disagreement on individual task rewards is 0.91%. The task IDs and decoding settings match; greedy inference is not bitwise repeatable.</p>
-<p><strong>DAPO-Math:</strong> initial evaluations of the same checkpoint span 60.74%–62.50%. Mean pairwise disagreement on individual task rewards is 12.03%. The task IDs and decoding settings match; greedy inference is not bitwise repeatable.</p>
-<p>The <a href="experiments/rl-surrogates-2026-v2/summary.json">paired task-bootstrap intervals</a> condition on the realized models and decoded outputs. They exclude training-seed and inference-runtime uncertainty. Disjoint study splits also do not rule out pretraining exposure.</p></details>
-<details><summary>Three actual responses: reaching an answer within the cap</summary>
-<p>We inspected the first three zero-to-one reward transitions in GLM-5’s saved DAPO evaluation order. All three initial responses hit 4,096 tokens without a parsable final answer. The trained responses finished with independently checked answers:</p>
+<details><summary>Evaluation repeatability and uncertainty</summary>
+<p>Initial evaluations use the same checkpoint, task IDs, and decoding settings. Greedy inference still varies:</p>
+<ul><li><strong>GSM8K:</strong> accuracy spans 95.12%–95.70%; evaluation pairs disagree on correctness for 0.91% of questions on average.</li>
+<li><strong>DAPO-Math:</strong> accuracy spans 60.74%–62.50%; evaluation pairs disagree on correctness for 12.03% of questions on average.</li></ul>
+<p>The <a href="experiments/rl-surrogates-2026-v2/summary.json">paired task-bootstrap intervals</a> resample evaluation questions while holding the trained models and decoded outputs fixed. They exclude variation from training seeds and inference. Disjoint study splits also do not rule out pretraining exposure.</p></details>
+<details><summary>Three responses that finished within the token cap</summary>
+<p>We inspected the first three questions that changed from incorrect to correct in GLM-5’s saved DAPO evaluation order. All three initial responses hit 4,096 tokens without a parsable final answer. The trained responses finished with independently checked answers:</p>
 <div class="table-scroll"><table class="ptable results-table"><thead><tr><th>Problem</th><th>Trained tokens</th><th>Answer</th></tr></thead><tbody>
 <tr><td>Largest three-digit prime factor of C(2000,1000)</td><td>2,967</td><td>661</td></tr>
 <tr><td>Sixth score in seven tests with integer running averages</td><td>2,025</td><td>100</td></tr>
@@ -535,7 +536,7 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 </tbody></table></div><p>The first answer follows from prime-factor exponents; the other two were checked by exhaustive enumeration. These <a href="experiments/rl-surrogates-2026-v2/grader-inspection-cases.json">saved traces</a> illustrate improvement within a response budget, not the frequency of any behavior across the dataset.</p></details>
 
 
-<details id="experiment-recipe"><summary>Frozen recipe, data construction, and correctness checks</summary>
+<details id="experiment-recipe"><summary>Training recipe, data splits, and correctness checks</summary>
 <div class="table-scroll"><table class="ptable settings-table"><tbody>
 <tr><th scope="row">Engine</th><td>Miles, Fully Sharded Data Parallel (FSDP2) training and two SGLang engines on the same two B200s</td></tr>
 <tr><th scope="row">Collection</th><td>64 prompts × 4 responses; 16 minibatches of 16 responses, consumed once</td></tr>
@@ -578,7 +579,7 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 </details>
 <details><summary>How to cite this post</summary>
 <pre><code>@article{dong2026rlsurrogates,
-  title = {RL Surrogate Losses in 2026},
+  title = {RL Losses in 2026: From PPO to SAPO},
   author = {Dong, Simon},
   year = {2026},
   url = {https://simondong1.github.io/rl-surrogates-2026.html}

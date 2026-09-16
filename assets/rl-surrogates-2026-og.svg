@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">RL Losses in 2026: From PPO to SAPO</title>
+  <desc id="description">PPO, DAPO, CISPO, GLM-5, DPPO, SAPO, and GSPO. Clip, cap, reject, or soften policy gradients.</desc>
+  <rect width="1200" height="630" fill="#fbfbfa"/>
+  <rect width="1200" height="13" fill="#4f46e5"/>
+  <g font-family="Arial, sans-serif">
+    <text x="62" y="69" font-size="24" font-weight="700" fill="#4f46e5">POLICY GRADIENTS · 2026</text>
+    <g font-size="66" font-weight="700" fill="#20252b">
+      <text x="58" y="158">RL Losses in 2026:</text>
+      <text x="58" y="235">From PPO to SAPO</text>
+    </g>
+    <text x="62" y="312" font-size="29" fill="#515963">PPO · DAPO · CISPO · GLM-5 · DPPO · SAPO · GSPO</text>
+    <g fill="#fff" stroke="#e2e5e8" stroke-width="2">
+      <rect x="62" y="379" width="250" height="89" rx="17"/>
+      <rect x="337" y="379" width="250" height="89" rx="17"/>
+      <rect x="611" y="379" width="250" height="89" rx="17"/>
+      <rect x="885" y="379" width="250" height="89" rx="17"/>
+    </g>
+    <g font-size="26" font-weight="700">
+      <g fill="#4f46e5"><rect x="81" y="399" width="8" height="49" rx="4"/><text x="105" y="426">CLIP</text></g>
+      <g fill="#b96805"><rect x="356" y="399" width="8" height="49" rx="4"/><text x="380" y="426">CAP</text></g>
+      <g fill="#e5484d"><rect x="630" y="399" width="8" height="49" rx="4"/><text x="654" y="426">REJECT</text></g>
+      <g fill="#9333ea"><rect x="904" y="399" width="8" height="49" rx="4"/><text x="928" y="426">SOFTEN</text></g>
+    </g>
+    <path d="M62 538H1138" stroke="#e2e5e8" stroke-width="2"/>
+    <text x="62" y="586" font-size="22" fill="#515963">simondong1.github.io · Simon Dong</text>
+  </g>
+</svg>

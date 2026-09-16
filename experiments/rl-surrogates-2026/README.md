@@ -1,6 +1,6 @@
 # RL surrogate comparison, September 2026
 
-Companion to [RL Surrogate Losses in 2026](https://simondong1.github.io/rl-surrogates-2026.html).
+Companion to [RL Losses in 2026: From PPO to SAPO](https://simondong1.github.io/rl-surrogates-2026.html).
 
 The study compares **PPO clipping, binary-TV DPPO, and GLM-5 asynchronous token
 rejection**. All use the same GRPO advantages and sequence-mean reduction. This

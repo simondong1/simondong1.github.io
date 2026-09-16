@@ -1,6 +1,6 @@
 # GSM8K and DAPO-Math surrogate comparison
 
-Follow-up to [RL Surrogate Losses in 2026](https://simondong1.github.io/rl-surrogates-2026.html).
+Follow-up to [RL Losses in 2026: From PPO to SAPO](https://simondong1.github.io/rl-surrogates-2026.html).
 The earlier Countdown/DeepMath experiment is preserved in its own directory.
 
 This study uses **full-parameter Qwen3.5-9B training in Miles** on two B200s.

@@ -49,6 +49,10 @@ contrast it with the current mechanism, and link the existing article.
 - Lead with the outcome, then show the evidence.
 - Define conventional math symbols immediately. Avoid invented shorthand and
   dense inline algebra.
+- Make headings name the mechanism, comparison, or finding. Keep algorithm
+  headings parallel: method name, then its concrete operation. Match table-of-
+  contents labels to their sections and preserve a subtitle of method names
+  when requested; avoid adding a second promotional standfirst.
 - Show arithmetic as typeset substitutions, not verbal instructions. For
   normalization examples, show the inputs, mean, standard deviation, and
   resulting normalized values; name the convention used by the experiment.
