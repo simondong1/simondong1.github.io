@@ -2,13 +2,13 @@
 
 ## A controlled study of data composition, model capacity, supervision, and serving cost
 
-**Simon Dong · Living research study v1.2 · 16 September 2026**
+**Simon Dong · Research study v1.3 · 16 September 2026**
 
-**Status:** production replay, main data audit, data/feature/optimization screens, three matched LLM heads, and initial model fusion are complete. Architecture controls, repeated seeds, and temporal labeling are progressing. Measured results are exploratory; final-test and deployment conclusions remain pending.
+**Status:** production replay, data audit, source/feature/optimization screens, architecture controls, matched LLM heads, pretraining controls, three-seed confirmations, model fusion, temporal evaluation, and quality-checked serving compilation are complete. The 1M text-data scaling run precedes sealed final-test selection. Sections 1–7 retain the broader research agenda; the measured run registry and `FINAL_SELECTION.md` define executed work and the bounded closing stage. Proposed follow-ups are not represented as completed experiments.
 
 ## Abstract
 
-We study whether search relevance improves through more examples, different examples, a different model, or a different use of the available signals. The dataset contains approximately ten million Gemini-labeled query–item pairs, drawn from natural search exposure, query-balanced production coverage, and random unexposed 3D items. The deployed reference is a 6.31-million-parameter deep-and-cross reranker using frozen content embeddings and historical engagement features. On query-disjoint validation, a two-pass full-data feature model reaches 73.21% shared-five accuracy. Full-parameter Qwen3-0.6B and Qwen3-1.7B classifiers trained on 250k raw query/title pairs reach 79.48% and 81.38%, respectively. These comparisons differ in information, pretraining, capacity, and compute. In the matched 0.6B experiment, classification, restricted-token, and full-vocabulary-token heads are nearly tied. Feature availability explains a substantial part of the raw-text advantage, and a query-separated internal audit finds complementary errors useful for conditional model mixtures. These are exploratory validation findings; repeated-seed, temporal, serving-cost, and final-test work remains in progress. Initial hypotheses and subsequent stage registrations are retained in version history; later amendments do not retroactively become preregistered hypotheses.
+We study whether search relevance improves through more examples, different examples, a different model, or a different use of the available signals. The dataset contains approximately ten million Gemini-labeled query–item pairs from natural search exposure, query-balanced production coverage, and random unexposed 3D items. The deployed reference is a 6.31-million-parameter deep-and-cross reranker using frozen content embeddings and historical engagement. On query-disjoint validation, three-seed mean shared-five accuracy is 73.16% for a full-data feature model and 81.43% for a full-parameter Qwen3-1.7B classifier trained on 250k query/title pairs. These recipe comparisons differ in information, pretraining, capacity, and compute. Matched 0.6B classifier and token heads are nearly tied; exposing distributions preserves more ranking resolution than emitting only a class. Feature availability helps explain the raw-text advantage. On 267 weighted complete pages from later traffic, shared-five accuracy is 60.25% for the feature model, 74.67% for 0.6B, and 76.37% for 1.7B; the larger soft mixture reaches 76.48%, with an accuracy difference not clearly separated from the text expert. Compiled 0.6B inference reduces warm B200 latency to 3.52 ms at one pair and 51.55 ms at 360 pairs while passing a full-validation quality gate. These are teacher-agreement and standalone systems measurements; human preference, online impact, and end-to-end serving latency remain unmeasured. Sealed test results are reported separately after registered selection. Initial hypotheses and subsequent stage registrations are retained in version history; later amendments do not retroactively become preregistered hypotheses.
 
 ## 1. Research questions and falsifiable hypotheses
 
@@ -52,13 +52,13 @@ The network learns from scratch **on top of pretrained frozen embeddings**. Call
 | Validation | Every 150 training batches; a configured 40-batch cap is not equivalent to complete held-out evaluation |
 | Output | Softmax over ten logits followed by expected class value on 0–9 |
 
-The serving pipeline additionally supplies item-embedding caches and exact query–item score overrides. We will report **raw-network** quality and **complete-serving-system** quality separately. An override hit is not evidence of model generalization. The production output name includes purchase terminology for historical interface compatibility; its relevance objective must not be confused with purchase prediction.
+The serving pipeline additionally supplies item-embedding caches and exact query–item score overrides. This study scores the **raw network**; exact historical complete-serving-system reconstruction remains a separate follow-up because override/cache identities are not fully established. An override hit is not evidence of model generalization. The production output name includes purchase terminology for historical interface compatibility; its relevance objective must not be confused with purchase prediction.
 
 A five-minute live sample showed approximately 14.3 ms median and 30.3 ms p99 gateway latency. Per-pod summary quantiles cannot be averaged into a fleet quantile; the reported gateway p99 comes from aggregated histogram buckets. Triton execution batch metrics near one refer to requests in this configuration, not necessarily one query–item pair. Candidate counts must be established from payload shape or inference logs.
 
 ## 3. Dataset, label semantics, and provenance
 
-The final manifest reports **9,950,940 pairs**: **8,953,912 train**, **496,477 validation**, and **500,551 test**. The feature snapshot contains 221 columns, plus four existing golden/long-tail evaluation collections covering general and 3D items. The original labels table has 9,951,838 pairs: 898 more than the finalized feature snapshot. The join audit must explain every exclusion and show that source frequencies and split memberships survive canonicalization.
+The final manifest reports **9,950,940 pairs**: **8,953,912 train**, **496,477 validation**, and **500,551 test**. The feature snapshot contains 221 columns, plus four existing golden/long-tail evaluation collections covering general and 3D items. The original labels table has 9,951,838 pairs: 898 more than the finalized feature snapshot. Finalized joins, counts, and split memberships were verified; the 898 upstream exclusions remain unexplained and are retained as a provenance limitation.
 
 ### 3.1 Three sampling sources
 
@@ -252,7 +252,7 @@ The GitHub Pages report will expose the protocol, public methodology, aggregate 
 | GitHub Pages | Protocol and aggregate audit published; report updated after completed stages |
 | Spark | Query execution and feature-table partition reads verified; future traffic exists through September 15; exit-status parsing handled in a study-specific wrapper |
 | GPU allocation/budget | Two scheduler-reserved B200s verified; optimizer pilot passed on one; total study budget pending |
-| Future feature cutoffs and human evaluation | To be audited before making temporal or human-quality claims |
+| Future feature cutoffs and human evaluation | August12–13 training feature partitions verified from upstream manifests; human agreement remains unmeasured |
 
 ## 9. Measured operational baseline and systems pilot
 
@@ -282,6 +282,8 @@ The 500k source-mixture screen uses 500 optimizer updates after the size screen 
 Parameter-matched architecture controls use a 6.29M-parameter cross-free MLP and a 6.23M-parameter feature-token transformer against the 6.31M DCN. The transformer retains the numeric bins and gated semantic reducers, with 69 numeric tokens, ten auxiliary tokens, four semantic tokens, a classification token, and four width-256 attention layers. Its optimizer pilot completed nonzero finite gradients and parameter changes before the main run. The full-data width-384 model is a separate intermediate-capacity point; the original 2M wide model uses width 512.
 
 The next LM controls use the same 250k input pairs and classification head. A frozen-backbone linear probe uses LR 1e-3; a random-initialized matched backbone uses LR 1e-4. These declared learning-rate differences acknowledge different optimization scales and do not establish fully optimized limits for either control. The full-parameter pretrained screen uses LR 5e-6, 1e-5, and 2e-5, plus a two-pass control. The 1.7B one-pass recipe receives seeds 271 and 811 after its first scaling result. A random-initialization dtype failure was caught before training; explicit FP32 parameter initialization, a new optimizer pilot, and a separate retry ID preserve the intended precision contract.
+
+The upstream build manifests identify August 12 partitions for D2Q, platform D2Q, Q2D, and item features, and August 13 for the main feature snapshot. These precede both temporal evaluation dates. This resolves the recorded partition-cutoff uncertainty; it does not independently prove the event-time semantics of every source table.
 
 Future requests are sampled from August 22 and September 8. Eight files per date are selected by deterministic hash from 8192 daily files, then 32 raw rows per file are selected uniformly without replacement. Eligibility is applied after sampling; inclusion probabilities and file cluster identities are retained for weighted estimates and cluster uncertainty. The result contains 268 eligible requests and 10,523 displayed pairs. All 268 requests have complete displayed-item coverage in the serialized relevance inputs. These include multiple model batches in some requests, so concatenated model inputs must be aligned by explicit item key, not list position.
 

@@ -26,8 +26,18 @@
   {
     "id": "model-experiments",
     "kind": "training",
-    "state": "running registered screens and confirmations on two allocated B200s",
-    "completed_runs": 78
+    "state": "running final registered data-scaling trial",
+    "completed_runs": 84
+  },
+  {
+    "id": "final-test-comparison-v1",
+    "kind": "sealed-test-analysis",
+    "state": "pending"
+  },
+  {
+    "id": "temporal-complete-page-audit-v1",
+    "kind": "temporal-evaluation",
+    "state": "complete"
   },
   {
     "id": "architecture-2m-cross4-ce10-2510u-s173",
@@ -135,6 +145,24 @@
     "size": 8953912,
     "objective": "ce10",
     "parameters": 6310062,
+    "seed": 811
+  },
+  {
+    "id": "confirm-qwen3-17b-classifier-250k-1ep-s271",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 1720589319,
+    "seed": 271
+  },
+  {
+    "id": "confirm-qwen3-17b-classifier-250k-1ep-s811",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 1720589319,
     "seed": 811
   },
   {
@@ -309,7 +337,43 @@
     "seed": 173
   },
   {
+    "id": "llm-qwen3-06b-classifier-250k-2ep-s173",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 596057095,
+    "seed": 173
+  },
+  {
     "id": "llm-qwen3-06b-classifier-250k-frozen-lr1e-3-s173",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 596057095,
+    "seed": 173
+  },
+  {
+    "id": "llm-qwen3-06b-classifier-250k-lr2e-5-s173",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 596057095,
+    "seed": 173
+  },
+  {
+    "id": "llm-qwen3-06b-classifier-250k-lr5e-6-s173",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 596057095,
+    "seed": 173
+  },
+  {
+    "id": "llm-qwen3-06b-classifier-250k-random-lr1e-4-s173-r2",
     "state": "complete",
     "kind": "language-model-training",
     "size": 250000,
@@ -784,6 +848,11 @@
     "objective": "ce10",
     "parameters": 6310062,
     "seed": 173
+  },
+  {
+    "id": "serving-benchmark-v1",
+    "state": "invalidated",
+    "reason": "Benchmark selected cache shard0000, which is empty; reported feature batch sizes did not reflect real rows. Discard this benchmark attempt. Quality training uses row-selected nonempty shards and is unaffected."
   },
   {
     "id": "label-1m-ce5-2510u-s173",

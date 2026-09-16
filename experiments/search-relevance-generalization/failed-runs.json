@@ -1,5 +1,10 @@
 [
   {
+    "id": "serving-benchmark-v1",
+    "state": "invalidated",
+    "reason": "Benchmark selected cache shard0000, which is empty; reported feature batch sizes did not reflect real rows. Discard this benchmark attempt. Quality training uses row-selected nonempty shards and is unaffected."
+  },
+  {
     "id": "label-1m-ce5-2510u-s173",
     "state": "failed",
     "reason": "TypeError: Got unsupported ScalarType BFloat16"

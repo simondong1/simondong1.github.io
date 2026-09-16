@@ -1,6 +1,6 @@
 ## Measured training results
 
-**78 controlled quality runs complete**, plus systems checks. Results below are exploratory validation measurements; individual seeds are recorded in the complete table. They are not deployment recommendations or final-test results. Each training row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.
+**84 controlled quality runs complete**, plus systems checks. Results below are exploratory validation measurements; individual seeds are recorded in the complete table. They are not deployment recommendations or final-test results. Each training row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.
 
 | Reference comparison | Unique training pairs | Common-five accuracy | Common-five NLL ↓ |
 |---|---:|---:|---:|
@@ -27,6 +27,8 @@ These reference rows are best-observed recipe comparisons with different input r
 | architecture-full-wide-ce10-2ep-s173 | 8,953,912 | 11,670,414 | 4,374 | 73.75% | 0.6848 | 0.6898 | 25.2 / 85.8 |
 | confirm-full-ce10-2ep-s271 | 8,953,912 | 6,310,062 | 4,374 | 73.13% | 0.7015 | 0.7052 | 23.3 / 81.7 |
 | confirm-full-ce10-2ep-s811 | 8,953,912 | 6,310,062 | 4,374 | 73.12% | 0.7008 | 0.6962 | 23.2 / 81.1 |
+| confirm-qwen3-17b-classifier-250k-1ep-s271 | 250,000 | 1,720,589,319 | 1,954 | 81.47% | 0.4955 | 0.4717 | 740.3 / 1134.1 |
+| confirm-qwen3-17b-classifier-250k-1ep-s811 | 250,000 | 1,720,589,319 | 1,954 | 81.45% | 0.4953 | 0.4860 | 732.8 / 1127.0 |
 | epochs-2m-ce10-1ep-s173 | 2,000,000 | 6,310,062 | 489 | 69.38% | 0.8040 | 0.8080 | 2.9 / 30.6 |
 | epochs-2m-ce10-4ep-s173 | 2,000,000 | 6,310,062 | 1,956 | 71.88% | 0.7368 | 0.7346 | 10.8 / 41.3 |
 | feature-2m-behavior_only-ce10-2510u-s173 | 2,000,000 | 6,310,062 | 2,510 | 54.26% | 1.0944 | 1.1479 | 13.0 / 43.5 |
@@ -46,7 +48,11 @@ These reference rows are best-observed recipe comparisons with different input r
 | label-1m-components-2510u-s173 | 1,000,000 | 6,309,996 | 2,510 | 67.51% | 0.9357 | 0.7196 | 14.2 / 40.7 |
 | label-1m-joint16-2510u-s173 | 1,000,000 | 6,310,260 | 2,510 | 71.36% | 0.7713 | 0.7178 | 12.9 / 40.3 |
 | llm-qwen3-06b-classifier-250k-1ep-s173 | 250,000 | 596,057,095 | 1,954 | 79.48% | 0.5503 | 0.5361 | 353.6 / 599.4 |
+| llm-qwen3-06b-classifier-250k-2ep-s173 | 250,000 | 596,057,095 | 3,908 | 79.90% | 0.5548 | 0.4885 | 708.4 / 953.0 |
 | llm-qwen3-06b-classifier-250k-frozen-lr1e-3-s173 | 250,000 | 596,057,095 | 1,954 | 50.23% | 1.2173 | 1.2822 | 114.7 / 339.3 |
+| llm-qwen3-06b-classifier-250k-lr2e-5-s173 | 250,000 | 596,057,095 | 1,954 | 79.45% | 0.5494 | 0.5361 | 354.1 / 598.8 |
+| llm-qwen3-06b-classifier-250k-lr5e-6-s173 | 250,000 | 596,057,095 | 1,954 | 78.72% | 0.5711 | 0.5673 | 365.0 / 609.3 |
+| llm-qwen3-06b-classifier-250k-random-lr1e-4-s173-r2 | 250,000 | 596,057,095 | 1,954 | 51.57% | 1.1595 | 1.3449 | 354.2 / 603.4 |
 | llm-qwen3-06b-restricted-250k-1ep-s173 | 250,000 | 596,049,920 | 1,954 | 79.42% | 0.5512 | 0.5416 | 353.0 / 597.7 |
 | llm-qwen3-06b-token-250k-1ep-s173 | 250,000 | 596,049,920 | 1,954 | 79.41% | 0.5509 | 0.5414 | 354.0 / 601.4 |
 | llm-qwen3-17b-classifier-250k-1ep-s173 | 250,000 | 1,720,589,319 | 1,954 | 81.38% | 0.4963 | 0.4745 | 723.5 / 1118.9 |
@@ -122,9 +128,19 @@ The full-data two-pass DCN improves shared-five accuracy from the operational pr
 
 At 2M pairs, removing clicks or purchases individually changes accuracy little, while removing all behavior features has a larger effect. Correlated signals can replace one another: a small single-family ablation does not mean that family has no information. The semantic-only and behavior-only models both trail their combination. These observations support testing complementary branches and conditional routing.
 
-The first capacity screen confounds architecture and parameter count. A 6.29M-parameter MLP and a 6.23M-parameter feature-token transformer provide closer controls for the 6.31M-parameter DCN; their measured rows are included above as they finish. Equal parameters do not imply equal FLOPs, so training and serving cost remain separate axes. A full-data width-384 follow-up is an intermediate capacity point; it is not identical to the width-512 2M screen.
+The first capacity screen confounds architecture and parameter count. At 2M pairs and 2510 updates, a parameter-matched 6.29M MLP reaches 71.77% shared-five accuracy (NLL 0.7418), a 6.23M feature transformer reaches 71.04% (0.7835), and the 6.31M DCN reaches 72.15% (0.7335). Equal parameters do not imply equal FLOPs. The full-data width-384 follow-up reaches 73.75% (0.6848); it is an intermediate capacity point, not identical to the width-512 2M screen.
 
 The one-factor optimizer screen shows no clear one-seed benefit from AMSGrad or stronger weight decay. LR 1e-3 improves accuracy over 3.5e-4 while worsening NLL; selecting only accuracy would conceal that confidence tradeoff. Log and square-root traffic weighting worsen aggregate validation quality in this setting. The seven-class support control performs similarly to the ten-way head. Independent title/thumbnail heads underperform their joint target, consistent with a restrictive independence assumption; this is not evidence that component labels are uninformative.
+
+### Pretraining and adaptation controls
+
+| Same 0.6B backbone and 250k raw-input pairs | Shared-five accuracy | Shared-five NLL ↓ |
+|---|---:|---:|
+| Pretrained, full post-training, LR 1e-5 | 79.48% | 0.5503 |
+| Pretrained, frozen backbone/linear head, LR 1e-3 | 50.23% | 1.2173 |
+| Random initialization, full training, LR 1e-4 | 51.57% | 1.1595 |
+
+These one-pass controls use the same query/title serialization. Different declared learning rates account for different optimization scales, but each control remains a finite-budget baseline. The frozen model trains only its linear readout; the other two update every model parameter. Poor frozen/random results do not establish their fully tuned limits. The observed benefit requires both useful pretrained parameters and adaptation under the tested recipes.
 
 ### Frequency and missing-feature slices
 
@@ -136,7 +152,7 @@ The one-factor optimizer screen shows no clear one-seed benefit from AMSGrad or 
 | Qwen3-1.7B, classification head | 81.99% | 81.48% | 80.35% | 83.66% | 78.98% |
 | Feature DCN, full data, two epochs | 80.25% | 70.51% | 66.19% | 81.30% | 62.80% |
 
-These are shared-five accuracies. Frequency groups use train-only positive-query median/p90 thresholds (291/22,159) in a logged 28-day query-view count. Zero counts remain unknown, not tail. This feature is constant within each query, but its historical cutoff is not yet verified; it is a frequency proxy. Missing-vector groups use original availability before any retraining masks. The raw-text LLM's advantage is particularly large where cached embeddings are absent; this helps explain the aggregate difference and motivates availability-aware fusion.
+These are shared-five accuracies. Frequency groups use train-only positive-query median/p90 thresholds (291/22,159) in a logged 28-day query-view count. Zero counts remain unknown, not tail. This feature is constant within each query. August 12–13 source partitions are verified, while source-table event-time semantics remain a caveat; these are frequency proxies. Missing-vector groups use original availability before any retraining masks. The raw-text LLM's advantage is particularly large where cached embeddings are absent; this helps explain the aggregate difference and motivates availability-aware fusion.
 
 ### Combining feature and text models
 
@@ -162,10 +178,61 @@ LM call fraction is not a measured speedup: preprocessing, small-batch utilizati
 
 The full-data two-pass production-size feature recipe has 3 completed seeds. Shared-five accuracy is **73.16%**, with sample standard deviation **0.049 percentage points**; mean NLL is **0.7010**. Subset selection remains fixed, so this measures optimization/initialization variability rather than independently resampled datasets.
 
+The matched 1.7B classifier has three seeds: mean validation accuracy **81.43%**, sample SD **0.044 percentage points**, and mean NLL **0.4957**. Each checkpoint is independently deployable below 4B; these results do not use an ensemble.
+
+### Class-token output versus a ranking score
+
+The probability-head tables expose logits for all three LM heads. A literal one-digit response is a separate output contract: it coarsens scores and creates ties. The following diagnostic applies that same coarsening to every head; the full-token model had zero invalid emissions, so its conditional argmax agrees with its emitted label.
+
+| Head | Single-class shared-five accuracy | Natural NDCG, discrete class | Natural NDCG, expected score |
+|---|---:|---:|---:|
+| classifier | 79.32% | 0.9549 | 0.9734 |
+| restricted token | 79.23% | 0.9550 | 0.9736 |
+| full-vocabulary token | 79.21% | 0.9546 | 0.9736 |
+
+NDCG uses tie-averaged zero-based gains on the same 27,411 natural multi-item queries with nonzero ideal gain. Probability pooling and coarsening an argmax are different decisions, so their shared-five accuracies also differ slightly. Exposing the distribution preserves useful ranking resolution regardless of whether the head was trained as class logits or a vocabulary token.
+
+### Measured serving cost
+
+| Model / device | Batch 1 p50 | Batch 360 p50 | Batch 360 p95 |
+|---|---:|---:|---:|
+| Feature DCN, full data, two epochs / B200 | 1.13 ms | 1.16 ms | 1.33 ms |
+| Feature DCN, full data, two epochs / CPU 4 threads | 0.56 ms | 8.49 ms | 9.02 ms |
+| Feature DCN, width 384 / B200 | 1.13 ms | 1.17 ms | 1.31 ms |
+| Feature DCN, width 384 / CPU 4 threads | 0.78 ms | 14.56 ms | 14.86 ms |
+| Qwen3-0.6B, classification head / B200 | 22.31 ms | 147.56 ms | 147.72 ms |
+| Qwen3-0.6B, restricted token logits / B200 | 22.42 ms | 147.56 ms | 147.64 ms |
+| Qwen3-0.6B, full-vocabulary token / B200 | 22.65 ms | 148.05 ms | 148.10 ms |
+| Qwen3-1.7B, classification head / B200 | 22.68 ms | 211.01 ms | 211.81 ms |
+
+These are warm eager-PyTorch forward/scoring measurements with inputs already resident on the device, ten warmups, and 50 timed repetitions. Text rows use the median prompt length padded to 88 tokens; p95-length results, batches 32/128, and empirical p99 are in the [benchmark artifact](experiments/search-relevance-generalization/serving-benchmark.json). The full-vocabulary path includes argmax over vocabulary logits. Every feature batch is checked against a nonempty cache shard. Tokenization, encoders, cache lookup, network, request concurrency, and queueing are excluded. The shared B200 host differs from the production accelerator, and fifty samples do not characterize a production p99.
+
+### Quality-checked inference compilation
+
+The 0.6B classifier uses `torch.compile(mode=reduce-overhead, dynamic=True)`, FP32 weights and BF16 autocast. Compilation keeps the same trained checkpoint and output contract.
+
+| Median-length batch | Eager p50 | Compiled p50 | Measured ratio |
+|---|---:|---:|---:|
+| 1 | 22.31 ms | 3.52 ms | 6.33× |
+| 32 | 22.47 ms | 7.48 ms | 3.01× |
+| 128 | 56.83 ms | 20.45 ms | 2.78× |
+| 360 | 147.56 ms | 51.55 ms | 2.86× |
+
+The predeclared full-validation gate **passed**: accuracy changed by **-0.0020 percentage points** and NLL by **0.000110**, within the absolute 0.002 limits on 496,477 pairs. This is an engineering tolerance, not a statistical equivalence test. The first two shape families took approximately 115 and 108 seconds including compilation; warm figures exclude that setup. Two compiled graphs and multiple CUDA-graph shapes were recorded. Full validation inference took 70.6 seconds after compilation. Serving should bucket/pad shapes and measure cold starts and concurrency explicitly. [Measurements and quality gate](experiments/search-relevance-generalization/compiled-serving.json).
+
+### Larger-expert mixture
+
+A second registered mixture combines the full-data width-384 feature model with the 1.7B text model and removes item dimension from the gate, so routing uses directly replayable inputs. On the same internal query audit, the text expert reaches **81.32%** shared-five accuracy and **0.4968** NLL; the soft mixture reaches **82.05%** and **0.4750**. This is a recipe extension with multiple changed ingredients, not a single-factor architecture claim. Its total serving parameters remain below 4B. [Full aggregate results](experiments/search-relevance-generalization/fusion-v2-results.json).
+
+### Reannotation bridge for future traffic
+
+The current combined teacher reannotated **128** deterministic validation pairs: title agreement **97.66%**, thumbnail agreement **93.75%**, exact-total agreement **92.19%**, and shared-five agreement **93.75%**. All used a stored snapshot URL, with newly fetched image bytes recorded by hash. This small bridge supports rubric continuity but does not prove identical historical prompt/model/image bytes, human agreement, or an accuracy ceiling. [Confusion matrices](experiments/search-relevance-generalization/teacher-bridge.json).
+
 ### Failed attempts retained
 
 | Run | Recorded failure |
 |---|---|
+| serving-benchmark-v1 | Benchmark selected cache shard0000, which is empty; reported feature batch sizes did not reflect real rows. Discard this benchmark attempt. Quality training uses row-selected nonempty shards and is unaffected. |
 | label-1m-ce5-2510u-s173 | TypeError: Got unsupported ScalarType BFloat16 |
 | llm-qwen3-06b-classifier-250k-random-lr1e-4-s173 | RuntimeError: mat1 and mat2 must have the same dtype, but got BFloat16 and Float |
 
