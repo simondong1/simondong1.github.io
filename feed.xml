@@ -5,6 +5,7 @@
     <link>https://simondong1.github.io/</link>
     <description>Machine learning systems, LLM internals, and technical notes by Simon Dong.</description>
     <language>en-us</language>
+    <lastBuildDate>Wed, 16 Sep 2026 01:35:54 +0000</lastBuildDate>
     <atom:link href="https://simondong1.github.io/feed.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>How to Set the Four GRPO Batch Knobs</title>
@@ -18,7 +19,7 @@
       <link>https://simondong1.github.io/rl-surrogates-2026.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/rl-surrogates-2026.html</guid>
       <pubDate>Tue, 15 Sep 2026 00:00:00 +0000</pubDate>
-      <description>Clipping, capping, and rejecting token updates produce different learning curves: seven RL surrogates explained with twelve full-parameter Miles runs.</description>
+      <description>Clipping, capping, and rejecting token updates produce different learning curves: six surrogates compared in twelve full-parameter Miles runs on GSM8K and DAPO-Math.</description>
     </item>
     <item>
       <title>How CUDA Graphs Speed Up Decode — and By How Much</title>

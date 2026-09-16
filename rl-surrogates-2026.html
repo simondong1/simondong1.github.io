@@ -4,13 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>RL Surrogate Losses in 2026</title>
-<meta name="description" content="Clipping, capping, and rejecting token updates produce different learning curves: seven RL surrogates explained with twelve full-parameter Miles runs." />
+<meta name="description" content="Clipping, capping, and rejecting token updates produce different learning curves: six surrogates compared in twelve full-parameter Miles runs on GSM8K and DAPO-Math." />
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 <link rel="canonical" href="https://simondong1.github.io/rl-surrogates-2026.html" />
 <link rel="alternate" type="application/rss+xml" title="Simon Dong Blog" href="https://simondong1.github.io/feed.xml" />
 <link rel="alternate" type="text/plain" title="llms.txt" href="https://simondong1.github.io/llms.txt" />
 <meta property="og:title" content="RL Surrogate Losses in 2026" />
-<meta property="og:description" content="Clipping, capping, and rejecting token updates produce different learning curves: seven RL surrogates explained with twelve full-parameter Miles runs." />
+<meta property="og:description" content="Clipping, capping, and rejecting token updates produce different learning curves: six surrogates compared in twelve full-parameter Miles runs on GSM8K and DAPO-Math." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://simondong1.github.io/rl-surrogates-2026.html" />
 <meta property="og:site_name" content="Simon Dong" />
@@ -25,7 +25,7 @@
 <meta name="twitter:site" content="@dongsixiang" />
 <meta name="twitter:creator" content="@dongsixiang" />
 <meta name="twitter:title" content="RL Surrogate Losses in 2026" />
-<meta name="twitter:description" content="Clipping, capping, and rejecting token updates produce different learning curves: seven RL surrogates explained with twelve full-parameter Miles runs." />
+<meta name="twitter:description" content="Clipping, capping, and rejecting token updates produce different learning curves: six surrogates compared in twelve full-parameter Miles runs on GSM8K and DAPO-Math." />
 <meta name="twitter:image" content="https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=2" />
 <meta name="twitter:image:alt" content="Clip, cap, reject, or soften the contribution of a sampled token." />
 <meta name="author" content="Simon Dong" />
@@ -38,14 +38,14 @@
   "@context": "https://schema.org",
   "@type": "TechArticle",
   "headline": "RL Surrogate Losses in 2026",
-  "description": "Clipping, capping, and rejecting token updates produce different learning curves: seven RL surrogates explained with twelve full-parameter Miles runs.",
+  "description": "Clipping, capping, and rejecting token updates produce different learning curves: six surrogates compared in twelve full-parameter Miles runs on GSM8K and DAPO-Math.",
   "author": {
     "@type": "Person",
     "name": "Simon Dong",
     "url": "https://x.com/dongsixiang"
   },
   "datePublished": "2026-09-15",
-  "dateModified": "2026-09-15",
+  "dateModified": "2026-09-16",
   "mainEntityOfPage": "https://simondong1.github.io/rl-surrogates-2026.html",
   "image": [
     "https://simondong1.github.io/assets/rl-surrogates-2026-og.png?v=2"
@@ -226,7 +226,7 @@ footer a{color:var(--ink-soft)}
 <ul>
 <li><strong>Many methods share the same retained gradient.</strong> Their gates and weights decide which tokens contribute.</li>
 <li><strong>Advantages, clipping, and length normalization are separate choices.</strong> An algorithm name rarely specifies all three.</li>
-<li><strong>The task changed the winner.</strong> PPO led on Countdown; GLM-5’s surrogate led on our DeepMath subset. Two seeds, fixed settings.</li>
+<li><strong>Headroom matters.</strong> GSM8K started above 95%; DAPO-Math exposed larger differences. One seed, fixed settings.</li>
 </ul>
 </aside>
 <a class="background-link" href="ppo.html"><span class="kicker">Background · Part 1</span><strong>Understanding PPO for Language Models <span aria-hidden="true">↗</span></strong><span>The rollout loop, advantages, and why the trainer recomputes log probabilities.</span></a>
@@ -282,10 +282,10 @@ footer a{color:var(--ink-soft)}
 <tr><td><a href="#gspo">GSPO</a></td><td>Clip a whole-response ratio</td><td><a href="https://arxiv.org/abs/2507.18071">Qwen3 / GSPO</a></td></tr>
 </tbody></table></div>
 <details id="practice"><summary>Framework support: verl, SkyRL, and Miles</summary>
-<p>Source snapshots checked September 15, 2026. Support does not establish relative throughput.</p>
+<p>Source snapshots checked September 15, 2026. Support does not establish relative throughput. The reduction specifies how token losses are averaged.</p>
 <div class="table-scroll"><table class="ptable"><thead><tr><th>Framework</th><th>Implemented paths</th><th>Default reduction</th></tr></thead><tbody>
 <tr><td><a href="#ref-verl">verl</a></td><td>PPO, DPPO, GSPO, SAPO, CISPO</td><td>Token mean</td></tr>
-<tr><td><a href="#ref-skyrl">SkyRL</a></td><td>PPO, DPPO, GSPO, SAPO, CISPO, rollout IS</td><td>Token mean</td></tr>
+<tr><td><a href="#ref-skyrl">SkyRL</a></td><td>PPO, DPPO, GSPO, SAPO, CISPO, rollout importance sampling</td><td>Token mean</td></tr>
 <tr><td><a href="#ref-miles">Miles</a></td><td>PPO, GSPO; custom-loss hook</td><td>Sequence mean</td></tr>
 </tbody></table></div>
 <p>Our Miles experiment uses the custom hook. Check the reduction separately: Miles calls its default “sample mean”; verl and SkyRL also expose alternative reductions.</p>
@@ -369,7 +369,7 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 <div class="example"><p>At \(r=1.5,\ A=+1\), PPO clips to zero. With temperature \(\tau=1\), SAPO’s attenuation is about 0.94, giving <strong>\(c\approx1.5\times0.94=1.41\)</strong>.</p></div>
 <p>Define \(h=\sigma(\tau(r-1))\). Then:</p>
 <div class="formula">\[ j_{\rm SAPO}=\frac4\tau hA,\qquad c_{\rm SAPO}=Ar\,4h(1-h). \]</div>
-<p>At \(r=1\), attenuation is one. Larger \(\tau\) makes it decay faster; positive and negative advantages can use different temperatures. The attenuation is bounded, not the complete coefficient \(c\).</p>
+<p>At \(r=1\), attenuation is one. Larger \(\tau\) makes it decay faster; positive and negative advantages can use different temperatures. The attenuation is at most one; the coefficient \(c\) can still exceed the advantage in magnitude.</p>
 
 <h3 id="gspo">GSPO: decide for the whole response</h3>
 <p><strong>Group Sequence Policy Optimization (GSPO)</strong> replaces noisy token-level decisions with one length-normalized sequence ratio.</p>
@@ -438,125 +438,98 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 </section>
 <section id="experiments">
 <h2>Twelve full-parameter training runs</h2>
-<p>We trained <a href="https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a">Qwen3.5-9B</a> in Miles on two B200s. Three surrogates × two datasets × two seeds. <strong>Only the surrogate and its declared thresholds change within each dataset/seed.</strong></p>
+<p>We trained <a href="https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a">Qwen3.5-9B</a> in Miles on two B200s: <strong>six surrogates × two math datasets × one seed</strong>. Within each dataset, only the surrogate and its declared thresholds change.</p>
 <div class="table-scroll"><table class="ptable settings-table"><tbody>
-<tr><th scope="row">Compared</th><td>PPO: 0.8–1.2 · DPPO: 0.15/0.15 · GLM-5: 0.5–5</td></tr>
-<tr><th scope="row">Held fixed</th><td>Starting checkpoint, GRPO advantages, sequence mean, prompt order, sampling, optimizer, and update budget</td></tr>
-<tr><th scope="row">Scale</th><td>All 8.95B language-policy parameters; no adapters. 512 training tasks and 256 test tasks per dataset.</td></tr>
-<tr><th scope="row">Runtime</th><td>6.91 hours total · 32.4–35.5 minutes per run · 153.4 GiB maximum memory observed on one GPU</td></tr>
-</tbody></table></div>
-<p class="note">Thresholds are fixed choices, not equally strong or separately tuned constraints. This tests three surrogates in one synchronous recipe, not complete lab training systems.</p>
+<tr><th scope="row">Compared</th><td>PPO clipping · CISPO · GLM-5 gating · DPPO · SAPO · GSPO</td></tr>
+<tr><th scope="row">Held fixed</th><td>Starting model, prompt order, four responses per prompt, GRPO advantages, sequence mean, optimizer, and update budget</td></tr>
+<tr><th scope="row">Full parameters</th><td>All 8.95B text-policy parameters; no adapters. Fresh model and optimizer for every arm.</td></tr>
 
-<h3>Countdown: PPO led; GLM-5 deteriorated</h3>
-<p>Construct an exact arithmetic expression from four supplied numbers. Each run gets <strong>512 updates</strong> and a <strong>1,024-token response cap</strong>.</p>
-<figure>
-<picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-countdown-mobile.svg"/><img alt="Held-out Countdown grader success from zero to 512 optimizer updates for PPO, DPPO, and GLM-5" height="450" src="assets/rl-surrogates-2026-countdown.svg" width="720"/></picture>
-<figcaption>Mean of two seeds on 256 held-out tasks. Bars span the seed results, not confidence intervals. All scheduled evaluations and measured baselines are shown.</figcaption></figure>
+<tr><th scope="row">Measured runtime</th><td>5.93 hours for all twelve jobs; peak sampled memory 177.8 GiB on one GPU</td></tr></tbody></table></div>
+<p class="note"><strong>GRPO with PPO clipping is the baseline; no critic.</strong> Actor–critic PPO changes the advantage estimator. DAPO’s similar clip-higher rule is a diagnostic; its full recipe also changes sampling. Thresholds are fixed, not equally tuned.</p>
+
+<h3>GSM8K: little headroom for this checkpoint</h3>
+<p><a href="https://huggingface.co/datasets/openai/gsm8k">GSM8K</a> contains grade-school arithmetic word problems. We use 7,409 training questions and a fixed 512-question subset of the official test set. Each arm sees 1,024 prompt presentations: <strong>256 updates, with a 1,536-token response cap</strong>.</p>
+<figure><picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-gsm8k-accuracy-mobile.svg"/><img src="assets/rl-surrogates-2026-gsm8k-accuracy.svg" width="828" height="324" alt="GSM8K training and held-out accuracy for six RL surrogates"/></picture><figcaption>Training: sampled accuracy at collection time, with faint raw values and a trailing five-collection mean. Held out: greedy accuracy on the same 512 questions. One seed; no confidence bands. Accuracy axes use different ranges.</figcaption></figure>
 <ul class="findings">
-<li><strong>PPO had the highest final mean:</strong> 59.38%, versus DPPO’s 51.17% and GLM-5’s 10.74%.</li>
-<li><strong>GLM-5 often ran out of room:</strong> 90.23% of final responses hit the cap, versus PPO’s 40.43% and DPPO’s 44.34%.</li>
+<li><strong>The starting policy already scores 95.12%–95.70%.</strong> Final scores span 92.77%–95.31%.</li>
+<li><strong>Most groups provide no relative reward signal:</strong> 90.53%–92.97% have identical rewards, averaged over each run. This is a weak setting for choosing between surrogates.</li>
 </ul>
 
-<h3>DeepMath: GLM-5 led on the integer grader</h3>
-<p>Solve math problems with integer final answers. Each run gets <strong>448 updates</strong> and a <strong>2,048-token response cap</strong>. This is a custom subset, not the official benchmark.</p>
-<figure>
-<picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-deepmath-mobile.svg"/><img alt="Held-out DeepMath grader success from zero to 448 optimizer updates for PPO, DPPO, and GLM-5" height="450" src="assets/rl-surrogates-2026-deepmath.svg" width="720"/></picture>
-<figcaption>Mean of two seeds on 256 held-out tasks. Bars span the seed results, not confidence intervals. All scheduled evaluations and measured baselines are shown.</figcaption></figure>
+<h3>DAPO-Math-17K: more room to learn</h3>
+<p><a href="https://huggingface.co/datasets/BytedTsinghua-SIA/DAPO-Math-17k">DAPO-Math-17K</a> contains competition math with numeric answers. We deduplicate it and hold out questions before training: 16,088 training questions, with 512 fixed evaluation questions. Each arm sees 1,280 prompt presentations: <strong>320 updates, with a 4,096-token response cap</strong>.</p>
+<figure><picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-dapo-accuracy-mobile.svg"/><img src="assets/rl-surrogates-2026-dapo-accuracy.svg" width="828" height="324" alt="DAPO training and held-out accuracy for six RL surrogates"/></picture><figcaption>Training: sampled accuracy at collection time, with faint raw values and a trailing five-collection mean. Held out: greedy accuracy on the same 512 questions. One seed; no confidence bands. Accuracy axes use different ranges.</figcaption></figure>
 <ul class="findings">
-<li><strong>GLM-5 had the highest final mean:</strong> 90.43%, versus PPO’s 83.40% and DPPO’s 83.20%.</li>
-<li><strong>GLM-5 hit the cap less often:</strong> 4.49%, versus PPO’s 11.52% and DPPO’s 9.38%. Intermediate scores still fluctuated.</li>
+<li><strong>SAPO has the highest final score in this seed:</strong> 74.80%, versus 64.06% for PPO clipping.</li>
+<li><strong>The response cap is part of the task.</strong> SAPO reaches it on 13.67% of final evaluation responses; PPO clipping on 28.91%.</li>
 </ul>
 
-<aside class="caveat">
-<p class="kicker">How to read these results</p>
-<ul>
-<li><strong>Two seeds are exploratory.</strong> Chart bars show seed ranges, not confidence intervals. Greedy baseline evaluations also varied.</li>
-<li><strong>DeepMath checks the final integer.</strong> A three-response inspection found an incorrect reference answer, a forbidden solution method, and an answer already derived before baseline truncation.</li>
-<li><strong>One numerical anomaly remains unresolved.</strong> Countdown GLM-5 seed 43 had six trainer/inference token differences above 5 natural-log units late in its degraded run.</li>
-</ul>
-<p>The scores measure <strong>grader success within a response budget</strong>. A valid answer can earn reward even if later text hits the cap.</p>
-</aside>
+<div class="table-scroll"><table class="ptable results-table"><thead><tr><th>Surrogate</th><th>GSM8K final</th><th>DAPO-Math final</th></tr></thead><tbody>
+<tr><td>GRPO (PPO clip)</td><td>95.31%</td><td>64.06%</td></tr>
+<tr><td>CISPO</td><td>93.75%</td><td>71.29%</td></tr>
+<tr><td>GLM-5 gate</td><td>94.53%</td><td>73.44%</td></tr>
+<tr><td>DPPO</td><td>93.55%</td><td>68.75%</td></tr>
+<tr><td>SAPO</td><td>92.77%</td><td>74.80%</td></tr>
+<tr><td>GSPO</td><td>94.14%</td><td>68.55%</td></tr>
+</tbody></table></div>
+<aside class="caveat"><p class="kicker">What these scores mean</p><ul>
+<li><strong>One seed is exploratory.</strong> Small differences do not establish an algorithm ranking; repeated greedy baseline evaluations also vary.</li>
+<li><strong>We grade the final number, not the proof.</strong> A correct answer can earn reward even if later text reaches the cap.</li>
+<li><strong>These are short, partial passes through the data.</strong> They do not establish convergence, performance on unseen domains, or long-horizon agent performance.</li>
+</ul></aside>
 
-<details><summary>All twelve endpoints and evaluation variability</summary>
-<h4>Countdown</h4>
-<div class="table-scroll"><table class="ptable results-table"><thead><tr><th>Surrogate</th><th>Seed 42</th><th>Seed 43</th><th>Mean</th></tr></thead><tbody>
-<tr><td>PPO</td><td>56.25%</td><td>62.50%</td><td>59.38%</td></tr>
-<tr><td>DPPO</td><td>54.30%</td><td>48.05%</td><td>51.17%</td></tr>
-<tr><td>GLM-5</td><td>17.19%</td><td>4.30%</td><td>10.74%</td></tr>
+<details><summary>Learning signal, truncation, and gate activation</summary>
+<p>Longer outputs do not create more optimizer steps here. Every arm receives the same number of responses and updates; generated tokens and compute can differ as its policy changes.</p>
+<h4>GSM8K</h4><figure><picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-gsm8k-diagnostics-mobile.svg"/><img src="assets/rl-surrogates-2026-gsm8k-diagnostics.svg" width="828" height="324" alt="GSM8K truncation and reward variance for six RL surrogates"/></picture><figcaption>Share of responses reaching the cap and prompt groups with identical rewards. Every collection is shown.</figcaption></figure>
+<ul class="findings"><li><strong>68.36%–76.17% of minibatches have zero fresh gradient.</strong> Equal group rewards eliminate GRPO advantages; gating can remove further contributions. Adam momentum can still move the weights.</li></ul>
+<h4>DAPO-Math-17K</h4><figure><picture><source media="(max-width: 640px)" srcset="assets/rl-surrogates-2026-dapo-diagnostics-mobile.svg"/><img src="assets/rl-surrogates-2026-dapo-diagnostics.svg" width="828" height="324" alt="DAPO truncation and reward variance for six RL surrogates"/></picture><figcaption>Share of responses reaching the cap and prompt groups with identical rewards. Every collection is shown.</figcaption></figure>
+<ul class="findings"><li><strong>19.06%–27.81% of minibatches have zero fresh gradient.</strong> Equal group rewards eliminate GRPO advantages; gating can remove further contributions. Adam momentum can still move the weights.</li></ul>
+<p>Apply every rule to the <strong>same PPO-run token probabilities</strong>. The share of nonzero-advantage, sequence-normalized token weight set to zero is:</p>
+<div class="table-scroll"><table class="ptable results-table"><thead><tr><th>Rule on PPO inputs</th><th>GSM8K</th><th>DAPO-Math</th></tr></thead><tbody>
+<tr><td>GRPO (PPO clip)</td><td>1.08%</td><td>0.32%</td></tr>
+<tr><td>CISPO</td><td>0.00%</td><td>0.00%</td></tr>
+<tr><td>GLM-5 gate</td><td>0.20%</td><td>0.01%</td></tr>
+<tr><td>DPPO</td><td>0.25%</td><td>0.02%</td></tr>
+<tr><td>SAPO</td><td>0.00%</td><td>0.00%</td></tr>
+<tr><td>GSPO</td><td>45.83%</td><td>34.95%</td></tr>
 </tbody></table></div>
-<h4>DeepMath</h4>
-<div class="table-scroll"><table class="ptable results-table"><thead><tr><th>Surrogate</th><th>Seed 42</th><th>Seed 43</th><th>Mean</th></tr></thead><tbody>
-<tr><td>PPO</td><td>82.81%</td><td>83.98%</td><td>83.40%</td></tr>
-<tr><td>DPPO</td><td>83.59%</td><td>82.81%</td><td>83.20%</td></tr>
-<tr><td>GLM-5</td><td>91.02%</td><td>89.84%</td><td>90.43%</td></tr>
-</tbody></table></div>
-<p>Six baseline evaluations per dataset used the same starting checkpoint. Countdown ranged from 48.44% to 50.39%; DeepMath from 67.97% to 73.44%. Average pairwise task-reward disagreement was 15.94% and 11.93%, respectively. Greedy inference was not bitwise repeatable.</p>
-<p>The same 256 test tasks are reused across seeds. The <a href="experiments/rl-surrogates-2026/summary.json">paired task-bootstrap intervals</a> condition on the realized models and outputs; they exclude training-seed and inference-runtime uncertainty. Disjoint study splits do not rule out base-model pretraining exposure.</p>
+<p>These are counting weights, not fractions of gradient norm. CISPO caps weights without zeroing them; SAPO usually changes their size smoothly. This diagnostic cannot predict an entire counterfactual training run. The <a href="experiments/rl-surrogates-2026-v2/gate-audit.csv">full audit</a> includes every trained policy and DAPO clipping.</p>
 </details>
 
-<details><summary>What changed inside the updates?</summary>
-<p>Apply all three gates to the <strong>same PPO-run token probabilities</strong>. The share of nonzero-advantage, sequence-normalized token weight gated off was:</p>
-<div class="table-scroll"><table class="ptable"><thead><tr><th>PPO-run inputs</th><th>PPO</th><th>DPPO</th><th>GLM-5</th></tr></thead><tbody>
-<tr><td>Countdown</td><td>1.51%</td><td>0.38%</td><td>0.24%</td></tr>
-<tr><td>DeepMath</td><td>0.43%</td><td>0.04%</td><td>0.02%</td></tr>
-</tbody></table></div>
-<p>These are counting weights, not fractions of gradient norm. A rare token with a large ratio can matter disproportionately. Different updates then change future responses and rewards.</p>
-<ul>
-<li><strong>Zero-advantage groups were common:</strong> 27.34%–62.89% of minibatch steps had zero fresh gradient. Adam momentum can still move weights.</li>
-<li><strong>The <a href="experiments/rl-surrogates-2026/gate-audit.csv">full audit</a> includes six rules.</strong> DAPO, CISPO, and SAPO columns are diagnostics, not trained arms.</li>
-<li><strong>Guarded extremes need care:</strong> counterfactual weight columns omit log-ratio-clamp derivative saturation. The PPO traces above never activated that guard.</li>
-</ul>
-</details>
+<details><summary>Evaluation variability and conditional uncertainty</summary>
+<p><strong>GSM8K:</strong> initial evaluations of the same checkpoint span 95.12%–95.70%. Mean pairwise disagreement on individual task rewards is 0.91%. The task IDs and decoding settings match; greedy inference is not bitwise repeatable.</p>
+<p><strong>DAPO-Math:</strong> initial evaluations of the same checkpoint span 60.74%–62.50%. Mean pairwise disagreement on individual task rewards is 12.03%. The task IDs and decoding settings match; greedy inference is not bitwise repeatable.</p>
+<p>The <a href="experiments/rl-surrogates-2026-v2/summary.json">paired task-bootstrap intervals</a> condition on the realized models and decoded outputs. They exclude training-seed and inference-runtime uncertainty. Disjoint study splits also do not rule out pretraining exposure.</p></details>
+<details><summary>Three actual responses: reaching an answer within the cap</summary>
+<p>We inspected the first three zero-to-one reward transitions in GLM-5’s saved DAPO evaluation order. All three initial responses hit 4,096 tokens without a parsable final answer. The trained responses finished with independently checked answers:</p>
+<div class="table-scroll"><table class="ptable results-table"><thead><tr><th>Problem</th><th>Trained tokens</th><th>Answer</th></tr></thead><tbody>
+<tr><td>Largest three-digit prime factor of C(2000,1000)</td><td>2,967</td><td>661</td></tr>
+<tr><td>Sixth score in seven tests with integer running averages</td><td>2,025</td><td>100</td></tr>
+<tr><td>Smallest GIRLS in MATH + WITH = GIRLS</td><td>3,060</td><td>10358</td></tr>
+</tbody></table></div><p>The first answer follows from prime-factor exponents; the other two were checked by exhaustive enumeration. These <a href="experiments/rl-surrogates-2026-v2/grader-inspection-cases.json">saved traces</a> illustrate improvement within a response budget, not the frequency of any behavior across the dataset.</p></details>
 
-<details><summary>Response examples behind the scores</summary>
-<p><strong>Countdown repetition.</strong> At 256 updates, GLM-5 seed 42 scored 10.55%; 89.06% of outputs hit the cap. Its first failed evaluation response repeated <code>145/ ? = ?</code> until truncation.</p>
-<p>All three methods failed that selected task. The <a href="experiments/rl-surrogates-2026/repetition-case.json">excerpt</a> illustrates the behavior; the curves measure its broader impact. Both GLM runs continued to their scheduled endpoints.</p>
-<p><strong>DeepMath grader limits.</strong> We inspected the first three zero-to-one reward transitions in evaluation order for GLM-5 seed 42. The <a href="experiments/rl-surrogates-2026/grader-cases.json">recorded cases</a> show:</p>
-<ol>
-<li>An oscillating limit labeled 1 by the dataset; the rewarded response also boxed 1.</li>
-<li>A response using Taylor expansions despite instructions forbidding them.</li>
-<li>A baseline that derived 44 but truncated before boxing it; the trained response finished.</li>
-</ol>
-<p>No labels changed after inspection. These three cases cannot estimate the prevalence of grader errors.</p>
-</details>
 
-<details id="experiment-recipe"><summary>Training recipe and correctness checks</summary>
+<details id="experiment-recipe"><summary>Frozen recipe, data construction, and correctness checks</summary>
 <div class="table-scroll"><table class="ptable settings-table"><tbody>
-<tr><th scope="row">Engine</th><td>Miles + Fully Sharded Data Parallel (FSDP2); SGLang rollouts on the same two GPUs</td></tr>
+<tr><th scope="row">Engine</th><td>Miles, Fully Sharded Data Parallel (FSDP2) training and two SGLang engines on the same two B200s</td></tr>
+<tr><th scope="row">Collection</th><td>64 prompts × 4 responses; 16 minibatches of 16 responses, consumed once</td></tr>
 <tr><th scope="row">Precision</th><td>Bfloat16 computation; 32-bit master weights, gradient reduction, and Adam states</td></tr>
-<tr><th scope="row">Optimizer</th><td>AdamW, learning rate 10<sup>−6</sup>, zero weight decay, gradient-norm limit 1</td></tr>
-<tr><th scope="row">Objective</th><td>GRPO sample-standard-deviation normalization; sequence mean; no reference-policy or entropy penalty</td></tr>
-<tr><th scope="row">Collection</th><td>32 prompts × 4 responses; 16 minibatches of 8 responses, each consumed once</td></tr>
-<tr><th scope="row">Budget</th><td>Countdown: 32 collections / 4,096 responses. DeepMath: 28 / 3,584.</td></tr>
+<tr><th scope="row">Optimizer</th><td>AdamW, learning rate 10<sup>−6</sup>, betas 0.9/0.95, no weight decay, gradient-norm limit 1</td></tr>
+<tr><th scope="row">Objective</th><td>GRPO with sample-standard-deviation normalization; sequence mean; no reference-policy or entropy penalty</td></tr>
 <tr><th scope="row">Decoding</th><td>Training temperature 1, top-p 1; greedy evaluation every 64 updates; thinking template disabled</td></tr>
-<tr><th scope="row">Seeds</th><td>42 and 43; reset model and optimizer before every arm</td></tr>
+<tr><th scope="row">Throughput</th><td>8,192-token packing per GPU, gradient checkpointing, up to 128 inference requests per engine</td></tr>
+<tr><th scope="row">Surrogate settings</th><td>PPO 0.2/0.2; CISPO and GLM-5 0.5–5; DPPO 0.15; SAPO temperatures 1/1.05; GSPO 0.0003/0.0004</td></tr>
 </tbody></table></div>
-<p>The rollout anchor stays fixed for all 16 minibatch updates. Then weights synchronize and generation resumes. Later minibatches therefore see a changed trainer even though collection is synchronous.</p>
-<h4>Data and rewards</h4>
-<ul>
-<li><a href="https://huggingface.co/datasets/Jiayi-Pan/Countdown-Tasks-3to4">Countdown</a>: four-number puzzles, checked with a restricted parser and exact rational arithmetic.</li>
-<li><a href="https://huggingface.co/datasets/zwhe99/DeepMath-103K">DeepMath</a>: integer-answer problems from the first shard, checked against the final boxed integer.</li>
-<li>Deduplicated, disjoint pilot/training/test splits. Binary rewards; no solution traces, partial credit, or special truncation penalty.</li>
-</ul>
-<h4>Validation and protocol changes</h4>
-<ul>
-<li><strong>Full-parameter audit:</strong> Adam state covers 8,953,803,264 language-policy parameters; weights changed in all 32 decoder layers. Unused vision and multi-token-prediction components are outside these text tasks.</li>
-<li><strong>Gradient checks:</strong> analytic derivatives for six token surrogates; custom PPO matches native Miles loss and gradients on 1,000 randomized cases.</li>
-<li><strong>Numerical guard:</strong> log ratios clamp to [−20,20]. It activated only in GLM runs, where those tokens were already rejected.</li>
-<li><strong>Grader correction:</strong> a pilot exposed valid LaTeX arithmetic rejected by the parser. We fixed it, restarted from the starting checkpoint, and froze training code before the comparison.</li>
-<li><strong>Runtime adjustment:</strong> DeepMath’s timing probe led to 28 collections for every arm. Its interrupted probe is excluded; the revised schedule used runtime, not algorithm scores.</li>
-</ul>
-<h4>Trainer/inference agreement</h4>
-<p>Before minibatch updates, run-mean absolute log-probability differences averaged 0.0047–0.0124 natural-log units per response. Token-level 99.9th percentiles were 0.155–0.250. Small averages did not eliminate outliers.</p>
-<p>Countdown GLM-5 seed 43 had six differences above 5 among 4,039,764 positions, maximum 14.491. They appeared after 320 updates, after scores had fallen. Their cause remains unresolved.</p>
-<p>Runtime includes initialization, compilation, generation, evaluation, and checkpointing. Shared caches and six-rule diagnostics prevent treating these timings as a loss-kernel speed comparison.</p>
+<p>The rollout anchor remains fixed through all 16 minibatch updates, then weights synchronize. Later minibatches therefore see a changed trainer even in this synchronous recipe.</p>
+<h4>Data and grading</h4>
+<p>GSM8K uses its official train/test split, with 64 training questions reserved for pilots. DAPO’s public file repeats 17,188 unique questions across 1,791,700 rows. We remove 12 questions with conflicting labels, then reserve 64 for pilots and 1,024 for evaluation; the scheduled evaluations use 512 of those. Splits and hashes are pinned in the <a href="experiments/rl-surrogates-2026-v2/data-manifest.json">data manifest</a>.</p>
+<p>The reward accepts a final numeric <code>Answer:</code> line or boxed number, including equivalent decimals and thousands separators. A pilot exposed retained end-of-sequence markers breaking extraction; we corrected the parser before all main runs. Every recorded main-run reward replays exactly with the frozen grader.</p>
+<h4>Model and numerical checks</h4>
+<p>Every final checkpoint contains all 8,953,803,264 text-policy parameters and changed layer-normalization weights in all 32 decoder layers. Unused vision and multi-token-prediction components are outside the trained text policy. Optimizer states were omitted from saved checkpoints to reduce I/O.</p>
+<p>Before each collection’s updates, run-mean absolute trainer/inference log-probability differences are 0.0041–0.0064 natural-log units, averaging tokens within each response first. Token-level 99.9th percentiles are 0.185–0.217; the largest difference is 3.997, with 0 tokens above 5. Small averages do not imply identical engines. Optimization drift is logged separately.</p>
+<p>Analytic gradient checks cover the surrogates, and the custom PPO loss matches native Miles on randomized cases. A numerical guard clamps log ratios to [−20,20]; per-update activation is included in the records. Runtime includes setup, compilation, generation, evaluation, and checkpointing, so it is not a loss-kernel speed comparison.</p>
 </details>
-
-<div class="closing">
-<p><strong>Choose the coefficient, then test the recipe.</strong> PPO, DPPO, and GLM-5 can retain the same \(Ar\) gradient yet produce very different learning curves. The gate, response budget, and grader all matter.</p>
-<div class="artifact-links"><a href="https://github.com/simondong1/simondong1.github.io/tree/main/experiments/rl-surrogates-2026">Code &amp; reproduction ↗</a><a href="experiments/rl-surrogates-2026/endpoints.csv">Per-seed scores ↓</a><a href="experiments/rl-surrogates-2026/results.json.gz">Measured records ↓</a></div>
-</div>
-</section>
+<div class="closing"><p><strong>Choose the gradient rule, then measure the learning signal.</strong> Reward variance, response budget, and evaluation repeatability determine what this comparison can reveal.</p>
+<div class="artifact-links"><a href="https://github.com/simondong1/simondong1.github.io/tree/main/experiments/rl-surrogates-2026-v2">Code &amp; reproduction ↗</a><a href="experiments/rl-surrogates-2026-v2/endpoints.csv">Final scores ↓</a><a href="experiments/rl-surrogates-2026-v2/results.json.gz">Measured records ↓</a></div></div></section>
 <section id="references"><h2>Sources &amp; code</h2>
 <details><summary>Primary papers and pinned implementations</summary>
 <ol class="sources">
@@ -573,7 +546,7 @@ w_{\rm GLM}&amp;=r\,\mathbf1[l&lt;r&lt;u].
 <li id="ref-verl"><a href="https://github.com/verl-project/verl/blob/90714c2a2b7b3d187c92cc0ef72dfc4952a3ec8f/verl/trainer/ppo/core_algos.py">verl policy losses</a> and <a href="https://github.com/verl-project/verl/blob/90714c2a2b7b3d187c92cc0ef72dfc4952a3ec8f/verl/trainer/config/actor/actor.yaml">actor defaults</a>, pinned September 15, 2026.</li>
 <li id="ref-skyrl"><a href="https://github.com/NovaSky-AI/SkyRL/blob/58891b2f0e84240da5cc1b3b76f0b91c62b0aef9/skyrl/backends/skyrl_train/utils/ppo_utils.py">SkyRL policy losses</a>, pinned September 15, 2026. Executable operations, rather than comments alone, determine the gradients.</li>
 <li id="ref-miles"><a href="https://github.com/radixark/miles/tree/2ef603a8ca44410beaad8c1dda5bf85f2a9d2533">Miles source used for training</a>.</li>
-<li><a href="https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a">Qwen3.5-9B checkpoint</a>; <a href="https://huggingface.co/datasets/Jiayi-Pan/Countdown-Tasks-3to4">Countdown-Tasks-3to4</a>; <a href="https://huggingface.co/datasets/zwhe99/DeepMath-103K">DeepMath-103K</a>. Exact data revisions and split hashes accompany the experiment.</li>
+<li><a href="https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a">Qwen3.5-9B checkpoint</a>; <a href="https://huggingface.co/datasets/openai/gsm8k">GSM8K</a>; <a href="https://huggingface.co/datasets/BytedTsinghua-SIA/DAPO-Math-17k">DAPO-Math-17K</a>. Exact data revisions and split hashes accompany the experiment.</li>
 </ol>
 </details>
 <details><summary>How to cite this post</summary>

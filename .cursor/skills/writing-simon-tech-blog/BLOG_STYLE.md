@@ -102,6 +102,19 @@ For performance sections:
   time, traffic, or launch shape as supporting evidence.
 - Do not fabricate timing, traffic, or site analytics.
 
+For RL learning curves:
+
+- Separate sampled training reward from held-out evaluation accuracy and state
+  their decoding settings. Place training rewards at the policy version that
+  generated the responses, not the update count that will later consume them.
+- Show every scheduled evaluation. If smoothing training rewards, retain faint
+  raw values and name the smoothing window. State the number of training seeds;
+  never invent uncertainty bands for a single run.
+- Use readable mobile plots and explicit axis ranges near a task's score ceiling.
+  Keep response length, truncation and reward variance available as diagnostics.
+- Identify GRPO with PPO clipping separately from actor–critic PPO. Do not compare
+  raw loss magnitudes between different surrogate formulations.
+
 ## Site conventions
 
 Every post needs:

@@ -8,6 +8,12 @@ It compares GRPO advantages with six policy surrogates: PPO clipping, CISPO,
 GLM-5 token rejection, binary-TV DPPO, SAPO, and GSPO. All arms start from the
 same pretrained checkpoint and fresh optimizer. This is not actor–critic PPO.
 
+All twelve main jobs completed on September 16, 2026, in **5 hours 56 minutes**.
+All 89,088 recorded rewards replay exactly, and every checkpoint passes the
+full-text-policy parameter and decoder-layer checks. See the [final scores](endpoints.csv),
+[learning curves](figures/), and [measured records](results.json.gz). These are
+one-seed, short-run results, not a general algorithm ranking.
+
 ## Data
 
 - **GSM8K:** arithmetic word problems, official training and test partitions.
@@ -67,9 +73,10 @@ initial scoring pass, phase timings, and training throughput.
 TensorBoard, per-example JSONL, sampled-token training dumps, GPU telemetry
 and exact launch commands remain in `/tmp/rl-surrogate-2026-v2/runs`.
 `export_metrics.py` exports all scalar series without discarding their axes.
-The final plots will show training and held-out accuracy over updates, with
-length, entropy and clipping diagnostics alongside them. Single-seed results
-must be labeled exploratory; task uncertainty is not training-seed uncertainty.
+The figure pack shows training and held-out accuracy, truncation, and groups
+with no reward variance. The measured records also retain response length,
+entropy, gradient norms, KL, and clipping diagnostics. Single-seed results
+are exploratory; task uncertainty is not training-seed uncertainty.
 
 ## Reproduction
 
@@ -116,9 +123,9 @@ At the first DAPO pilot collection, reward was 46.1% and 51.2% of responses
 reached the 4,096-token cap, all without receiving reward. Thus the main DAPO
 study measures answer success under a short response budget, with substantial
 truncation. The cap and grader remain identical across all algorithms.
-Estimated main-queue runtime is about seven hours, bounded by the remaining
-eight-hour budget after pilots. Exact commands and code hashes are captured
-before execution; failure stops the queue for inspection.
+The pre-run estimate was about seven hours within the eight-hour budget after
+pilots; the completed main queue took 5 hours 56 minutes. Exact commands and
+code hashes were captured before execution; failure stops the queue for inspection.
 
 ## Live monitoring
 
@@ -161,3 +168,30 @@ raw TensorBoard events, per-response reward/evaluation records, GPU telemetry,
 console logs and source snapshots. Model checkpoints and training tensor dumps
 stay local. W&B's automatic host/GPU monitoring is disabled in the uploader;
 the logged GPU measurements come from the training queue.
+
+`python monitor_study.py --watch` prints queue progress every 45 seconds and
+records health snapshots in the artifact directory. It reads training logs to
+count completed updates, checks W&B freshness, and uses the queue's GPU telemetry.
+It never restarts or changes a trainer.
+
+## Results and audits
+
+After each job, `audit_completed.py` checks its saved text-policy parameter
+count, changes in all decoder layers, every recorded reward, and the tails of
+trainer/inference log-probability differences. These checks run on CPU. Main
+checkpoints omit optimizer state, so the checkpoint audit does not claim to
+inspect saved Adam moments when they are absent. `upload_audits.py` attaches
+the reports to existing W&B runs after their main log upload completes.
+
+After exporting fresh scalars with `export_metrics.py`, `collect_results.py`
+checks complete update/evaluation schedules, frozen source and data hashes,
+actual prompt-group order, and finite metrics. It produces compact measured
+records, endpoint CSVs, a gate audit, and conditional paired-task intervals.
+Its normal mode requires all twelve jobs to finish; `--allow-incomplete` is
+for explicitly labeled local previews.
+
+`make_figures.py` produces conventional learning curves in SVG, PNG and PDF,
+including mobile layouts. Training rewards use the policy version that generated
+the responses. Raw values remain visible beneath the stated smoothing window;
+held-out evaluations are unsmoothed. `write_article_results.py` renders the
+completed results for the article and refuses an incomplete study.

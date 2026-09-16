@@ -1,0 +1,355 @@
+{
+  "state": "complete",
+  "datasets": {
+    "gsm8k": {
+      "endpoints": [
+        {
+          "run": "gsm8k_ppo_s42",
+          "dataset": "gsm8k",
+          "algorithm": "ppo",
+          "seed": 42,
+          "updates": 256,
+          "baseline_accuracy": 0.953125,
+          "final_accuracy": 0.953125,
+          "best_accuracy": 0.95703125,
+          "final_truncation_fraction": 0.005859375,
+          "final_response_tokens": 190.384765625,
+          "zero_gradient_step_fraction": 0.76171875,
+          "mean_zero_variance_group_fraction": 0.9296875,
+          "conditional_gated_fraction": 0.010767124339812048,
+          "mean_behavior_approx_kl": 0.004648512704704899,
+          "mean_initial_engine_logprob_abs_diff": 0.004866774566835375,
+          "max_log_ratio_guard_fraction": 0.0,
+          "training_generated_tokens": 820742,
+          "wall_seconds": 639.0067167282104,
+          "peak_gpu_memory_gib": 151.705078125
+        },
+        {
+          "run": "gsm8k_cispo_s42",
+          "dataset": "gsm8k",
+          "algorithm": "cispo",
+          "seed": 42,
+          "updates": 256,
+          "baseline_accuracy": 0.953125,
+          "final_accuracy": 0.9375,
+          "best_accuracy": 0.955078125,
+          "final_truncation_fraction": 0.01953125,
+          "final_response_tokens": 219.412109375,
+          "zero_gradient_step_fraction": 0.68359375,
+          "mean_zero_variance_group_fraction": 0.9140625,
+          "conditional_gated_fraction": 0.0,
+          "mean_behavior_approx_kl": 0.011922896363273594,
+          "mean_initial_engine_logprob_abs_diff": 0.00486131175830451,
+          "max_log_ratio_guard_fraction": 0.0,
+          "training_generated_tokens": 868723,
+          "wall_seconds": 639.2359066009521,
+          "peak_gpu_memory_gib": 159.76953125
+        },
+        {
+          "run": "gsm8k_glm5_s42",
+          "dataset": "gsm8k",
+          "algorithm": "glm5",
+          "seed": 42,
+          "updates": 256,
+          "baseline_accuracy": 0.955078125,
+          "final_accuracy": 0.9453125,
+          "best_accuracy": 0.955078125,
+          "final_truncation_fraction": 0.009765625,
+          "final_response_tokens": 117.990234375,
+          "zero_gradient_step_fraction": 0.6953125,
+          "mean_zero_variance_group_fraction": 0.9130859375,
+          "conditional_gated_fraction": 0.017531466200585436,
+          "mean_behavior_approx_kl": 0.025303799555700834,
+          "mean_initial_engine_logprob_abs_diff": 0.005065690791070665,
+          "max_log_ratio_guard_fraction": 0.0,
+          "training_generated_tokens": 717506,
+          "wall_seconds": 598.4718492031097,
+          "peak_gpu_memory_gib": 152.65234375
+        },
+        {
+          "run": "gsm8k_dppo_s42",
+          "dataset": "gsm8k",
+          "algorithm": "dppo",
+          "seed": 42,
+          "updates": 256,
+          "baseline_accuracy": 0.953125,
+          "final_accuracy": 0.935546875,
+          "best_accuracy": 0.955078125,
+          "final_truncation_fraction": 0.0078125,
+          "final_response_tokens": 201.64453125,
+          "zero_gradient_step_fraction": 0.73828125,
+          "mean_zero_variance_group_fraction": 0.9228515625,
+          "conditional_gated_fraction": 0.003686805524092604,
+          "mean_behavior_approx_kl": 0.006534258742135535,
+          "mean_initial_engine_logprob_abs_diff": 0.004338504422776168,
+          "max_log_ratio_guard_fraction": 0.0,
+          "training_generated_tokens": 1072419,
+          "wall_seconds": 649.5232758522034,
+          "peak_gpu_memory_gib": 153.33203125
+        },
+        {
+          "run": "gsm8k_sapo_s42",
+          "dataset": "gsm8k",
+          "algorithm": "sapo",
+          "seed": 42,
+          "updates": 256,
+          "baseline_accuracy": 0.95703125,
+          "final_accuracy": 0.927734375,
+          "best_accuracy": 0.95703125,
+          "final_truncation_fraction": 0.0078125,
+          "final_response_tokens": 222.615234375,
+          "zero_gradient_step_fraction": 0.68359375,
+          "mean_zero_variance_group_fraction": 0.9052734375,
+          "conditional_gated_fraction": 0.0,
+          "mean_behavior_approx_kl": 0.02335843748326738,
+          "mean_initial_engine_logprob_abs_diff": 0.004085353722985019,
+          "max_log_ratio_guard_fraction": 0.0097881518304348,
+          "training_generated_tokens": 690257,
+          "wall_seconds": 598.5471980571747,
+          "peak_gpu_memory_gib": 160.62890625
+        },
+        {
+          "run": "gsm8k_gspo_s42",
+          "dataset": "gsm8k",
+          "algorithm": "gspo",
+          "seed": 42,
+          "updates": 256,
+          "baseline_accuracy": 0.951171875,
+          "final_accuracy": 0.94140625,
+          "best_accuracy": 0.962890625,
+          "final_truncation_fraction": 0.017578125,
+          "final_response_tokens": 294.724609375,
+          "zero_gradient_step_fraction": 0.69921875,
+          "mean_zero_variance_group_fraction": 0.908203125,
+          "conditional_gated_fraction": 0.39095744680851063,
+          "mean_behavior_approx_kl": 0.003183310848612564,
+          "mean_initial_engine_logprob_abs_diff": 0.004792902005647193,
+          "max_log_ratio_guard_fraction": 0.0,
+          "training_generated_tokens": 1084769,
+          "wall_seconds": 669.8397510051727,
+          "peak_gpu_memory_gib": 152.6484375
+        }
+      ],
+      "initial_accuracy_range": [
+        0.951171875,
+        0.95703125
+      ],
+      "mean_initial_pairwise_reward_disagreement": 0.009114583333333334,
+      "paired_vs_ppo": {
+        "cispo": {
+          "difference_vs_ppo": -0.015625,
+          "conditional_task_bootstrap_95": [
+            -0.037109375,
+            0.00390625
+          ]
+        },
+        "glm5": {
+          "difference_vs_ppo": -0.0078125,
+          "conditional_task_bootstrap_95": [
+            -0.02734375,
+            0.009765625
+          ]
+        },
+        "dppo": {
+          "difference_vs_ppo": -0.017578125,
+          "conditional_task_bootstrap_95": [
+            -0.037109375,
+            0.001953125
+          ]
+        },
+        "sapo": {
+          "difference_vs_ppo": -0.025390625,
+          "conditional_task_bootstrap_95": [
+            -0.046875,
+            -0.005859375
+          ]
+        },
+        "gspo": {
+          "difference_vs_ppo": -0.01171875,
+          "conditional_task_bootstrap_95": [
+            -0.02734375,
+            0.00390625
+          ]
+        }
+      },
+      "same_prompt_groups_verified": true
+    },
+    "dapo": {
+      "endpoints": [
+        {
+          "run": "dapo_ppo_s42",
+          "dataset": "dapo",
+          "algorithm": "ppo",
+          "seed": 42,
+          "updates": 320,
+          "baseline_accuracy": 0.609375,
+          "final_accuracy": 0.640625,
+          "best_accuracy": 0.66796875,
+          "final_truncation_fraction": 0.2890625,
+          "final_response_tokens": 2431.33984375,
+          "zero_gradient_step_fraction": 0.23125,
+          "mean_zero_variance_group_fraction": 0.709375,
+          "conditional_gated_fraction": 0.0031756307401347617,
+          "mean_behavior_approx_kl": 0.0007506174723403092,
+          "mean_initial_engine_logprob_abs_diff": 0.005186225492070662,
+          "max_log_ratio_guard_fraction": 0.0,
+          "training_generated_tokens": 13192051,
+          "wall_seconds": 2992.849595785141,
+          "peak_gpu_memory_gib": 172.708984375
+        },
+        {
+          "run": "dapo_cispo_s42",
+          "dataset": "dapo",
+          "algorithm": "cispo",
+          "seed": 42,
+          "updates": 320,
+          "baseline_accuracy": 0.625,
+          "final_accuracy": 0.712890625,
+          "best_accuracy": 0.712890625,
+          "final_truncation_fraction": 0.12890625,
+          "final_response_tokens": 2059.99609375,
+          "zero_gradient_step_fraction": 0.190625,
+          "mean_zero_variance_group_fraction": 0.6640625,
+          "conditional_gated_fraction": 0.0,
+          "mean_behavior_approx_kl": 0.0021314575925316603,
+          "mean_initial_engine_logprob_abs_diff": 0.006360751003376209,
+          "max_log_ratio_guard_fraction": 0.00022644927958026528,
+          "training_generated_tokens": 12213106,
+          "wall_seconds": 2789.9067940711975,
+          "peak_gpu_memory_gib": 173.302734375
+        },
+        {
+          "run": "dapo_glm5_s42",
+          "dataset": "dapo",
+          "algorithm": "glm5",
+          "seed": 42,
+          "updates": 320,
+          "baseline_accuracy": 0.607421875,
+          "final_accuracy": 0.734375,
+          "best_accuracy": 0.7578125,
+          "final_truncation_fraction": 0.10546875,
+          "final_response_tokens": 1867.328125,
+          "zero_gradient_step_fraction": 0.246875,
+          "mean_zero_variance_group_fraction": 0.71328125,
+          "conditional_gated_fraction": 0.0013794941082890197,
+          "mean_behavior_approx_kl": 0.003198859867097781,
+          "mean_initial_engine_logprob_abs_diff": 0.005898543699731818,
+          "max_log_ratio_guard_fraction": 0.020344501361250877,
+          "training_generated_tokens": 12846720,
+          "wall_seconds": 2871.211310863495,
+          "peak_gpu_memory_gib": 176.80859375
+        },
+        {
+          "run": "dapo_dppo_s42",
+          "dataset": "dapo",
+          "algorithm": "dppo",
+          "seed": 42,
+          "updates": 320,
+          "baseline_accuracy": 0.623046875,
+          "final_accuracy": 0.6875,
+          "best_accuracy": 0.708984375,
+          "final_truncation_fraction": 0.201171875,
+          "final_response_tokens": 2320.2265625,
+          "zero_gradient_step_fraction": 0.278125,
+          "mean_zero_variance_group_fraction": 0.73984375,
+          "conditional_gated_fraction": 0.0006665558584035142,
+          "mean_behavior_approx_kl": 0.0014204731220161192,
+          "mean_initial_engine_logprob_abs_diff": 0.005835463774565142,
+          "max_log_ratio_guard_fraction": 0.0,
+          "training_generated_tokens": 12822847,
+          "wall_seconds": 2911.814950942993,
+          "peak_gpu_memory_gib": 173.435546875
+        },
+        {
+          "run": "dapo_sapo_s42",
+          "dataset": "dapo",
+          "algorithm": "sapo",
+          "seed": 42,
+          "updates": 320,
+          "baseline_accuracy": 0.62109375,
+          "final_accuracy": 0.748046875,
+          "best_accuracy": 0.748046875,
+          "final_truncation_fraction": 0.13671875,
+          "final_response_tokens": 2129.263671875,
+          "zero_gradient_step_fraction": 0.278125,
+          "mean_zero_variance_group_fraction": 0.71171875,
+          "conditional_gated_fraction": 1.7111013462984061e-06,
+          "mean_behavior_approx_kl": 0.0017371033332437946,
+          "mean_initial_engine_logprob_abs_diff": 0.005291936323192204,
+          "max_log_ratio_guard_fraction": 0.0,
+          "training_generated_tokens": 13103619,
+          "wall_seconds": 2961.86718249321,
+          "peak_gpu_memory_gib": 173.509765625
+        },
+        {
+          "run": "dapo_gspo_s42",
+          "dataset": "dapo",
+          "algorithm": "gspo",
+          "seed": 42,
+          "updates": 320,
+          "baseline_accuracy": 0.61328125,
+          "final_accuracy": 0.685546875,
+          "best_accuracy": 0.685546875,
+          "final_truncation_fraction": 0.232421875,
+          "final_response_tokens": 2284.697265625,
+          "zero_gradient_step_fraction": 0.259375,
+          "mean_zero_variance_group_fraction": 0.709375,
+          "conditional_gated_fraction": 0.34139784946236557,
+          "mean_behavior_approx_kl": 0.0005497035568168939,
+          "mean_initial_engine_logprob_abs_diff": 0.005660346487275092,
+          "max_log_ratio_guard_fraction": 0.0,
+          "training_generated_tokens": 13423104,
+          "wall_seconds": 2992.6645805835724,
+          "peak_gpu_memory_gib": 177.841796875
+        }
+      ],
+      "initial_accuracy_range": [
+        0.607421875,
+        0.625
+      ],
+      "mean_initial_pairwise_reward_disagreement": 0.1203125,
+      "paired_vs_ppo": {
+        "cispo": {
+          "difference_vs_ppo": 0.072265625,
+          "conditional_task_bootstrap_95": [
+            0.03515625,
+            0.109375
+          ]
+        },
+        "glm5": {
+          "difference_vs_ppo": 0.09375,
+          "conditional_task_bootstrap_95": [
+            0.056640625,
+            0.1328125
+          ]
+        },
+        "dppo": {
+          "difference_vs_ppo": 0.046875,
+          "conditional_task_bootstrap_95": [
+            0.009765625,
+            0.08208007812500018
+          ]
+        },
+        "sapo": {
+          "difference_vs_ppo": 0.107421875,
+          "conditional_task_bootstrap_95": [
+            0.072265625,
+            0.142578125
+          ]
+        },
+        "gspo": {
+          "difference_vs_ppo": 0.044921875,
+          "conditional_task_bootstrap_95": [
+            0.009765625,
+            0.078125
+          ]
+        }
+      },
+      "same_prompt_groups_verified": true
+    }
+  },
+  "completed_jobs": 12,
+  "runtime_hours": 5.931857651803228,
+  "uncertainty_note": "One training seed. Task intervals condition on the realized models and decoded outputs; they do not estimate training-seed or inference-runtime variance.",
+  "gate_note": "Gated fractions use sequence-normalized weight among nonzero advantages. They are not fractions of parameter-gradient norm. CISPO caps weights without setting its gate to zero."
+}
