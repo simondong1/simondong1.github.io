@@ -1,8 +1,0 @@
-{"kind": "generation", "event": "start", "rollout_id": 32, "time": 1789520356.0243702}
-{"kind": "generation", "event": "end", "rollout_id": 32, "time": 1789520557.931519, "seconds": 201.9071488380432}
-{"kind": "generation", "event": "start", "rollout_id": 33, "time": 1789520751.9594483}
-{"kind": "generation", "event": "end", "rollout_id": 33, "time": 1789520956.7248979, "seconds": 204.76544952392578}
-{"kind": "generation", "event": "start", "rollout_id": 34, "time": 1789521113.2254307}
-{"kind": "generation", "event": "end", "rollout_id": 34, "time": 1789521305.8105335, "seconds": 192.58510279655457}
-{"kind": "generation", "event": "start", "rollout_id": 35, "time": 1789521457.8504343}
-{"kind": "generation", "event": "end", "rollout_id": 35, "time": 1789521654.0772412, "seconds": 196.22680687904358}

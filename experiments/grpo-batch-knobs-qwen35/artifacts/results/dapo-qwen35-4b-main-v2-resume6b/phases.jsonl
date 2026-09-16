@@ -1,4 +1,0 @@
-{"kind": "generation", "event": "start", "rollout_id": 92, "time": 1789542722.5108743}
-{"kind": "generation", "event": "end", "rollout_id": 92, "time": 1789542914.6612349, "seconds": 192.15036058425903}
-{"kind": "generation", "event": "start", "rollout_id": 93, "time": 1789543552.144924}
-{"kind": "generation", "event": "end", "rollout_id": 93, "time": 1789543742.9617066, "seconds": 190.8167827129364}

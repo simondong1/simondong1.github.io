@@ -1,9 +1,0 @@
-{
-  "run": "dapo-qwen35-4b-main-v2-resume8",
-  "passed": false,
-  "reason": "Generation worker lost during first rollout, before any completed rollout, training update or save",
-  "restored_samples": 100352,
-  "restored_tokens": 780349493,
-  "actual_bundle_order_verified": true,
-  "completed_batch_checks_not_possible": true
-}

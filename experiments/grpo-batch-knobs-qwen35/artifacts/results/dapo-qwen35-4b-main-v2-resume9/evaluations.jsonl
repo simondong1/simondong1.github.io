@@ -1,4 +1,0 @@
-{"time": 1789549670.687199, "rollout_id": 103, "task": "dapo", "cumulative_samples": 106496, "cumulative_output_tokens": 830898121, "accuracy": 0.853515625, "n": 512, "extra_metrics": null}
-{"time": 1789552717.9312913, "rollout_id": 111, "task": "dapo", "cumulative_samples": 114688, "cumulative_output_tokens": 900862011, "accuracy": 0.841796875, "n": 512, "extra_metrics": null}
-{"time": 1789555598.0595627, "rollout_id": 119, "task": "dapo", "cumulative_samples": 122880, "cumulative_output_tokens": 965050084, "accuracy": 0.828125, "n": 512, "extra_metrics": null}
-{"time": 1789558367.3740315, "rollout_id": 127, "task": "dapo", "cumulative_samples": 131072, "cumulative_output_tokens": 1024649671, "accuracy": 0.826171875, "n": 512, "extra_metrics": null}

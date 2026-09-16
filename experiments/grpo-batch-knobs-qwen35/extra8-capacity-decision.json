@@ -1,7 +1,0 @@
-{
-  "time": 1789549175.0757155,
-  "request": "eight-GPU generation replacement",
-  "available": false,
-  "decision": "cancel pending request and continue on twelve GPUs",
-  "current_training_interrupted": false
-}
