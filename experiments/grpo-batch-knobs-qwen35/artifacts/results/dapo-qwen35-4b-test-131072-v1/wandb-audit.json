@@ -1,0 +1,18 @@
+{
+  "name": "dapo-qwen35-4b-test-131072-v1",
+  "state": "finished",
+  "checks": [
+    {
+      "metric": "eval/dapo",
+      "expected_count": 1,
+      "found_count": 1,
+      "values_match": true,
+      "shared_count": 1,
+      "shared_values_match": true,
+      "missing_steps": [],
+      "unexpected_steps": []
+    }
+  ],
+  "all_match": true,
+  "terminal": true
+}

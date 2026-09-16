@@ -1,0 +1,59 @@
+{
+  "sources": {
+    "gsm8k": {
+      "repo": "openai/gsm8k",
+      "revision": "740312add88f781978c0658806c59bc2815b9866"
+    },
+    "dapo": {
+      "repo": "BytedTsinghua-SIA/DAPO-Math-17k",
+      "revision": "65877096c24ffa7abc4e4fa5edb95cf3413a5674"
+    }
+  },
+  "splits": {
+    "dapo": {
+      "validation": {
+        "rows": 512,
+        "file": "dapo-validation.jsonl",
+        "sha256": "bc1e1891d5c4d57b7a5cb0edf5a48742683748d9040ce07902baa9d9f440bbf3"
+      },
+      "test": {
+        "rows": 1024,
+        "file": "dapo-test.jsonl",
+        "sha256": "c91cdaa8e2cf3846347a89d1c1b7e0cb19f8e424e5c8af9bb633264cb897b360"
+      },
+      "train": {
+        "rows": 15640,
+        "file": "dapo-train.jsonl",
+        "sha256": "8e95bc3069e24a71647e8137688c9dc18335fe4990ea9136258a969a89d80dfa"
+      }
+    },
+    "gsm8k": {
+      "train": {
+        "rows": 6961,
+        "file": "gsm8k-train.jsonl",
+        "sha256": "ec45bec6a750be7b7c336e22607dddb9816e6af27f37877d2a3f3f89ca394fa5"
+      },
+      "validation": {
+        "rows": 512,
+        "file": "gsm8k-validation.jsonl",
+        "sha256": "8ce39d25b5bf62ba057974d9fd37376c8667d32a70c2a80e30d758ac8bbea7bb"
+      },
+      "test": {
+        "rows": 1319,
+        "file": "gsm8k-test.jsonl",
+        "sha256": "e31103bdcc0a8d1701318fca6b809df9f3fcdd05fbb3d855067db59c0adb08c7"
+      }
+    }
+  },
+  "dapo_deduplication": {
+    "source_rows": 1791700,
+    "unique_prompt_groups": 17188,
+    "conflicting_groups_excluded": 12,
+    "retained_unique_prompts": 17176
+  },
+  "split_seeds": {
+    "gsm8k": 1729,
+    "dapo": 20260915
+  },
+  "provenance_note": "GSM8K files are byte-identical to the previously prepared seed1729 splits. The original generic split_seed20260915 described the new DAPO split only. Prepared training files remain unchanged; ordered IDs and file hashes define reproduction."
+}

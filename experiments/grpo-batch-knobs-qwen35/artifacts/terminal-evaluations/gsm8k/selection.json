@@ -1,0 +1,9 @@
+{
+  "main": "gsm8k-qwen35-4b-main-v1",
+  "selected_responses": 98304,
+  "endpoint_responses": 131072,
+  "rule": "Best saved checkpoint or initial model on validation; ties favor earlier",
+  "selected_validation_accuracy": 0.955078125,
+  "evaluations_sha256": "2da9089e0bd8a8682c35574accd8fe6d526edd7eabdab05b6a0efde0de2b6260",
+  "test_sha256": "e31103bdcc0a8d1701318fca6b809df9f3fcdd05fbb3d855067db59c0adb08c7"
+}

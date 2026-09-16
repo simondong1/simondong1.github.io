@@ -1,0 +1,57 @@
+{
+  "run": "dapo-qwen35-4b-main-v2-resume7",
+  "resume": {
+    "rollout_id": 93,
+    "samples": 96256,
+    "tokens": 745622196,
+    "buffer_groups": 0
+  },
+  "first_rollout": 94,
+  "first_cumulative_samples": 97280,
+  "prompt_order_audit": "matches frozen dataset order, shuffle seed and restored exposure",
+  "first_generation_seconds": 132.84173202514648,
+  "training_audit": "passed",
+  "optimizer_steps": [
+    376,
+    377,
+    378,
+    379
+  ],
+  "finite_metrics": true,
+  "constant_lr": 1e-06,
+  "loads_optimizer": true,
+  "loads_rng": true,
+  "first_train_seconds": 110.4828622341156,
+  "scientific_source_checks": {
+    "study_hooks.py": true,
+    "study_data_source.py": true,
+    "study_rollout.py": true,
+    "math_rewards.py": true,
+    "runtime-pin.json": true
+  },
+  "infrastructure_source_changed": false,
+  "launcher_change": "Allocator aliases explicitly agree; expandable segments disabled only for colocated roles.",
+  "allocator": {
+    "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
+    "PYTORCH_ALLOC_CONF": "expandable_segments:True"
+  },
+  "native_offload_settings": {
+    "colocate": false,
+    "offload_train": false,
+    "offload_rollout": false,
+    "sglang_disable_piecewise_cuda_graph": false
+  },
+  "first_durable_checkpoint": {
+    "rollout_id": 94,
+    "samples": 97280,
+    "archive_seconds": 85.64367914199829,
+    "archived": true
+  },
+  "allocation": {
+    "training_gpus": 8,
+    "rollout_gpus": 8,
+    "gpu_nodes": 3,
+    "reserved_gpus": 16,
+    "colocate": false
+  }
+}

@@ -4,30 +4,30 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>How to Set the Four GRPO Batch Knobs</title>
-<meta content="A 512-response, one-update batch cut job time by 28–29% and improved mean test accuracy on two math tasks. Three-seed confirmation also exposed failures hidden by screening." name="description"/>
+<meta content="128 prompts × eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism." name="description"/>
 <meta content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" name="robots"/>
 <link href="https://simondong1.github.io/grpo-batch-knobs.html" rel="canonical"/>
 <link href="https://simondong1.github.io/feed.xml" rel="alternate" title="Simon Dong Blog" type="application/rss+xml"/>
 <link href="https://simondong1.github.io/llms.txt" rel="alternate" title="llms.txt" type="text/plain"/>
 <meta content="How to Set the Four GRPO Batch Knobs" property="og:title"/>
-<meta content="A 512-response, one-update batch cut job time by 28–29% and improved mean test accuracy on two math tasks. Three-seed confirmation also exposed failures hidden by screening." property="og:description"/>
+<meta content="128 prompts × eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism." property="og:description"/>
 <meta content="article" property="og:type"/>
 <meta content="https://simondong1.github.io/grpo-batch-knobs.html" property="og:url"/>
 <meta content="Simon Dong" property="og:site_name"/>
 <meta content="en_US" property="og:locale"/>
-<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=2" property="og:image"/>
-<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=2" property="og:image:secure_url"/>
+<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=3" property="og:image"/>
+<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=3" property="og:image:secure_url"/>
 <meta content="image/png" property="og:image:type"/>
 <meta content="1200" property="og:image:width"/>
 <meta content="630" property="og:image:height"/>
-<meta content="64 prompts with eight answers each feed one update of 512 responses; 28–29% shorter jobs in this two-task study." property="og:image:alt"/>
+<meta content="Qwen3.5-4B: 128 prompts with eight answers each supply four disjoint optimizer updates of 256 responses." property="og:image:alt"/>
 <meta content="summary_large_image" name="twitter:card"/>
 <meta content="@dongsixiang" name="twitter:site"/>
 <meta content="@dongsixiang" name="twitter:creator"/>
 <meta content="How to Set the Four GRPO Batch Knobs" name="twitter:title"/>
-<meta content="A 512-response, one-update batch cut job time by 28–29% and improved mean test accuracy on two math tasks. Three-seed confirmation also exposed failures hidden by screening." name="twitter:description"/>
-<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=2" name="twitter:image"/>
-<meta content="64 prompts with eight answers each feed one update of 512 responses; 28–29% shorter jobs in this two-task study." name="twitter:image:alt"/>
+<meta content="128 prompts × eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism." name="twitter:description"/>
+<meta content="https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=3" name="twitter:image"/>
+<meta content="Qwen3.5-4B: 128 prompts with eight answers each supply four disjoint optimizer updates of 256 responses." name="twitter:image:alt"/>
 <meta content="Simon Dong" name="author"/>
 <meta content="How to Set the Four GRPO Batch Knobs" name="citation_title"/>
 <meta content="Dong, Simon" name="citation_author"/>
@@ -37,26 +37,26 @@
   "@context": "https://schema.org",
   "@type": "TechArticle",
   "headline": "How to Set the Four GRPO Batch Knobs",
-  "description": "A 512-response, one-update batch cut job time by 28\u201329% and improved mean test accuracy on two math tasks. Three-seed confirmation also exposed failures hidden by screening.",
+  "description": "128 prompts \u00d7 eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism.",
   "author": {
     "@type": "Person",
     "name": "Simon Dong",
     "url": "https://x.com/dongsixiang"
   },
   "datePublished": "2026-09-15",
-  "dateModified": "2026-09-15",
+  "dateModified": "2026-09-16",
   "mainEntityOfPage": "https://simondong1.github.io/grpo-batch-knobs.html",
   "image": [
-    "https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=2"
+    "https://simondong1.github.io/assets/grpo-batch-knobs-og.png?v=3"
   ],
   "keywords": [
     "GRPO",
     "Miles",
+    "Qwen3.5-4B",
     "reinforcement learning",
     "batch size",
-    "rollout",
     "GSM8K",
-    "Countdown"
+    "DAPO-MATH-17K"
   ]
 }</script>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -186,30 +186,27 @@ footer a{color:var(--ink-soft)}
 @media(min-width:1300px){nav.toc{position:fixed;top:5.5rem;left:calc((100vw - 48rem)/2 - 14rem);width:12rem;max-height:calc(100vh - 7rem);overflow-y:auto;border:0;padding:0;margin:0}nav.toc ol{display:block}nav.toc li{font-size:.78rem;margin:.35rem 0}}
 @media(max-width:640px){.wrap{padding:0 1.25rem}header.hero{padding:3rem 0 2rem}h1.title{font-size:2.6rem}.subtitle{font-size:1.08rem}h2{font-size:1.6rem}h3{font-size:1.15rem}section{margin-top:3rem}section+section{padding-top:2.3rem}.takeaways{padding:1rem 0}.takeaways li{font-size:.96rem}.background-link{padding:1rem}.example,.caveat{padding:1rem}.formula{font-size:.87rem}.notation{grid-template-columns:1fr}.notation div{padding:.45rem 0}.notation dt{min-width:4rem}.reward-example{gap:.35rem}.reward-example code{font-size:.77rem}.reward-example div span{font-size:.65rem}.comparison{gap:.6rem}.comparison>div{padding-left:.6rem}.comparison strong{font-size:1.08rem}.comparison span{font-size:.74rem}table.ptable{font-size:.8rem}table.ptable th,table.ptable td{padding:.6rem .35rem}table.ptable th{font-size:.6rem;letter-spacing:.025em}.overview td:first-child{width:25%}.overview td:last-child{width:29%}.panel{padding:1rem .75rem}.controls{gap:.65rem}.controls label:last-child{flex:1 1 100%}.controls input[type=range]{width:100%}.controls button{font-size:.71rem}#gradient-plot .svg-label{font-size:13px}figcaption{font-size:.76rem}.caveat li{font-size:.88rem}.settings-table th{width:24%}.artifact-links{flex-direction:column;gap:.7rem}}
 </style>
-<style>small{font-size:.79em;color:var(--ink-soft)}.ptable td{overflow-wrap:anywhere}.ptable td:not(:first-child){overflow-wrap:normal;word-break:normal}.settings-table td:first-child{width:52%}.kb-inputs label{min-width:0}picture{display:block;max-width:100%}</style></head>
+<style>small{font-size:.79em;color:var(--ink-soft)}.ptable td{overflow-wrap:anywhere}.ptable td:not(:first-child){overflow-wrap:normal;word-break:normal}.settings-table td:first-child{width:52%}.kb-inputs label{min-width:0}picture{display:block;max-width:100%}</style><style>figure img{width:100%;max-width:100%;height:auto;display:block}figure{margin:1.6rem 0}.findings{margin-top:.6rem}select{max-width:100%}.controls select{display:block;margin-top:.4rem}</style></head>
 <body>
 <header class="hero"><div class="wrap">
 <p class="eyebrow">Reinforcement learning · Part 3</p>
 <h1 class="title">How to Set the Four GRPO Batch Knobs</h1>
-<p class="subtitle">Collecting answers and updating a model are different batch decisions. Forty-one Miles training runs test their tradeoff on two tasks.</p>
-<div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span aria-hidden="true">·</span><time datetime="2026-09-15">September 15, 2026</time></div>
+<p class="subtitle">A concrete recipe for Qwen3.5-4B: 128 prompts, eight answers each, four updates of 256 responses. Two math runs test how it learns; separate benchmarks test how to run it faster.</p>
+<div class="byline"><a class="who" href="https://x.com/dongsixiang">Simon Dong</a><span aria-hidden="true">·</span><span>Updated <time datetime="2026-09-16">September 16, 2026</time></span></div>
 </div></header>
 <main class="wrap">
-<p>For Qwen2.5-1.5B-Instruct on two B200 GPUs, the strongest shared starting recipe we confirmed was <strong>64 prompts, eight answers each, one model update using all 512 responses</strong>. It improved test accuracy and finished sooner than the small-batch baseline in all three seed pairs on both tasks. The gains include changes in training stability and answer length, not just GPU throughput.</p>
-<p><strong>Group Relative Policy Optimization (GRPO)</strong> learns by comparing rewards among several answers to the same problem. In our synchronous setup, a <strong>rollout</strong> collects those answers with one version of the model; training then uses them to update its parameters.</p>
-<a class="background-link" href="rl-surrogates-2026.html"><span class="kicker">Background · Part 2</span><strong>RL Surrogate Losses in 2026 <span aria-hidden="true">↗</span></strong><span>How advantages, probability ratios, and clipping turn rewarded answers into gradients.</span></a>
+<p><strong>Choose the optimizer batch for learning, then tune GPU packing separately.</strong> We trained the March 2026 <a href="https://huggingface.co/Qwen/Qwen3.5-4B">Qwen3.5-4B</a> model for 131,072 responses on each of GSM8K and DAPO-MATH-17K, with learning rate (LR) <code>1e-6</code>.</p>
+<p><strong>These are two learning trajectories of one recipe, not a search for the best tuple.</strong> The evidence supports the results below at this budget. It cannot establish that four updates beat one, that eight answers beat sixteen, or that another training seed would give the same result. DAPO required checkpoint recovery after several worker interruptions; its discarded work is accounted for below.</p>
+<p><strong>Group Relative Policy Optimization (GRPO)</strong> compares the rewards of several answers to the same problem. A <strong>rollout</strong> collects those answers using one version of the model; the optimizer then updates the parameters using the collected responses.</p>
+<a class="background-link" href="rl-surrogates-2026.html"><span class="kicker">Background · Part 2</span><strong>RL Losses in 2026: From PPO to SAPO ↗</strong><span>How rewards, advantages, probability ratios, and clipping produce a training gradient.</span></a>
 <nav class="toc" aria-label="Table of contents"><div class="toc-title">On this page</div><ol>
-<li><a href="#knobs">One collection, four updates</a></li>
-<li><a href="#results">The confirmation results</a></li>
-<li><a href="#screen">What the screen separated</a></li>
-<li><a href="#papers">What other recipes do</a></li>
-<li><a href="#rule">How to choose the settings</a></li>
-<li><a href="#scope">Methods and limits</a></li>
-<li><a href="#references">Sources and code</a></li>
-</ol></nav>
+<li><a href="#knobs">One collection, four updates</a></li><li><a href="#learning">What the two runs learned</a></li>
+<li><a href="#hardware">How GPUs changed the time</a></li><li><a href="#papers">What the papers actually use</a></li>
+<li><a href="#recipe">How to choose the settings</a></li><li><a href="#methods">Methods and limits</a></li>
+<li><a href="#references">Sources and reproduction</a></li></ol></nav>
 
 <section id="knobs"><h2>One collection, four updates</h2>
-<p>Generate eight answers to each of 64 problems. You now have 512 training responses. This example keeps those responses fixed and asks how to consume them: four updates of 128, or one update of 512.</p>
+<p>Generate eight answers to each of 128 problems. You now have 1,024 training responses. This example keeps those responses fixed and asks how to consume them: four updates of 256, or one update of 1,024.</p>
 <div class="table-scroll"><table class="ptable settings-table"><thead><tr><th>Miles setting</th><th>Symbol</th><th>Unit</th></tr></thead><tbody>
 <tr><td><code>--rollout-batch-size</code></td><td>\(P\)</td><td>Prompts per collection</td></tr>
 <tr><td><code>--n-samples-per-prompt</code></td><td>\(G\)</td><td>Responses per prompt</td></tr>
@@ -220,33 +217,33 @@ footer a{color:var(--ink-soft)}
 <div class="formula featured">\[ P\times G=B\times S. \]</div>
 <p><strong>More inner steps partition the collection; they do not replay it.</strong> Each slice produces an accumulated gradient and an Adam optimizer update. The generator receives new weights only after all the slices finish. Later slices therefore train a model that has already moved away from the version that generated them.</p>
 <div class="panel" id="batch-calculator">
-  <p class="panel-title">Choose three batch settings</p>
-  <p class="panel-sub">The fourth must make every generated response fit into exactly one optimizer update.</p>
-  <div class="controls">
-    <label>Calculate
-      <select id="kb-derived" aria-label="Setting to calculate">
-        <option value="steps">S: updates per rollout</option>
-        <option value="batch">B: responses per update</option>
-        <option value="prompts">P: prompts per rollout</option>
-        <option value="group">G: responses per prompt</option>
-      </select>
-    </label>
-  </div>
-  <div class="controls kb-inputs">
-    <label>P · prompts<input id="kb-prompts" type="number" min="1" step="1" value="64"></label>
-    <label>G · responses / prompt<input id="kb-group" type="number" min="1" step="1" value="8"></label>
-    <label>B · responses / update<input id="kb-batch" type="number" min="1" step="1" value="128"></label>
-    <label>S · updates / rollout<input id="kb-steps" type="number" min="1" step="1" value="4" disabled></label>
-  </div>
-  <div class="controls" aria-label="Batch presets">
-    <button type="button" data-kb-preset="16,8,128,1">One small update</button>
-    <button type="button" data-kb-preset="64,8,128,4">Four disjoint updates</button>
-    <button type="button" data-kb-preset="64,8,512,1">One large update</button>
-    <button type="button" data-kb-preset="512,16,512,16">R1 / DAPO batch shape</button>
-  </div>
-  <p class="readout" id="kb-result" aria-live="polite"></p>
-  <div id="kb-slices" class="kb-slices" aria-label="Responses consumed by each optimizer update"></div>
-  <p class="note" id="kb-note">Generation uses one weight snapshot. Training publishes new weights after all these updates.</p>
+<p class="panel-title">Choose three batch settings</p>
+<p class="panel-sub">The fourth must make every generated response fit into exactly one optimizer update.</p>
+<div class="controls">
+<label>Calculate
+      <select aria-label="Setting to calculate" id="kb-derived">
+<option value="steps">S: updates per rollout</option>
+<option value="batch">B: responses per update</option>
+<option value="prompts">P: prompts per rollout</option>
+<option value="group">G: responses per prompt</option>
+</select>
+</label>
+</div>
+<div class="controls kb-inputs">
+<label>P · prompts<input id="kb-prompts" min="1" step="1" type="number" value="128"/></label>
+<label>G · responses / prompt<input id="kb-group" min="1" step="1" type="number" value="8"/></label>
+<label>B · responses / update<input id="kb-batch" min="1" step="1" type="number" value="256"/></label>
+<label>S · updates / rollout<input disabled="" id="kb-steps" min="1" step="1" type="number" value="4"/></label>
+</div>
+<div aria-label="Batch presets" class="controls">
+<button data-kb-preset="32,8,256,1" type="button">One small update</button>
+<button data-kb-preset="128,8,256,4" type="button">Our four-update recipe</button>
+<button data-kb-preset="128,8,1024,1" type="button">One large update</button>
+<button data-kb-preset="512,16,512,16" type="button">R1 / DAPO batch shape</button>
+</div>
+<p aria-live="polite" class="readout" id="kb-result"></p>
+<div aria-label="Responses consumed by each optimizer update" class="kb-slices" id="kb-slices"></div>
+<p class="note" id="kb-note">Generation uses one weight snapshot. Training publishes new weights after all these updates.</p>
 <p class="note">The diagram shows slice sizes. Token balancing can reorder actual responses, and group members need not stay in the same update.</p>
 </div>
 <style>
@@ -306,7 +303,6 @@ footer a{color:var(--ink-soft)}
   update();
 })();
 </script>
-
 <p><strong>Fixing group size still leaves two independent choices:</strong> how many prompts to collect, and how many responses to use per optimizer update. The number of updates follows. If the optimizer batch is fixed too, a larger collection necessarily means more inner updates.</p>
 <p>A <strong>microbatch</strong> is the part processed at once before gradients are accumulated. Tune <code>--micro-batch-size</code> or <code>--max-tokens-per-gpu</code> for GPU memory and throughput. That preserves the intended optimizer batch, apart from numerical effects. Increasing <code>--global-batch-size</code> changes the learning algorithm.</p>
 <details><summary>Miles implementation boundaries</summary>
@@ -315,119 +311,123 @@ footer a{color:var(--ink-soft)}
 <p>With one answer per prompt, Miles disables division by the group standard deviation. Group centering subtracts the average reward; with one answer, it subtracts that answer’s reward from itself, yielding zero policy advantage. A one-answer algorithm needs a different baseline or objective.</p>
 </details></section>
 
-<section id="results"><h2>The confirmation results</h2>
-<p>We trained Qwen2.5-1.5B-Instruct on two tasks: GSM8K word problems and Countdown arithmetic expressions that must use every supplied number once. Each run used two NVIDIA B200 GPUs, one for training and one for the SGLang inference engine, updating all model parameters in bfloat16 (BF16) precision.</p>
-<p>Twenty-two single-seed runs screened the batch choices. One additional Countdown run checked learning-rate sensitivity. We then froze three recipes per task and trained each with <strong>three fresh seeds and 32,768 responses</strong>. Validation problems supplied learning curves; separate held-out test problems evaluated the final checkpoints. In the charts and tables, LR means learning rate, the optimizer’s step-size setting. Confirmation used a base rate of 3e-6; the retuned GSM8K recipe multiplies it by √2.</p>
-<p>The baseline collects 16 prompts × eight answers and performs one update of 128 responses. Alternatives collect 512 responses and vary how training consumes them. We estimate test uncertainty by resampling the same problems jointly across the three trained models; these intervals do not capture uncertainty over every possible training seed.</p>
-<figure><picture><source media="(max-width:600px)" srcset="assets/grpo-batch-knobs-gsm8k-time-mobile.svg"><img src="assets/grpo-batch-knobs-gsm8k-time.svg" alt="GSM8K validation accuracy across three selected batch recipes." loading="lazy"></picture><figcaption>GSM8K: each dot averages three runs at the same cumulative number of training responses. Its horizontal position is mean elapsed job time through that validation. Vertical lines show observed seed ranges. Initialization and intermediate evaluations are included. Final job totals are below.</figcaption></figure>
-<ul class="findings"><li><strong>One large update improved accuracy and time.</strong> Mean test accuracy rose from 74.88% to 77.94%, while full job time fell from 25.57 to 18.39 minutes, a 28.1% reduction. All three paired seeds improved on both measures.</li><li><strong>The retuned two-update recipe did not hold up.</strong> It averaged 73.59% test accuracy; seed 3 ended at 67.93%. Its 17.88-minute mean job saved only about half a minute versus the large one-update recipe.</li><li><strong>Runtime includes stability and length changes.</strong> Baseline seed 3 scored zero on two intermediate validation checks before recovering; 24.42% of its training responses hit the length cap. Yet in seed 1, the large batch generated 10.11 million output tokens versus 7.52 million and still finished 22.3% sooner.</li></ul>
-<div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Recipe</th><th scope="col">Test mean / seed range</th><th scope="col">Job min</th></tr></thead><tbody><tr><td>Small one-update baseline<br><small>P16 · G8 · B128 · S1; LR 3e-06</small></td><td>74.88%<br><small>74.00–76.57%</small></td><td>25.57</td></tr><tr><td>Large one-update batch<br><small>P64 · G8 · B512 · S1; LR 3e-06</small></td><td>77.94%<br><small>77.33–78.92%</small></td><td>18.39</td></tr><tr><td>Two updates, retuned LR<br><small>P64 · G8 · B256 · S2; LR 4.24e-06</small></td><td>73.59%<br><small>67.93–77.48%</small></td><td>17.88</td></tr></tbody></table></div>
-<p class="note">1,319 held-out GSM8K test problems; initial model 72.71%. Job time is the mean complete training job, including validation and checkpoint saving. Separate terminal test jobs are excluded.</p>
-<figure><picture><source media="(max-width:600px)" srcset="assets/grpo-batch-knobs-countdown-time-mobile.svg"><img src="assets/grpo-batch-knobs-countdown-time.svg" alt="Countdown validation accuracy across three selected batch recipes." loading="lazy"></picture><figcaption>Countdown: each dot averages three runs at the same cumulative number of training responses. Its horizontal position is mean elapsed job time through that validation. Vertical lines show observed seed ranges. Initialization and intermediate evaluations are included. Final job totals are below.</figcaption></figure>
-<ul class="findings"><li><strong>The large one-update recipe transferred.</strong> Mean test accuracy rose from 9.73% to 21.58%, while full job time fell from 19.31 to 13.68 minutes, a 29.2% reduction. All three paired seeds improved; their time reductions ranged from 9.1% to 48.5%.</li><li><strong>Baseline collapse enlarges the mean gap.</strong> Seed 1 reached 28.32% validation accuracy at 8,192 responses, then fell to zero by 16,384 and ended at zero on test. Inspected outputs contained long, incorrect arithmetic and altered operands; the <a href="experiments/grpo-batch-knobs/final-outcome-audit.json">saved-output audit</a> documents the checks. The other baseline test scores were 11.91% and 17.29%.</li><li><strong>Four answers per prompt remained competitive.</strong> That recipe averaged 20.25% on test in 13.73 minutes. The large one-update recipe was 1.33 percentage points higher on average, but their ranking reversed in one of three seed pairs; the paired uncertainty interval includes zero.</li></ul>
-<div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Recipe</th><th scope="col">Test mean / seed range</th><th scope="col">Job min</th></tr></thead><tbody><tr><td>Small one-update baseline<br><small>P16 · G8 · B128 · S1; LR 3e-06</small></td><td>9.73%<br><small>0.00–17.29%</small></td><td>19.31</td></tr><tr><td>Large one-update batch<br><small>P64 · G8 · B512 · S1; LR 3e-06</small></td><td>21.58%<br><small>18.36–24.61%</small></td><td>13.68</td></tr><tr><td>Four answers, four updates<br><small>P128 · G4 · B128 · S4; LR 3e-06</small></td><td>20.25%<br><small>19.63–20.80%</small></td><td>13.73</td></tr></tbody></table></div>
-<p class="note">1,024 held-out Countdown test problems; initial model 1.27%. Job time is the mean complete training job, including validation and checkpoint saving. Separate terminal test jobs are excluded.</p>
-<p>These are comparisons against a specified learning rate, not against an independently optimized baseline. A one-seed control with a lower learning rate improved Countdown’s small-batch screening result; it was not confirmed across fresh seeds. The time gains also include changes in response length and training stability.</p>
-<details><summary>Accuracy versus responses, active phase time, and seed uncertainty</summary>
-<figure><picture><source media="(max-width:600px)" srcset="assets/grpo-batch-knobs-gsm8k-samples-mobile.svg"><img src="assets/grpo-batch-knobs-gsm8k-samples.svg" alt="GSM8K validation accuracy across three selected batch recipes." loading="lazy"></picture><figcaption>GSM8K: mean validation accuracy across three fresh seeds at equal generated responses. Lines show the measured training trajectory; vertical bars are observed seed ranges.</figcaption></figure>
-<ul class="findings"><li><strong>Large one-update batch had the highest mean validation endpoint.</strong> At 32,768 responses it reached 87.83%. Seed ranges and held-out test results qualify that point estimate.</li></ul>
-<p>GSM8K curves by <a href="assets/grpo-batch-knobs-gsm8k-active-time.svg">active phase time</a>, <a href="assets/grpo-batch-knobs-gsm8k-tokens.svg">generated output tokens</a>, and <a href="assets/grpo-batch-knobs-gsm8k-updates.svg">optimizer updates</a>. Equal update counts use different amounts of data when optimizer batches differ.</p>
-<figure><picture><source media="(max-width:600px)" srcset="assets/grpo-batch-knobs-countdown-samples-mobile.svg"><img src="assets/grpo-batch-knobs-countdown-samples.svg" alt="Countdown validation accuracy across three selected batch recipes." loading="lazy"></picture><figcaption>Countdown: mean validation accuracy across three fresh seeds at equal generated responses. Lines show the measured training trajectory; vertical bars are observed seed ranges.</figcaption></figure>
-<ul class="findings"><li><strong>Large one-update batch had the highest mean validation endpoint.</strong> At 32,768 responses it reached 22.27%. Seed ranges and held-out test results qualify that point estimate.</li></ul>
-<p>Countdown curves by <a href="assets/grpo-batch-knobs-countdown-active-time.svg">active phase time</a>, <a href="assets/grpo-batch-knobs-countdown-tokens.svg">generated output tokens</a>, and <a href="assets/grpo-batch-knobs-countdown-updates.svg">optimizer updates</a>. Equal update counts use different amounts of data when optimizer batches differ.</p>
-<p>“Active phase time” adds measured generation, trainer work including old-policy scoring, and recorded weight synchronization. It excludes initialization, evaluation, and uninstrumented orchestration. Complete job time includes those costs and the final checkpoint save; terminal test evaluation is a separate job.</p>
-<p>Chart dots average the three trained seeds; vertical lines show their observed range. The paired test intervals resample problem IDs jointly across seeds. They measure prompt uncertainty <em>conditional on these three trained models</em>, not uncertainty over all possible training runs. Differences in the tables are percentage points (pp).</p>
-<h3>GSM8K: individual runs</h3><div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Recipe</th><th scope="col">Seed</th><th scope="col">Val</th><th scope="col">Test</th><th scope="col">Phase min</th><th scope="col">Job min</th></tr></thead><tbody><tr><td>Small one-update baseline</td><td>1</td><td>81.64%</td><td>74.00%</td><td>18.17</td><td>23.77</td></tr><tr><td>Small one-update baseline</td><td>2</td><td>83.98%</td><td>74.07%</td><td>19.08</td><td>24.22</td></tr><tr><td>Small one-update baseline</td><td>3</td><td>83.59%</td><td>76.57%</td><td>22.94</td><td>28.72</td></tr><tr><td>Large one-update batch</td><td>1</td><td>88.28%</td><td>77.56%</td><td>14.95</td><td>18.47</td></tr><tr><td>Large one-update batch</td><td>2</td><td>86.52%</td><td>77.33%</td><td>14.85</td><td>18.32</td></tr><tr><td>Large one-update batch</td><td>3</td><td>88.67%</td><td>78.92%</td><td>14.88</td><td>18.38</td></tr><tr><td>Two updates, retuned LR</td><td>1</td><td>84.38%</td><td>75.36%</td><td>14.47</td><td>17.88</td></tr><tr><td>Two updates, retuned LR</td><td>2</td><td>84.77%</td><td>77.48%</td><td>14.22</td><td>17.73</td></tr><tr><td>Two updates, retuned LR</td><td>3</td><td>80.66%</td><td>67.93%</td><td>14.54</td><td>18.02</td></tr></tbody></table></div>
-<div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Comparison</th><th scope="col">Mean pp</th><th scope="col">Conditional 95% interval</th><th scope="col">Seed differences pp</th></tr></thead><tbody><tr><td>Large one-update batch versus baseline</td><td>+3.06</td><td>[+1.69, +4.47]</td><td>+3.56, +3.26, +2.35</td></tr><tr><td>Two updates, retuned LR versus baseline</td><td>-1.29</td><td>[-2.60, +0.00]</td><td>+1.36, +3.41, -8.64</td></tr><tr><td>Two updates, retuned LR versus Large one-update batch</td><td>-4.35</td><td>[-5.64, -3.06]</td><td>-2.20, +0.15, -10.99</td></tr></tbody></table></div>
-<div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Recipe</th><th scope="col">Generate min</th><th scope="col">Trainer min</th><th scope="col">Sync min</th><th scope="col">Other min</th><th scope="col">Output<br>million tokens</th></tr></thead><tbody><tr><td>Small one-update baseline</td><td>11.78</td><td>7.68</td><td>0.61</td><td>5.50</td><td>10.21</td></tr><tr><td>Large one-update batch</td><td>7.79</td><td>6.92</td><td>0.19</td><td>3.50</td><td>9.78</td></tr><tr><td>Two updates, retuned LR</td><td>7.60</td><td>6.62</td><td>0.19</td><td>3.47</td><td>8.67</td></tr></tbody></table></div>
-<p class="note">Three-seed means. “Other” is full job time minus the recorded phases: it includes initialization, validation, checkpoint saving, and orchestration. Different learned response lengths change the generated work.</p>
-<p>GSM8K terminal-test truncation ranged from 0.00% to 1.14% across the nine runs, under the common 1,024-token cap. Per-run test lengths and truncation are in the summary.</p>
-<h3>Countdown: individual runs</h3><div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Recipe</th><th scope="col">Seed</th><th scope="col">Val</th><th scope="col">Test</th><th scope="col">Phase min</th><th scope="col">Job min</th></tr></thead><tbody><tr><td>Small one-update baseline</td><td>1</td><td>0.00%</td><td>0.00%</td><td>21.14</td><td>26.49</td></tr><tr><td>Small one-update baseline</td><td>2</td><td>12.89%</td><td>11.91%</td><td>11.47</td><td>16.32</td></tr><tr><td>Small one-update baseline</td><td>3</td><td>14.84%</td><td>17.29%</td><td>10.28</td><td>15.12</td></tr><tr><td>Large one-update batch</td><td>1</td><td>23.83%</td><td>24.61%</td><td>10.44</td><td>13.65</td></tr><tr><td>Large one-update batch</td><td>2</td><td>23.44%</td><td>21.78%</td><td>10.40</td><td>13.64</td></tr><tr><td>Large one-update batch</td><td>3</td><td>19.53%</td><td>18.36%</td><td>10.37</td><td>13.74</td></tr><tr><td>Four answers, four updates</td><td>1</td><td>18.75%</td><td>20.80%</td><td>10.47</td><td>13.70</td></tr><tr><td>Four answers, four updates</td><td>2</td><td>21.48%</td><td>20.31%</td><td>10.47</td><td>13.79</td></tr><tr><td>Four answers, four updates</td><td>3</td><td>20.51%</td><td>19.63%</td><td>10.38</td><td>13.70</td></tr></tbody></table></div>
-<div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Comparison</th><th scope="col">Mean pp</th><th scope="col">Conditional 95% interval</th><th scope="col">Seed differences pp</th></tr></thead><tbody><tr><td>Large one-update batch versus baseline</td><td>+11.85</td><td>[+10.32, +13.38]</td><td>+24.61, +9.86, +1.07</td></tr><tr><td>Four answers, four updates versus baseline</td><td>+10.51</td><td>[+9.05, +12.04]</td><td>+20.80, +8.40, +2.34</td></tr><tr><td>Four answers, four updates versus Large one-update batch</td><td>-1.33</td><td>[-2.87, +0.20]</td><td>-3.81, -1.46, +1.27</td></tr></tbody></table></div>
-<div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Recipe</th><th scope="col">Generate min</th><th scope="col">Trainer min</th><th scope="col">Sync min</th><th scope="col">Other min</th><th scope="col">Output<br>million tokens</th></tr></thead><tbody><tr><td>Small one-update baseline</td><td>8.38</td><td>5.31</td><td>0.61</td><td>5.01</td><td>3.87</td></tr><tr><td>Large one-update batch</td><td>6.57</td><td>3.65</td><td>0.19</td><td>3.27</td><td>0.60</td></tr><tr><td>Four answers, four updates</td><td>6.56</td><td>3.69</td><td>0.19</td><td>3.29</td><td>0.61</td></tr></tbody></table></div>
-<p class="note">Three-seed means. “Other” is full job time minus the recorded phases: it includes initialization, validation, checkpoint saving, and orchestration. Different learned response lengths change the generated work.</p>
-<p>Countdown terminal-test truncation ranged from 0.00% to 0.29% across the nine runs, under the common 1,024-token cap. Per-run test lengths and truncation are in the summary.</p>
-<p>Evaluation occurred every 4,096 training responses. Time-to-target is therefore an observation bracket, not an exact crossing time. Targets were fixed before screening: 88.59375% and 93.59375% for GSM8K; 5.78125% and 10.78125% for Countdown. All three large one-update GSM8K runs reached the lower target at a scheduled evaluation; neither other recipe did. No GSM8K confirmation run reached the higher target. Every Countdown confirmation run passed both targets by the first 4,096-response evaluation, so first crossing alone misses the later collapse. Unreached targets remain censored in the <a href="experiments/grpo-batch-knobs/summary.json">full summary</a>.</p>
-</details></section>
+<section id="learning"><h2>What the two runs learned</h2>
+<p>Each task's retained training path contains <strong>128 rollouts and 512 Adam updates</strong>. Every rollout supplied 1,024 fresh training responses, consumed once in four disjoint batches. We evaluated 512 validation questions before training and after every 8,192 responses.</p>
+<p>The table reports the fixed-budget endpoint on held-out test questions. The initial model and endpoint each answer every question once using greedy decoding and the same 16,384-token response cap. Changes are in percentage points (pp).</p>
+<p>We also keep a <strong>validation-selected checkpoint</strong>: the best of five predeclared candidates according to validation accuracy. Test results never determine that choice.</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Test task</th><th>Initial</th><th>Endpoint</th><th>Change, 95% interval</th></tr></thead><tbody>
 
-<section id="screen"><h2>What the screen separated</h2>
-<p>Each screening run generated 16,384 responses. The grid separates three questions: collecting more at a fixed optimizer batch, changing the optimizer batch inside a fixed collection, and distributing a fixed response budget over more or fewer prompts.</p>
-<figure><picture><source media="(max-width:600px)" srcset="assets/grpo-batch-knobs-screen-time-mobile.svg"><img src="assets/grpo-batch-knobs-screen-time.svg" alt="Screening job time versus 128, 256, 512, and 1024 responses per collection for GSM8K and Countdown." loading="lazy"></picture><figcaption>One screening seed, including initialization and validation. Group size stays eight and optimizer batch stays 128. Every point performs 128 optimizer updates. Response lengths change with the learned policy, so this is an end-to-end training measurement, not a fixed-token decoding benchmark.</figcaption></figure>
-<ul class="findings">
-<li><strong>The smallest collection paid a time penalty.</strong> GSM8K took 13.63 minutes at 128 responses per collection, versus 9.25–9.93 minutes at 256–1,024. Countdown fell from 8.55 minutes to a minimum of 7.56 at 512.</li>
-<li><strong>The fastest point was not always the better learner.</strong> GSM8K’s 256-response collection ended at 84.57% validation accuracy, below the 86.52% small-collection baseline. Doubling Countdown’s collection from 512 to 1,024 was slightly slower.</li>
-</ul>
-<p>Generation concurrency was capped at 512 active requests in every arm; this screen does not locate an unconstrained hardware optimum. At a fixed 512-response collection, changing the optimizer batch produced much smaller runtime differences. It still changed learning. A square-root learning-rate increase also failed to help consistently: GSM8K’s one-update batch ended at 88.28% with learning rate 3e-6 and 85.35% at 6e-6. These are screening observations, not multi-seed rankings.</p>
-<h3>More answers per prompt are not free</h3>
-<p>A group with both correct and incorrect answers supplies a relative reward signal. Subtracting the group’s mean reward leaves an all-equal group with zero learning signal. For one fixed problem, if independent answers succeed with probability \(p\), a group of size \(G\) has mixed rewards with probability:</p>
-<div class="formula">\[ 1-p^G-(1-p)^G. \]</div>
-<p>Larger groups raise that chance at fixed \(p\), but spend more of the response budget on each problem. In this screen, group sizes 4, 8, 16, and 32 exposed 4,096, 2,048, 1,024, and 512 prompts respectively. Actual mixed-group rates also depend on how the policy learns; the formula alone cannot choose the group size.</p>
-<p>The comparison also changes the scale of normalized advantages: Miles uses the sample standard deviation, whose correction depends on group size. These runs test the resulting recipes; they do not isolate prompt coverage alone.</p>
-<div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Answers / prompt</th><th scope="col">Prompts seen</th><th scope="col">GSM8K</th><th scope="col">Countdown</th></tr></thead><tbody><tr><td>4</td><td>4,096</td><td>31.4% mixed<br>85.94% accuracy</td><td>14.4% mixed<br>24.22% accuracy</td></tr><tr><td>8</td><td>2,048</td><td>42.4% mixed<br>86.13% accuracy</td><td>20.5% mixed<br>22.85% accuracy</td></tr><tr><td>16</td><td>1,024</td><td>58.4% mixed<br>87.89% accuracy</td><td>35.9% mixed<br>25.00% accuracy</td></tr><tr><td>32</td><td>512</td><td>64.5% mixed<br>85.74% accuracy</td><td>24.6% mixed<br>11.91% accuracy</td></tr></tbody></table></div><p class="note">One screening seed. “Mixed” averages the fraction of groups with unequal rewards across rollouts; accuracy is the final validation score. All four rows collect 512 responses and train four updates of 128.</p>
-<p>The group-32 arm did not win either task. That does not establish that large groups are bad: it establishes that their extra repeats were not a free improvement under this fixed response budget. Only Countdown’s group-4 recipe received fresh-seed confirmation; the other group comparisons remain exploratory.</p>
-<details><summary>All screening results and why these candidates were selected</summary>
-<p>GSM8K’s one-update batch had the highest endpoint. The retuned two-update recipe tied group 16’s endpoint, with better average accuracy along the sample-indexed curve. Countdown’s group-4 recipe had the best average accuracy along that curve and the shortest job. Group 16 finished four validation questions higher, but had a lower curve average.</p>
-<p>We also retained the unchanged-LR, one-update batch on Countdown to compare that distinct update family and test an identical recipe across both tasks. It was not the second-highest endpoint arm. This was a declared validation-based choice, not a mechanical ranking of the top two endpoints; <a href="experiments/grpo-batch-knobs/selection.json">selection.json</a> records the alternatives before any test evaluation.</p>
-<h3>GSM8K: screening</h3><div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Recipe</th><th scope="col">Final val</th><th scope="col">Curve avg</th><th scope="col">Job min</th></tr></thead><tbody><tr><td>onpolicy-small<br><small>P16 · G8 · B128 · S1; LR 3e-06</small></td><td>86.52%</td><td>86.35%</td><td>13.63</td></tr><tr><td>batch-256<br><small>P64 · G8 · B256 · S2; LR 3e-06</small></td><td>86.33%</td><td>87.21%</td><td>9.92</td></tr><tr><td>batch-256-sqrt<br><small>P64 · G8 · B256 · S2; LR 4.24e-06</small></td><td>87.89%</td><td>86.99%</td><td>9.75</td></tr><tr><td>group-16<br><small>P32 · G16 · B128 · S4; LR 3e-06</small></td><td>87.89%</td><td>86.11%</td><td>9.84</td></tr><tr><td>group-32<br><small>P16 · G32 · B128 · S4; LR 3e-06</small></td><td>85.74%</td><td>85.96%</td><td>9.89</td></tr><tr><td>group-4<br><small>P128 · G4 · B128 · S4; LR 3e-06</small></td><td>85.94%</td><td>86.72%</td><td>9.72</td></tr><tr><td>onpolicy-large<br><small>P64 · G8 · B512 · S1; LR 3e-06</small></td><td>88.28%</td><td>85.47%</td><td>10.01</td></tr><tr><td>onpolicy-large-sqrt<br><small>P64 · G8 · B512 · S1; LR 6e-06</small></td><td>85.35%</td><td>86.33%</td><td>10.00</td></tr><tr><td>split-2<br><small>P32 · G8 · B128 · S2; LR 3e-06</small></td><td>84.57%</td><td>84.23%</td><td>9.25</td></tr><tr><td>split-4<br><small>P64 · G8 · B128 · S4; LR 3e-06</small></td><td>86.13%</td><td>85.86%</td><td>9.93</td></tr><tr><td>split-8<br><small>P128 · G8 · B128 · S8; LR 3e-06</small></td><td>86.33%</td><td>85.79%</td><td>9.76</td></tr></tbody></table></div>
-<h3>Countdown: screening</h3><div class="table-scroll"><table class="ptable"><thead><tr><th scope="col">Recipe</th><th scope="col">Final val</th><th scope="col">Curve avg</th><th scope="col">Job min</th></tr></thead><tbody><tr><td>onpolicy-small<br><small>P16 · G8 · B128 · S1; LR 3e-06</small></td><td>13.28%</td><td>13.92%</td><td>8.55</td></tr><tr><td>batch-256<br><small>P64 · G8 · B256 · S2; LR 3e-06</small></td><td>16.99%</td><td>15.65%</td><td>7.59</td></tr><tr><td>batch-256-sqrt<br><small>P64 · G8 · B256 · S2; LR 4.24e-06</small></td><td>19.73%</td><td>16.43%</td><td>7.64</td></tr><tr><td>group-16<br><small>P32 · G16 · B128 · S4; LR 3e-06</small></td><td>25.00%</td><td>16.46%</td><td>7.55</td></tr><tr><td>group-32<br><small>P16 · G32 · B128 · S4; LR 3e-06</small></td><td>11.91%</td><td>9.84%</td><td>7.56</td></tr><tr><td>group-4<br><small>P128 · G4 · B128 · S4; LR 3e-06</small></td><td>24.22%</td><td>18.92%</td><td>7.46</td></tr><tr><td>onpolicy-large<br><small>P64 · G8 · B512 · S1; LR 3e-06</small></td><td>22.85%</td><td>15.70%</td><td>7.61</td></tr><tr><td>onpolicy-large-sqrt<br><small>P64 · G8 · B512 · S1; LR 6e-06</small></td><td>23.44%</td><td>15.60%</td><td>7.58</td></tr><tr><td>split-2<br><small>P32 · G8 · B128 · S2; LR 3e-06</small></td><td>16.99%</td><td>15.55%</td><td>7.93</td></tr><tr><td>split-4<br><small>P64 · G8 · B128 · S4; LR 3e-06</small></td><td>22.85%</td><td>16.60%</td><td>7.56</td></tr><tr><td>split-8<br><small>P128 · G8 · B128 · S8; LR 3e-06</small></td><td>22.46%</td><td>18.31%</td><td>7.80</td></tr></tbody></table></div>
-<p class="note">Curve average is trapezoidal accuracy area divided by the 16,384-response budget, using the five measured validation points. It summarizes early and late learning together.</p>
-<p>The separate learning-rate control kept the small-batch Countdown shape fixed and lowered learning rate from 3e-6 to 1e-6. Its endpoint improved from 13.28% to 19.34%, at 8.96 minutes. It remained below the selected candidates and was not confirmed across fresh seeds. The control shows why a gap against one baseline learning rate cannot be attributed entirely to batching.</p>
-</details></section>
+<tr><td>GSM8K<br><small>1319 questions</small></td><td>93.48%</td><td>95.15%</td><td>+1.67 pp<br><small>[+0.30 pp, +3.03 pp]</small></td></tr>
 
-<section id="papers"><h2>What other recipes do</h2>
-<p>The primary sources support several workable regimes. An algorithm name does not specify a universal optimizer batch or group size.</p>
-<div class="table-scroll"><table class="ptable"><thead><tr><th>Source</th><th>Reported batching</th><th>What transfers</th></tr></thead><tbody>
-<tr><td><a href="#ref-r1">DeepSeek-R1</a></td><td>8,192 responses → 16 disjoint updates of 512; learning rate 3e-6</td><td>A large collection need not imply a large optimizer batch.</td></tr>
-<tr><td><a href="#ref-dapo">DAPO</a></td><td>512 prompts × 16 responses; 16 updates of 512 after filtering; learning rate 1e-6</td><td>Count retained responses, and account separately for filtering and its loss.</td></tr>
-<tr><td><a href="#ref-deepseek-math">DeepSeekMath</a></td><td>64 answers per prompt, optimizer batch 1,024, one update per exploration stage</td><td>Groups larger than 8–16 have established precedents.</td></tr>
-<tr><td><a href="#ref-gspo">GSPO</a> / <a href="#ref-sapo">SAPO</a></td><td>Four optimizer updates in reasoning; SAPO uses two in its multitask setting</td><td>Task mixture and the update objective affect useful subdivision.</td></tr>
-<tr><td><a href="#ref-hunyuan-batch-scaling">Hunyuan batch scaling</a></td><td>One update per retained batch; asynchronous partial rollouts; square-root LR retuning</td><td>Compare samples-to-target and generation throughput together.</td></tr>
-<tr><td><a href="#ref-scalerl">ScaleRL</a></td><td>One versus eight optimizer batches, plus long compute sweeps</td><td>Early winners can lose over longer training horizons.</td></tr>
-<tr><td><a href="#ref-isocompute">IsoCompute</a> / <a href="#ref-brorl">BroRL</a></td><td>Larger groups studied alongside compute or optimizer-batch changes</td><td>State the compute constraint before transferring a group-size recommendation.</td></tr>
+<tr><td>DAPO-MATH-17K<br><small>1024 questions</small></td><td>74.71%</td><td>81.93%</td><td>+7.23 pp<br><small>[+4.69 pp, +9.86 pp]</small></td></tr>
 </tbody></table></div>
-<p>Hunyuan reports approximately preserved sample efficiency with Adam and square-root learning-rate scaling over a bounded batch range. Its infrastructure uses <strong>asynchronous partial rollouts</strong>: generation overlaps training, and unfinished responses can continue later. Generation concurrency exceeds the per-update training batch. That is useful evidence for retuning, but it neither reproduces this synchronous experiment nor says how far every workload can grow its batch.</p>
-<p><a href="#ref-trl">TRL</a> distinguishes another important pair: multiple training iterations reuse generated data, while a larger generation batch can supply disjoint updates. Miles’ inner-step count in this experiment is the second mechanism. Increasing epochs and shrinking optimizer batches are different changes.</p>
-</section>
+<p class="note">Intervals resample paired test questions 20,000 times. They describe uncertainty across questions, conditional on these trained models. They do not measure variation across training seeds. DAPO uses our held-out split, not an official DAPO test benchmark.</p>
+<p>On GSM8K, mean test-answer length changed from 390 to 1224 output tokens; the selected checkpoint averaged 1135 tokens. 1.06% of endpoint answers hit the response cap. These generation costs use the same decoding settings for all checkpoints.</p><p>On DAPO-MATH-17K, mean test-answer length changed from 4796 to 6586 output tokens; the selected checkpoint averaged 7899 tokens. 5.08% of endpoint answers hit the response cap. These generation costs use the same decoding settings for all checkpoints.</p>
+<p><strong>Completion matters too.</strong> The frozen grader can credit a numeric answer before a response is cut off. A post hoc sensitivity check counts every unfinished response as incorrect, without changing checkpoint selection. On GSM8K, this reduces the endpoint gain to +1.21 pp, with an interval that includes zero. The selected checkpoint still improves by +2.50 pp [+1.29 pp, +3.71 pp].</p>
+<p>On DAPO-MATH-17K, counting unfinished answers as incorrect gives an endpoint gain of +7.42 pp [+4.88 pp, +9.96 pp]. The validation-selected checkpoint gains +9.18 pp [+6.84 pp, +11.62 pp].</p>
+<p>The DAPO endpoint–selected test difference is -1.76 pp [-3.71 pp, +0.20 pp]. That interval includes zero, so this test does not establish that the selected checkpoint is more accurate. Its answers are longer.</p>
+<details><summary>Accuracy when unfinished responses count as incorrect</summary>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Task</th><th>Endpoint</th><th>Selected</th><th>Endpoint gain, 95% interval</th></tr></thead><tbody>
+<tr><td>GSM8K</td><td>94.69%</td><td>95.98%</td><td>+1.21 pp<br><small>[-0.15 pp, +2.58 pp]</small></td></tr><tr><td>DAPO-MATH-17K</td><td>81.93%</td><td>83.69%</td><td>+7.42 pp<br><small>[+4.88 pp, +9.96 pp]</small></td></tr>
+</tbody></table></div><p>These are the same saved test responses, rescored by completion status. No new model generation or checkpoint choice is involved. The companion records include the number of credited truncated answers and all paired comparisons.</p></details>
 
-<section id="rule"><h2>How to choose the settings</h2>
-<p><strong>Start here for this model, two-GPU setup, and 32,768-response budget:</strong></p><pre><code>--rollout-batch-size 64
---n-samples-per-prompt 8
---global-batch-size 512
---num-steps-per-rollout 1
---lr 3e-6</code></pre><p>Countdown’s alternative—128 prompts, four answers each, four updates of 128 at the same learning rate—remains competitive. Neither result establishes a universal optimum. For a new workload, use the following comparisons to choose the settings.</p>
-<ol>
-<li><strong>Choose group size for the task.</strong> Start with a practical candidate such as eight, then compare four and sixteen at a fixed response budget. Track correctness, mixed reward groups, and prompt coverage. More mixed groups alone does not prove better learning.</li>
-<li><strong>Choose the optimizer batch using learning curves.</strong> Compare at equal cumulative responses and at the horizon you intend to run. In this small-model study, 128, 256, and 512 were useful candidates; the frequently copied value 512 is not a hardware rule.</li>
-<li><strong>Increase generation volume until its benefit stalls.</strong> Hold group size and optimizer batch fixed to isolate this direction. The resulting inner-step count rises automatically. Compare complete job time and accuracy together, since a policy that produces shorter answers can appear faster.</li>
-<li><strong>Compute the fourth knob exactly, then tune GPU packing separately.</strong> Require integer divisibility before launch. Use microbatches or a token allowance to fit the GPU, with the optimizer batch held fixed.</li>
-</ol>
-<p>When increasing the optimizer batch, test the current learning rate and a square-root-scaled candidate; also consider a lower rate if the baseline degrades late. When increasing only collection volume, <strong>do not multiply learning rate by the number of inner steps</strong>: at an equal response budget and fixed optimizer batch, the total number of Adam updates has not changed.</p>
-<p>Track held-out accuracy and response lengths throughout the intended budget. With one update per collection, clipping can stay near zero even as quality deteriorates between collections. A low clipping fraction alone does not establish stable learning.</p>
-<details><summary>Which diagnostics distinguish drift from engine mismatch?</summary>
-<p>Monitor clipping, the sampled log-ratio statistic from Proximal Policy Optimization (PPO), and the effective sample size ratio, which reflects uneven probability-ratio weights. In the screening eight-update runs, mean clipping rose from effectively zero on the first slice to 0.285% on the last slice for GSM8K and 1.323% for Countdown. Later slices drifted, but they were not “clipped to death” in this range.</p>
-<p>In the pinned implementation, <code>train_rollout_logprob_abs_diff</code> compares the trainer’s <em>old-policy</em> scores with the generation engine’s scores. It diagnoses inference/trainer mismatch, not current-policy drift across inner updates. The meaning and reduction of every diagnostic should be checked before applying a threshold.</p>
-</details></section>
 
-<section id="scope"><h2>Methods and limits</h2>
-<p>This is evidence from <strong>one 1.5-billion-parameter instruct model, two mathematical task types, and short training runs</strong>. It does not establish the best tuple for a frontier model, coding, long reasoning traces, asynchronous generation, or a different training objective. Three fresh seeds improve on screening; they do not establish a universal winner.</p>
-<p>We used straightforward speed settings: BF16, efficient attention, SGLang prefix caching and CUDA graphs, dynamic token packing, bounded CPU threads, and no activation recomputation. An 8,192-token packing allowance was faster than 16,384 in the warm pilot measurements and used less memory. Generated lengths differed, so those pilots justify a conservative setting rather than a precise causal speedup.</p>
-<p>The reward audit mattered before any comparison. GSM8K initially appeared to improve from 60.9% to 82.8%, but a flexible numerical verifier already scored the initial responses at 82.0%; most of that apparent gain was answer formatting. Countdown also needed valid untagged expressions accepted. Those smoke runs were excluded and the corrected verifiers were frozen.</p>
-<p>One later spot-check found an incorrect GSM8K validation label: a catch-up problem implies 15 minutes but labels 10. Primary labels stayed frozen. One item can change a 512-problem validation score by at most 0.195 percentage points; the <a href="experiments/grpo-batch-knobs/label_sensitivity.json">separate sensitivity analysis</a> preserves that distinction. This small spot-check does not estimate the dataset’s error rate.</p>
-<details><summary>Exact training controls, inputs, and accounting</summary>
-<ul>
-<li><strong>Inputs:</strong> pinned public Hugging Face revisions in the <a href="experiments/grpo-batch-knobs/data_manifest.json">data manifest</a>. GSM8K uses 6,961 train, 512 validation, and all 1,319 official test problems. Countdown uses 50,000 train, 512 validation, and 1,024 test problems, deduplicated by the sorted number multiset and target before splitting.</li>
-<li><strong>Generation:</strong> temperature 1 during training; greedy evaluation; 1,024-token response cap throughout. Same-seed arms share prompt-order prefixes. Equal responses need not mean equal generated tokens. Same-checkpoint greedy scores varied slightly, so each run retains its actual initial evaluation.</li>
-<li><strong>Optimization:</strong> full parameters in BF16 with 32-bit optimizer master weights. Adam learning rate 3e-6 unless marked, betas 0.9/0.98, weight decay 0.1, gradient norm cap 1.0. Advantages centered within each group and divided by its sample standard deviation plus 1e-6; sequence-mean loss; clipping 0.2/0.28; no Kullback–Leibler (KL) divergence penalty to a reference model, entropy bonus, replay, or dynamic filtering. This is not a reproduction of DAPO’s complete recipe.</li>
-<li><strong>Systems:</strong> one training GPU and one generation GPU, two B200s per run. Four identical Tier-2 workers ran randomized queues. Packing stayed at 8,192 tokens/GPU, with up to 512 active generation requests and CUDA-graph batch size 512. Cached model/environment downloads are outside job timing; initialization and compilation are inside it.</li>
-<li><strong>Checks:</strong> exact response/update/evaluation counts, finite metrics, frozen source hashes, identical holdout IDs, group membership, and same-seed prompt prefixes. Completed histories were checked against persisted W&B records. Per-example correctness, lengths, and update diagnostics are in the public numerical export.</li>
-</ul>
-<p>The verifiers check final numerical answers or exact restricted arithmetic; they do not establish that a written reasoning chain is sound. No test outcomes changed the chosen recipes, budgets, or checkpoints.</p>
+<div class="controls"><label for="axis-gsm8k">GSM8K horizontal axis<select id="axis-gsm8k" data-curve="gsm8k"><option value="">Training responses</option><option value="-output_tokens">Retained output tokens</option><option value="-elapsed_seconds">Elapsed job time</option></select></label></div>
+<figure id="curve-gsm8k"><a class="plot-open" href="assets/grpo-qwen35-gsm8k.svg" aria-label="Open GSM8K chart with exact point values"><picture><source media="(max-width: 600px)" srcset="assets/grpo-qwen35-gsm8k-mobile.svg"><img src="assets/grpo-qwen35-gsm8k.svg" alt="GSM8K validation accuracy across 131,072 training responses" loading="lazy"></picture></a><figcaption>GSM8K: one greedy answer per validation question, 512 questions per point. The points belong to one training run. The gray markers identify checkpoints eligible for selection; the initial model is also eligible. Open the SVG to inspect exact values on hover.</figcaption></figure>
+<ul class="findings"><li><strong>GSM8K ended at 94.53% validation accuracy.</strong> It began at 92.97%; the test result above is measured separately.</li>
+<li><strong>The last half of training changed validation by -0.78 pp.</strong> The paired-question 95% interval is [-2.54 pp, +0.98 pp]. The interval includes zero; this does not establish either continuing improvement or a plateau.</li></ul>
+
+<div class="controls"><label for="axis-dapo">DAPO-MATH-17K horizontal axis<select id="axis-dapo" data-curve="dapo"><option value="">Training responses</option><option value="-output_tokens">Retained output tokens</option><option value="-elapsed_seconds">Elapsed job time</option></select></label></div>
+<figure id="curve-dapo"><a class="plot-open" href="assets/grpo-qwen35-dapo.svg" aria-label="Open DAPO-MATH-17K chart with exact point values"><picture><source media="(max-width: 600px)" srcset="assets/grpo-qwen35-dapo-mobile.svg"><img src="assets/grpo-qwen35-dapo.svg" alt="DAPO-MATH-17K validation accuracy across 131,072 training responses" loading="lazy"></picture></a><figcaption>DAPO-MATH-17K: one greedy answer per validation question, 512 questions per point. The points belong to one training run. The gray markers identify checkpoints eligible for selection; the initial model is also eligible. Open the SVG to inspect exact values on hover.</figcaption></figure>
+<ul class="findings"><li><strong>DAPO-MATH-17K ended at 82.62% validation accuracy.</strong> It began at 77.34%; the test result above is measured separately.</li>
+<li><strong>The last half of training changed validation by -3.71 pp.</strong> The paired-question 95% interval is [-6.64 pp, -0.98 pp]. The late decline argues for retaining the validation-selected checkpoint at this budget.</li></ul>
+
+<details><summary>Checkpoint selection and alternative learning axes</summary>
+<p>We selected among the initial model and checkpoints saved at 32,768, 65,536, 98,304, and 131,072 responses, using validation accuracy alone. Ties favor the earlier checkpoint. Test scores never changed this choice.</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Task</th><th>Selected exposure</th><th>Selected test accuracy</th><th>Endpoint minus selected</th></tr></thead><tbody>
+<tr><td>GSM8K</td><td>98,304 responses</td><td>96.13%</td><td>-0.99 pp<br><small>[-1.90 pp, -0.08 pp]</small></td></tr><tr><td>DAPO-MATH-17K</td><td>65,536 responses</td><td>83.69%</td><td>-1.76 pp<br><small>[-3.71 pp, +0.20 pp]</small></td></tr>
+</tbody></table></div>
+<p>The <a href="experiments/grpo-batch-knobs-qwen35/main-analysis.json">numerical curves</a> also include generated output tokens, optimizer updates, elapsed job time, and measured active-phase time. Output tokens matter: equal response counts can require very different amounts of computation.</p>
 </details>
-<div class="artifact-links"><a href="experiments/grpo-batch-knobs/README.md">Reproduction guide ↗</a><a href="experiments/grpo-batch-knobs/endpoints.csv">All training endpoints ↗</a><a href="experiments/grpo-batch-knobs/results.json.gz">Numerical records ↗</a></div>
+<details><summary>Did later inner updates become heavily clipped?</summary>
+<p>Clipping limits how much a changed action probability can influence the policy objective. The table averages the logged clipping fraction at each update position across the run. Miles averages token indicators within each response, then averages responses.</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Task</th><th>Update 1</th><th>Update 2</th><th>Update 3</th><th>Update 4</th></tr></thead><tbody>
+<tr><td>GSM8K</td><td>0.000%</td><td>0.005%</td><td>0.008%</td><td>0.012%</td></tr><tr><td>DAPO-MATH-17K</td><td>0.000%</td><td>0.004%</td><td>0.007%</td><td>0.011%</td></tr>
+</tbody></table></div>
+<p>The first position uses the unchanged, trainer-scored policy. Later positions measure changes after earlier updates. Zero-advantage responses also contribute zero effective clipping, so clipping alone cannot prove that an update remains useful. The companion records include probability-change and importance-weight diagnostics as well.</p>
+<p>The fraction of groups with both correct and incorrect answers averaged 14.75% in the first eight rollouts and 4.10% in the last eight on GSM8K; 37.11% in the first eight rollouts and 20.41% in the last eight on DAPO-MATH-17K. All-equal reward groups have zero centered advantage. These measurements describe our recipe; they do not compare four updates against one or establish a better group size.</p>
+</details>
 </section>
 
-<section id="references"><h2>Sources and code</h2>
-<p>Primary papers and pinned runtime sources, checked September 15, 2026. The companion files distinguish measured training code from the portable launcher.</p>
+<section id="hardware"><h2>How GPUs changed the time</h2>
+<p><strong>Data parallelism (DP)</strong> puts a full model replica on each training GPU and divides the batch between them. <strong>Tensor parallelism (TP)</strong> divides supported operations within a model across GPUs. TP2/DP4 means four replicas, each split across two GPUs. Because the 4B model fit on one NVIDIA B200 GPU, we measured both approaches before choosing the main allocation.</p>
+<p>This benchmark replays the same 256 saved responses for four updates from initial weights. It is a systems measurement, not a learning experiment. Each training phase includes old-policy probability scoring and optimization.</p>
+<figure><a class="plot-open" href="assets/grpo-qwen35-parallelism.svg" aria-label="Open GPU parallelism chart with exact point values"><picture><source media="(max-width:600px)" srcset="assets/grpo-qwen35-parallelism-mobile.svg"><img src="assets/grpo-qwen35-parallelism.svg" alt="Training phase time for data and tensor parallel configurations on one to eight B200 GPUs" loading="lazy"></picture></a><figcaption>Qwen3.5-4B using the bfloat16 (BF16) numeric format and an 8,192-token packing allowance. Intermediate activations are stored rather than recomputed during backpropagation. Each dot averages phases 2–4 within one job; these are not three independent job repetitions. All arms use the same 2,052,264 input-plus-output tokens per phase. Open the SVG to inspect exact values on hover.</figcaption></figure>
+<ul class="findings"><li><strong>Eight-way data parallelism was fastest after warm-up:</strong> 17.70 seconds, versus 25.82 seconds for TP2/DP4 on the same eight GPUs.</li><li><strong>Four-way data parallelism was also faster than splitting each model:</strong> 30.95 seconds for DP4, versus 48.26 seconds for TP2/DP2 and 86.37 seconds for TP4.</li></ul>
+<p>Qwen3.5 combines conventional attention with recurrent blocks that compress context into a fixed-size state. The pinned <a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/miles_plugins/models/hf_attention.py#L194-L202">attention wrapper</a> and <a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/miles_plugins/models/qwen3_5.py">Qwen3.5 implementation</a> replicate those recurrent blocks across tensor-parallel ranks. Increasing TP therefore does not divide every operation. The initial gradient norms were within 0.006% across the DP arms; TP4 differed by about 3.2%. These are comparable measured workloads, not a claim of numerical identity.</p>
+<p>The complete short benchmark jobs include initialization and compilation. For example, DP8 took 413 seconds overall and TP2/DP4 took 257 seconds despite the latter's slower warm phases. Startup and cache state varied across these single jobs, so those totals do not isolate a topology-only effect. Repeated training amortizes overhead; fresh response lengths can still trigger more compilation.</p>
+
+<h3>The actual training allocation and time</h3>
+<p>A generation engine serves requests using its own model replica; each TP1 engine here uses one GPU. GSM8K used two worker machines (nodes), with four GPUs training and four generating responses. DAPO began with eight GPUs per role, temporarily resumed with four per role after worker losses, then used eight training GPUs and eight generation GPUs across three nodes. Its final segment used 8 training GPUs and 4 generation engines across 2 nodes. Both tasks were synchronous: the generator waited during training, and trainers waited during generation.</p>
+
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Task</th><th>Training + generation</th><th>Complete job</th><th>Output tokens</th></tr></thead><tbody>
+<tr><td>GSM8K</td><td>2 nodes<br>4 training (DP4) + 4 generation (TP1)</td><td>3.66 h<br><small>29.2 allocated GPU-hours</small></td><td>122.7M</td></tr><tr><td>DAPO-MATH-17K</td><td>2 nodes<br>8 training (DP8) + 4 generation (TP1)<br><small>Final allocation; began with 8 + 8</small></td><td>12.49 h<br><small>178.7 allocated GPU-hours</small></td><td>1.025B</td></tr>
+</tbody></table></div>
+<p class="note">All accelerators were Tier-2 B200s. Complete job time includes startup, validation, and saving checkpoints. For DAPO it sums the recovered trajectory's execution segments, including discarded work. Allocated GPU-hours include idle roles during those jobs; recovery setup, pilots, and final test jobs are additional costs. Output tokens in the table describe the retained training path.</p>
+<p>DAPO's worker losses changed both allocation and total cost. Across checkpoint rewinds, 11,264 completed responses and 94.3 million output tokens are excluded from the learning axes and included in execution cost. Elapsed time including recovery was 13.94 h. These interruptions prevent a clean speed comparison between the two tasks.</p>
+<details><summary>Recovery history and additional costs</summary>
+<p>An earlier DAPO attempt lost its training node after 42.7 minutes and 10,240 responses, before a recovery checkpoint existed. Its 11.38 allocated GPU-hours are additional cost. The measured trajectory restarted from initial weights with the same learning settings.</p>
+<p>Later worker losses required restoring checkpoints at 32,768 and 94,208 responses. A planned move at 36,864 retained all completed work and used additional available GPUs. Learning settings stayed fixed; recovery saves became more frequent, eventually occurring after every rollout. Only checkpoints at the original 32,768-response intervals remained eligible for selection.</p>
+<p>Two startup failures produced no responses or updates: an allocation check stopped after sixteen seconds when a replacement worker disappeared; the first colocated launch stopped after 72.91 seconds because its memory allocator was incompatible with CPU offloading. Disabling expandable memory segments fixed that compatibility issue. Their costs are separate from training segments. Another eight-GPU worker disappeared during preparation before any training began. The four-GPU colocated retry then ran out of memory during its third optimizer update, before saving. Its completed work is included in the discarded-work totals. We returned to the previously working placement with eight training GPUs and four generation GPUs; no allocator split-size tuning was applied. A subsequent placement check caught IP sorting that split training across two local filesystems. That attempt completed one rollout and no optimizer update before being stopped; its work and 337.58 seconds are included in execution cost. The corrected launcher keeps all eight training GPUs and checkpoint shards on one host. After two durable cycles, we added four available generation GPUs, retaining all completed work and reaching eight training plus eight generation GPUs across three nodes.</p>
+<p>A later generation-worker loss occurred after the checkpoint at 100,352 responses was durable. Its replacement also disappeared during the next attempt’s first rollout. That attempt recorded no completed batch; partial response counts were not persisted. We continued from the same saved state on the twelve surviving GPUs and included both interrupted jobs in execution time. We also measured a small change to checkpoint-upload concurrency; three subsequent uploads averaged 82.06 seconds, versus 85.83 seconds for four preceding uploads on the same training node. We kept that small operational change; these sequential observations do not isolate its causal effect.</p>
+<p>Each training segment was audited against W&amp;B. The out-of-memory attempt's final discarded update exists in the local log but was not flushed to W&amp;B; its audit explicitly records the missing row. It contributes no retained learning result. The interruption during a first rollout left no numerical rows to compare. Some interrupted durations are bounded by infrastructure and cleanup events; accounting uses their upper bounds. The companion records preserve each allocation, checkpoint restore, discarded update, and timing bound. Observed worker deletions do not establish their underlying cause.</p>
+</details>
+<p>Generation favored more engines in a separate DAPO inference probe: approximately <strong>143 seconds on four engines versus 101 seconds on eight</strong> for 128 prompts × eight answers. These were single trials with different sampled outputs. The four-engine trial shared CPU resources with a replay on separate GPUs; complete jobs were nearly tied at 240 versus 236 seconds.</p>
+<p>We also tested packing with real long responses. An 8,192-token target took 12.26 seconds in its warm phase and reached 131.4 GiB on the logging rank; a 16,384-token target took 17.14 seconds and reached 142.8 GiB. We kept 8,192. A single response longer than that target stays intact; it is not truncated to fit the packing target.</p>
+<details><summary>Easy optimizations kept in the frozen runs</summary><p>BF16 weights, efficient attention, CUDA graphs that replay recurring GPU operations during generation, dynamic token packing, stored activations, bounded CPU thread counts, cached models, and periodic validation/checkpointing. For this pinned hybrid-model stack, disabling the prefix cache in SGLang, our generation engine, enables its scheduler to overlap CPU preparation and GPU execution. That runtime choice is separate from changing the learning batch.</p><p>Memory figures record the logging rank's observed peak, not the maximum across every GPU. Runtime pins, timings, and all eight TP/DP arms are in the companion artifacts.</p></details>
+</section>
+
+<section id="papers"><h2>What the papers actually use</h2>
+<p>There are several coherent recipes. A large collection followed by many smaller updates is common, but a single larger update is also studied. The optimizer, objective, response length, and total training budget affect which choice works.</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Primary source</th><th>Reported configuration</th><th>What it supports</th></tr></thead><tbody>
+<tr><td><a href="#ref-r1">DeepSeek-R1</a></td><td>8,192 responses; 16 disjoint updates of 512; LR 3e-6.</td><td>Amortize generation while keeping smaller optimizer batches.</td></tr>
+<tr><td><a href="#ref-dapo">DAPO</a></td><td>512 prompts × 16; 16 updates of 512; LR 1e-6 plus warm-up.</td><td>The same batch shape, alongside filtering and other algorithm changes.</td></tr>
+<tr><td><a href="#ref-deepseek-math">DeepSeekMath</a></td><td>64 answers per question; one update after each exploration stage.</td><td>Eight or sixteen answers is a starting range, not a universal rule.</td></tr>
+<tr><td><a href="#ref-gspo">GSPO</a> / <a href="#ref-sapo">SAPO</a></td><td>Four mini-batches in their reasoning experiments.</td><td>Moderate subdivision also appears with different policy objectives.</td></tr>
+<tr><td><a href="#ref-hunyuan-batch-scaling">Hunyuan batch scaling</a></td><td>One update per retained batch; square-root LR scaling over a bounded range.</td><td>Compare equal samples, then ask whether throughput gains outweigh sample-efficiency losses.</td></tr>
+<tr><td><a href="#ref-scalerl">ScaleRL</a></td><td>48 prompts × 16 = 768 responses per update; larger batches can win later.</td><td>Training horizon can reverse a short-run ranking.</td></tr>
+<tr><td><a href="#ref-brorl">BroRL</a> / <a href="#ref-isocompute">IsoCompute Playbook</a></td><td>Study broader per-prompt sampling as compute scales.</td><td>More answers per prompt can help, but their extra work must be accounted for.</td></tr>
+</tbody></table></div>
+<p>Hunyuan's implementation uses asynchronous partial rollouts and streaming generation. Its learning-rate result is useful evidence, but it does not directly validate our synchronous setup. Nor does its one-update experiment say how many disjoint inner updates we should take.</p>
+<p>Our <code>128 × 8 = 256 × 4</code> choice keeps the pinned Miles Qwen3.5 example's group size, optimizer batch, and learning rate, while collecting four optimizer batches before publishing weights. The papers motivate this recipe; the two main runs measure its behavior. We did not directly compare it against the example's one-update recipe.</p>
+</section>
+
+<section id="recipe"><h2>How to choose the settings</h2>
+<ol>
+<li><strong>Start with the reward groups.</strong> Use eight responses per prompt as a practical baseline. Track the fraction of groups containing both correct and incorrect answers. An all-correct or all-wrong group has zero centered reward advantage. More responses can reveal variation, but at fixed total responses they reduce the number of different prompts. A low mixed-group fraction can also mean that the task has become too easy.</li>
+<li><strong>Choose the optimizer batch and learning rate together.</strong> For this Qwen3.5-4B setup, 256 responses and LR 1e-6 are the measured starting point. The 512-response batches in R1 and DAPO are precedents, not a reason to override a working smaller-model configuration.</li>
+<li><strong>Choose how much to generate before publishing weights.</strong> Here, 128 prompts × eight answers supplies 1,024 responses. Measure generation and complete-cycle time on your engines. Larger collections can keep more requests active, but later inner updates may use answers from a model version further behind the current one.</li>
+<li><strong>Derive the inner steps and validate the integers.</strong> Divide 1,024 by 256 to get four disjoint updates. Also check that the optimizer batch divides across the data-parallel workers. Do not multiply the learning rate by four just because there are four updates.</li>
+<li><strong>Tune memory packing and parallelism separately.</strong> Our B200 measurements favor TP1 plus more data-parallel replicas. A smaller-memory GPU or a larger model may need tensor parallelism or recomputation. Those choices require another systems measurement.</li>
+</ol>
+<p>If instead you choose <strong>one update per collection</strong>, increasing generation volume also increases the optimizer batch. Square-root learning-rate scaling is a reasonable candidate from the batch-scaling literature, with a fixed-rate control. Stop increasing batch size when sample efficiency deteriorates enough to erase the measured time saving.</p>
+<p>For several inner updates, inspect clipping, policy probability changes, and effective sample size—the diagnostic for how concentrated the importance weights become—by update position. Our companion records include all four positions. The trainer/rollout log-probability difference diagnoses disagreement between the two engines; it is not itself a measurement of drift across inner updates.</p>
+<p><strong>Decide whether to train longer from late held-out progress.</strong> A positive late trend can motivate a predeclared extension; a noisy interval containing zero cannot establish a plateau. Our fixed endpoint is 131,072 responses. We report what the second half added, without extrapolating a best eventual score.</p>
+</section>
+
+<section id="methods"><h2>Methods and limits</h2>
+<p>We trained all parameters of the model’s text backbone with GRPO and centered, standard-deviation-normalized advantages; sequence-mean loss; lower/upper policy clipping 0.2/0.28; Adam with betas 0.9/0.98 and weight decay 0.1; gradient norm cap 1. No penalty against a frozen reference model, entropy bonus, dynamic filtering, asynchronous policy generation, or response replay was enabled. This is GRPO on DAPO's data, not the complete DAPO algorithm.</p>
+<p>Training used temperature 1. Evaluation used greedy decoding. Both used non-thinking chat mode, prompts requesting step-by-step answers, and a 16,384-token response cap. This template setting did not prevent long reasoning or generated thinking delimiters. A small validation pilot compared mode, cap, and cache settings jointly; it does not isolate a causal advantage for non-thinking mode. Its 8K cap truncated 28.9% of responses; the chosen 16K setup truncated none of that pilot's 128 responses.</p>
+<div class="table-scroll"><table class="ptable"><thead><tr><th>Source</th><th>Train</th><th>Validation</th><th>Test</th></tr></thead><tbody><tr><td>GSM8K</td><td>6,961</td><td>512</td><td>1,319 official test</td></tr><tr><td>DAPO-MATH-17K</td><td>15,640</td><td>512</td><td>1,024 held out</td></tr></tbody></table></div>
+<p>The official DAPO file contains 1,791,700 repeated rows. Whitespace normalization yields 17,188 prompt groups; excluding twelve groups with conflicting labels leaves 17,176. We split those groups before training. Exact source revisions, ordered split IDs, and hashes reproduce all six files byte for byte.</p>
+<p>Numeric GSM8K answers accept the usual final-answer formats. DAPO respects the source's <code>Answer:</code> format, with boxed-answer fallback; an explicit wrong final answer cannot be rescued by an earlier correct number. Twenty-two verifier cases passed. Spot checks identified one incorrect validation label in each dataset; we retained the frozen source labels. Each item can affect its task's validation score by at most 0.195 percentage points. The <a href="experiments/grpo-batch-knobs-qwen35/evaluation-caveats.json">label checks and completion caveats</a> document the evidence; they do not estimate the prevalence of label errors.</p>
+<p>Each task has one training seed. The same prompts can recur across dataset epochs, with fresh responses each time. The splits isolate our RL training; they do not prove that questions were absent from the model's earlier training. These results do not establish transfer beyond these two math distributions, a model-size scaling law, or a globally optimal batch tuple.</p>
+<details><summary>Reproducibility and accounting</summary><p>We preserve source hashes, resolved learning settings, runtime/model revisions, per-question correctness, response and token counts, all train diagnostics, checkpoint selection, and independent comparisons with persisted W&amp;B histories. Checkpoints include optimizer, trainer random state, and data position. Resuming does not promise bitwise-identical generation.</p><p>The public bundle omits credentials, private node identities, and internal infrastructure configuration. It includes the measured scientific hooks and portable arguments; trained checkpoints remain in private study storage. Earlier Qwen2.5 artifacts remain archived separately and are not evidence for this model.</p></details>
+<div class="artifact-links"><a href="experiments/grpo-batch-knobs-qwen35/README.md">Reproduction guide ↗</a><a href="experiments/grpo-batch-knobs-qwen35/main-analysis.json">Learning and timing records ↗</a><a href="experiments/grpo-batch-knobs-qwen35/test-analysis.json">Paired test analysis ↗</a></div>
+</section>
+
+<section id="references"><h2>Sources and reproduction</h2>
+<p>Primary papers and pinned runtime sources, checked September 15, 2026. The companion files include measured training hooks and portable argument lists.</p>
 <ol class="sources"><li id="ref-hunyuan-batch-scaling"><a href="https://arxiv.org/html/2608.29296v1">When Do Larger Batches Help Scale LLM Reinforcement Learning?</a>.</li>
 <li id="ref-deepseek-math"><a href="https://arxiv.org/html/2402.03300v3">DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models</a>.</li>
 <li id="ref-dapo"><a href="https://arxiv.org/html/2503.14476v2">DAPO: An Open-Source LLM Reinforcement Learning System at Scale</a>.</li>
@@ -442,7 +442,7 @@ footer a{color:var(--ink-soft)}
 <li id="ref-r1"><a href="https://arxiv.org/html/2501.12948v2">DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning</a>.</li>
 <li id="ref-miles">Miles runtime <code>7e03b728faf9</code>: <a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/miles/utils/arguments.py#L2317-L2325">batch derivation</a>, <a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/miles/ray/rollout/train_data_conversion.py#L108-L117">group centering</a>, and <a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/miles/backends/training_utils/loss_hub/losses.py#L306-L325">log-probability mismatch diagnostic</a>.</li>
 <li id="ref-trl"><a href="https://huggingface.co/docs/trl/main/en/grpo_trainer">TRL GRPO trainer documentation</a> and <a href="https://github.com/huggingface/trl/blob/03ad26d2c56974b2e72e57fcb7e5002b47b55ca5/trl/trainer/grpo_config.py">configuration source</a>, accessed September 15, 2026.</li>
-<li><a href="https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct">Qwen2.5-1.5B-Instruct</a>; <a href="https://huggingface.co/datasets/openai/gsm8k">GSM8K</a>; <a href="https://huggingface.co/datasets/Jiayi-Pan/Countdown-Tasks-3to4">Countdown data</a>. Exact revisions and split hashes are in the companion manifests.</li></ol>
+<li><a href="https://huggingface.co/Qwen/Qwen3.5-4B">Qwen3.5-4B</a>; <a href="https://huggingface.co/datasets/openai/gsm8k">GSM8K</a>; <a href="https://huggingface.co/datasets/BytedTsinghua-SIA/DAPO-Math-17k">official DAPO-MATH-17K</a>. Exact revisions and split hashes are in the companion manifests.</li><li><a href="https://github.com/radixark/miles/blob/7e03b728faf9ab861741a4a8535a72292e481cb7/scripts/run-qwen3.5-4B.sh">Pinned Miles Qwen3.5-4B example</a>: 32 prompts × eight responses, one 256-response optimizer batch, LR 1e-6.</li></ol>
 <details><summary>How to cite this post</summary><pre><code>@misc{dong2026grpobatchknobs,
   title = {How to Set the Four GRPO Batch Knobs},
   author = {Dong, Simon},
@@ -450,8 +450,7 @@ footer a{color:var(--ink-soft)}
   url = {https://simondong1.github.io/grpo-batch-knobs.html}
 }</code></pre></details>
 </section>
-</main><footer><div class="wrap"><a href="index.html">← All posts</a> · <a href="rl-surrogates-2026.html">Part 2: RL surrogate losses</a> · <a href="https://x.com/dongsixiang">Simon Dong</a></div></footer>
-
+</main><footer><div class="wrap"><a href="index.html">← All posts</a> · <a href="rl-surrogates-2026.html">Part 2: RL losses</a> · <a href="https://x.com/dongsixiang">Simon Dong</a></div></footer>
 <script>(()=>{
 const links=[...document.querySelectorAll('.toc a')];
 const sections=[...document.querySelectorAll('main>section[id]')];
@@ -460,4 +459,5 @@ let pending=false;window.addEventListener('scroll',()=>{if(!pending){pending=tru
 function reveal(){if(!location.hash)return;const target=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(!target)return;for(let n=target;n;n=n.parentElement)if(n.tagName==='DETAILS')n.open=true;target.scrollIntoView({block:'start'})}
 window.addEventListener('hashchange',reveal);if(location.hash)requestAnimationFrame(reveal);
 })();</script>
+<script>document.querySelectorAll('select[data-curve]').forEach(select=>select.addEventListener('change',()=>{const task=select.dataset.curve;const figure=document.getElementById('curve-'+task);const base='assets/grpo-qwen35-'+task+select.value;figure.querySelector('source').srcset=base+'-mobile.svg';figure.querySelector('img').src=base+'.svg';figure.querySelector('a.plot-open').href=base+'.svg';figure.querySelector('img').alt=task+' validation accuracy against '+select.options[select.selectedIndex].text;}));</script>
 </body></html>

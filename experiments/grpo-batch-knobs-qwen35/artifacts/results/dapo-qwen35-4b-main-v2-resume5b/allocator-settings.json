@@ -1,0 +1,4 @@
+{
+  "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:False",
+  "PYTORCH_ALLOC_CONF": "expandable_segments:False"
+}

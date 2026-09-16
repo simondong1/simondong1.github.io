@@ -1,0 +1,40 @@
+{
+  "name": "dapo-qwen35-4b-main-v2",
+  "state": "finished",
+  "checks": [
+    {
+      "metric": "train/pg_loss",
+      "expected_count": 152,
+      "found_count": 152,
+      "values_match": true,
+      "shared_count": 152,
+      "shared_values_match": true
+    },
+    {
+      "metric": "eval/dapo",
+      "expected_count": 5,
+      "found_count": 5,
+      "values_match": true,
+      "shared_count": 5,
+      "shared_values_match": true
+    },
+    {
+      "metric": "perf/train_time",
+      "expected_count": 38,
+      "found_count": 38,
+      "values_match": true,
+      "shared_count": 38,
+      "shared_values_match": true
+    },
+    {
+      "metric": "perf/rollout_time",
+      "expected_count": 38,
+      "found_count": 38,
+      "values_match": true,
+      "shared_count": 38,
+      "shared_values_match": true
+    }
+  ],
+  "all_match": true,
+  "terminal": true
+}

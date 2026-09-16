@@ -1,0 +1,11 @@
+{
+  "event": "rollout_node_termination",
+  "resume_from_responses": 32768,
+  "completed_before_failure": 38912,
+  "discarded_responses": 6144,
+  "discarded_output_tokens": 52375043,
+  "failed_job_seconds": 9513.085740327835,
+  "failure_record": "dapo-qwen35-4b-main-v2",
+  "reason_known": "Rollout pod terminated; scheduler events do not establish why it was terminated.",
+  "configuration_change": "None in learning settings. Replacement node; restore weights, Adam, RNG and data-source state."
+}

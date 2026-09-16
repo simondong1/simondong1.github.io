@@ -1,0 +1,17 @@
+{"time": 1789504876.1541193, "rollout_id": 0, "task": "gsm8k", "cumulative_samples": 0, "cumulative_output_tokens": 0, "accuracy": 0.9296875, "n": 512, "extra_metrics": null}
+{"time": 1789505605.655805, "rollout_id": 7, "task": "gsm8k", "cumulative_samples": 8192, "cumulative_output_tokens": 4125212, "accuracy": 0.935546875, "n": 512, "extra_metrics": null}
+{"time": 1789506455.952828, "rollout_id": 15, "task": "gsm8k", "cumulative_samples": 16384, "cumulative_output_tokens": 8856628, "accuracy": 0.94140625, "n": 512, "extra_metrics": null}
+{"time": 1789507214.1660535, "rollout_id": 23, "task": "gsm8k", "cumulative_samples": 24576, "cumulative_output_tokens": 15045165, "accuracy": 0.943359375, "n": 512, "extra_metrics": null}
+{"time": 1789508129.550821, "rollout_id": 31, "task": "gsm8k", "cumulative_samples": 32768, "cumulative_output_tokens": 21832524, "accuracy": 0.94921875, "n": 512, "extra_metrics": null}
+{"time": 1789508958.9889002, "rollout_id": 39, "task": "gsm8k", "cumulative_samples": 40960, "cumulative_output_tokens": 30744078, "accuracy": 0.9609375, "n": 512, "extra_metrics": null}
+{"time": 1789509924.7850988, "rollout_id": 47, "task": "gsm8k", "cumulative_samples": 49152, "cumulative_output_tokens": 42800418, "accuracy": 0.962890625, "n": 512, "extra_metrics": null}
+{"time": 1789510815.099341, "rollout_id": 55, "task": "gsm8k", "cumulative_samples": 57344, "cumulative_output_tokens": 53606686, "accuracy": 0.958984375, "n": 512, "extra_metrics": null}
+{"time": 1789511620.5882912, "rollout_id": 63, "task": "gsm8k", "cumulative_samples": 65536, "cumulative_output_tokens": 61080921, "accuracy": 0.953125, "n": 512, "extra_metrics": null}
+{"time": 1789512248.2779713, "rollout_id": 71, "task": "gsm8k", "cumulative_samples": 73728, "cumulative_output_tokens": 67536708, "accuracy": 0.96484375, "n": 512, "extra_metrics": null}
+{"time": 1789512999.7081957, "rollout_id": 79, "task": "gsm8k", "cumulative_samples": 81920, "cumulative_output_tokens": 75135611, "accuracy": 0.95703125, "n": 512, "extra_metrics": null}
+{"time": 1789513760.750209, "rollout_id": 87, "task": "gsm8k", "cumulative_samples": 90112, "cumulative_output_tokens": 83679829, "accuracy": 0.95703125, "n": 512, "extra_metrics": null}
+{"time": 1789514672.9538412, "rollout_id": 95, "task": "gsm8k", "cumulative_samples": 98304, "cumulative_output_tokens": 92708992, "accuracy": 0.955078125, "n": 512, "extra_metrics": null}
+{"time": 1789515505.7304797, "rollout_id": 103, "task": "gsm8k", "cumulative_samples": 106496, "cumulative_output_tokens": 101268093, "accuracy": 0.951171875, "n": 512, "extra_metrics": null}
+{"time": 1789516271.8965864, "rollout_id": 111, "task": "gsm8k", "cumulative_samples": 114688, "cumulative_output_tokens": 107928846, "accuracy": 0.94921875, "n": 512, "extra_metrics": null}
+{"time": 1789517036.6752465, "rollout_id": 119, "task": "gsm8k", "cumulative_samples": 122880, "cumulative_output_tokens": 115136209, "accuracy": 0.951171875, "n": 512, "extra_metrics": null}
+{"time": 1789517917.5719073, "rollout_id": 127, "task": "gsm8k", "cumulative_samples": 131072, "cumulative_output_tokens": 122704463, "accuracy": 0.9453125, "n": 512, "extra_metrics": null}

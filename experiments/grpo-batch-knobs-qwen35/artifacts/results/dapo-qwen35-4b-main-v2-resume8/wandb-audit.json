@@ -1,0 +1,10 @@
+{
+  "name": "dapo-qwen35-4b-main-v2-resume8",
+  "state": "finished",
+  "checks": [],
+  "all_match": true,
+  "terminal": true,
+  "retained_through_samples": 100352,
+  "retained_all_match": true,
+  "note": "No completed rollout or optimizer-update metrics were recorded; the empty check list makes no numerical agreement claim."
+}

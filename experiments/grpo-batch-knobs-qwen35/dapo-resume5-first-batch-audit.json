@@ -1,0 +1,21 @@
+{
+  "run": "dapo-qwen35-4b-main-v2-resume5b",
+  "resume": {
+    "rollout_id": 91,
+    "samples": 94208,
+    "tokens": 728528591,
+    "buffer_groups": 0
+  },
+  "prompt_order_matches_preinterruption_dump": true,
+  "completed_optimizer_steps": [
+    368,
+    369
+  ],
+  "completed_metrics_finite": true,
+  "constant_lr": 1e-06,
+  "training_audit": "failed: OOM before completing four updates",
+  "first_generation_seconds": 178.72566390037537,
+  "first_durable_checkpoint": null,
+  "retained_responses": 0,
+  "failure_record": "dapo-colocated-oom.json"
+}

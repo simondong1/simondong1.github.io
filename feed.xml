@@ -12,7 +12,7 @@
       <link>https://simondong1.github.io/grpo-batch-knobs.html</link>
       <guid isPermaLink="true">https://simondong1.github.io/grpo-batch-knobs.html</guid>
       <pubDate>Tue, 15 Sep 2026 00:00:00 +0000</pubDate>
-      <description>A 512-response, one-update batch cut job time by 28–29% and improved mean test accuracy on two math tasks. Three-seed confirmation also exposed failures hidden by screening.</description>
+      <description>128 prompts × eight answers feed four updates of 256 on Qwen3.5-4B. Two math runs test the recipe; GPU benchmarks favor data parallelism.</description>
     </item>
     <item>
       <title>RL Losses in 2026: From PPO to SAPO</title>

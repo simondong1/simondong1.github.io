@@ -1,0 +1,14 @@
+{
+  "event": "training_node_termination",
+  "resume_from_responses": 32768,
+  "generated_responses_this_segment": 1024,
+  "optimizer_updates_this_segment": 1,
+  "discarded_responses": 1024,
+  "discarded_output_tokens": 8880943,
+  "job_seconds_bounds": [
+    820.5800275802612,
+    854.3144035339355
+  ],
+  "reason_known": "Kubelet stopped the container; autoscaler reported the cloud instance absent afterward. Cause of the deletion remains unestablished.",
+  "next_placement": "Four TP1/DP4 training B200s on one node plus four TP1 rollout B200s on another; both Tier 2. Both eight-GPU nodes were lost and replacements could not schedule."
+}
