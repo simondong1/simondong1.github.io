@@ -27,7 +27,205 @@
     "id": "model-experiments",
     "kind": "training",
     "state": "preparing controlled training; two allocated B200s verified",
-    "completed_runs": 6
+    "completed_runs": 58
+  },
+  {
+    "id": "architecture-2m-cross4-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 9744882,
+    "seed": 173
+  },
+  {
+    "id": "architecture-2m-large-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 56620878,
+    "seed": 173
+  },
+  {
+    "id": "architecture-2m-mlp-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 2875242,
+    "seed": 173
+  },
+  {
+    "id": "architecture-2m-small-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 1250062,
+    "seed": 173
+  },
+  {
+    "id": "architecture-2m-wide-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 17763726,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-behavior_only-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-lexical_only-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-no_clicks-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-no_corrected_behavior-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-no_exposures-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-no_legacy_behavior-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-no_platform-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-no_purchases-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-no_similarity-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-semantic_lexical-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-semantic_only-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "feature-2m-text_semantic_lexical-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "label-1m-ce5-2510u-s173-r2",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 1000000,
+    "objective": "ce5",
+    "parameters": 6309897,
+    "seed": 173
+  },
+  {
+    "id": "label-1m-ce7-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 1000000,
+    "objective": "ce7",
+    "parameters": 6309963,
+    "seed": 173
+  },
+  {
+    "id": "label-1m-components-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 1000000,
+    "objective": "components",
+    "parameters": 6309996,
+    "seed": 173
+  },
+  {
+    "id": "label-1m-joint16-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 1000000,
+    "objective": "joint16",
+    "parameters": 6310260,
+    "seed": 173
+  },
+  {
+    "id": "llm-qwen3-06b-classifier-250k-1ep-s173",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 596057095,
+    "seed": 173
   },
   {
     "id": "llm-qwen3-06b-classifier-pilot-s173",
@@ -36,6 +234,249 @@
     "size": 250000,
     "objective": "ce7",
     "parameters": 596057095,
+    "seed": 173
+  },
+  {
+    "id": "llm-qwen3-06b-restricted-250k-1ep-s173",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 596049920,
+    "seed": 173
+  },
+  {
+    "id": "llm-qwen3-06b-token-250k-1ep-s173",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 596049920,
+    "seed": 173
+  },
+  {
+    "id": "llm-qwen3-17b-classifier-pilot-s173",
+    "state": "complete",
+    "kind": "language-model-optimizer-pilot",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 1720589319,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-0-0-100-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-0-100-0-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-0-25-75-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-0-50-50-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-0-75-25-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-100-0-0-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-25-0-75-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-25-25-50-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-25-50-25-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-25-75-0-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-50-0-50-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-50-25-25-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-50-50-0-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-70-20-10-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-75-0-25-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "mix-500k-75-25-0-ce10-500u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 500000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-adamw-noamsgrad-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-dropout0-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-dropout03-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-logweight-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-lr1e-3-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-lr1e-4-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-wd0-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "optimization-2m-wd01-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
     "seed": 173
   },
   {
@@ -88,6 +529,42 @@
     "state": "complete",
     "kind": "controlled-training",
     "size": 250000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "size-4000000-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 4000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "size-4000000-ce10-2ep-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 4000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "size-8953912-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 8953912,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "size-8953912-ce10-2ep-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 8953912,
     "objective": "ce10",
     "parameters": 6310062,
     "seed": 173

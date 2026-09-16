@@ -31,7 +31,7 @@ The source checkout is pinned to `02e00f7ac8828a0bf64b9dca73e4312ecb767474`. Liv
 
 ### 2.1 Inputs and architecture
 
-The production configuration uses 69 numeric behavior signals: search and platform exposure, clicks and purchases at item/query/query–item levels, corrected Q2D counts, and centrality/prominence measures. Each numeric signal uses a learned four-dimensional embedding of 32 percentile bins. Two scalar similarity scores and eight query–title lexical match features accompany four dense content vectors: item text (1024), item image (1152), query text/ROME (1024), and query image-space/SigLIP (1152).
+The production configuration uses 69 numeric behavior signals: search and platform exposure, clicks and purchases at item/query/query–item levels, corrected behavior counts, and centrality/prominence measures. Each numeric signal uses a learned four-dimensional embedding of 32 percentile bins. Two scalar similarity scores and eight query–title lexical match features accompany four dense content vectors: item text (1024), item image (1152), query text/ROME (1024), and query image-space/SigLIP (1152).
 
 Each dense vector is reduced to 256 dimensions by a learned value network multiplied by a sigmoid gate. Concatenation produces **1310 features**. Two full-rank cross layers feed a ReLU MLP with widths **256 → 128 → 32 → 10** and dropout 0.15. The two cross matrices alone each have shape 1310 × 1310, making the cross network a substantial part of the parameter budget.
 
@@ -159,19 +159,23 @@ For source capacities `C_s` and desired proportions `w_s`, sampling without repl
 
 Test random fractions 0/5/10/20% in a follow-up at a feasible size while keeping the natural:balanced ratio within the remaining mass fixed. Compare equal unique-pair weight with clipped `log1p(pair_count)` and square-root weighting, normalizing to mean one. Do not simultaneously alter sampling and loss weighting without documenting the resulting effective target distribution. Measure effective sample size `(sum w)^2 / sum(w^2)`.
 
+**Mixture-screen amendment after the initial size curves, before any mixture results:** the 250k fixed-update run showed severe overconfidence after approximately 41 passes (shared-five validation NLL 2.33). The 500k mixture screen will therefore use **500 updates at batch 4096**, approximately 4.10 passes, rather than inheriting the 2510-update size budget. All 16 mixtures receive the same revised budget; this avoids making the first composition screen primarily a test of prolonged small-data overfitting. Larger follow-ups retain separately stated budgets.
+
 ### 5.3 Feature information and failure modes
 
 | Group | Inputs and purpose |
 |---|---|
 | Lexical | Query/title match features; inexpensive exact and partial matching |
 | Frozen semantic | Text/image embeddings and query–item similarities |
-| Historical behavior | Item, query, and pair exposure/click/purchase histories, with corrected Q2D and D2Q/platform signals separated |
+| Historical behavior | Item, query, and pair exposure/click/purchase histories, with legacy, platform, and corrected behavior families separated |
 | Raw content | Query, title, legitimate catalog attributes; images for multimodal models |
 | Hybrid | Learned semantic representation fused with structured features through a separate normalized projection |
 
 Compare lexical-only, semantic-only, behavior-only, semantic+lexical, and all-production features. Then remove clicks, purchases, exposures, D2Q/platform, and Q2D families individually and in justified combinations. Treat behavioral signals as observational predictors; their presence does not make them causal evidence of relevance. Exclude identifiers that enable pair memorization unless explicitly studying an ID baseline.
 
 Run both **retrained ablations** (can the remaining information learn the task?) and **inference perturbations** (how does a fitted model fail when a signal disappears?). They answer different questions. Probe missingness alone, zero/missing masks, shuffled behavior within controlled strata, age of statistics, and behavior-preserving versus content-preserving counterfactuals. A classifier that easily predicts random-source membership from missing features motivates stronger source-shortcut checks, not an automatic conclusion that relevance was learned.
+
+The actual numeric family lists contain 18 legacy search signals, 18 platform signals, and 33 corrected behavior signals. Naming differs across repository layers (including D2Q/Q2D terminology), so ablations are registered by explicit column lists: remove legacy behavior (36 including platform), corrected behavior (33), platform only (18), clicks (21), purchases (21), or viewed/searches counts (21). The two scalar similarities are a separate ablation. Raw title equality between label-time metadata and cached features was verified for every main train/validation row.
 
 ### 5.4 Architecture and optimization
 

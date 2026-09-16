@@ -26,7 +26,7 @@ img{max-width:100%;height:auto}
 @media print{aside,header,.lab{display:none}.layout{display:block;margin:0;padding:0}body{font-size:10pt;background:white}h1{font-size:24pt}h2{font-size:16pt;break-after:avoid}table{font-size:8pt;display:table}a{color:inherit}main{padding:0}}
 </style></head>
 <body><header><a href="/">Simon Dong · Research notes</a><span>Living study · Protocol v1.1 · September 2026</span></header>
-<div class="layout"><aside aria-label="Contents"><strong>Contents</strong><div class="toc">
+<div class="layout"><aside aria-label="Contents"><strong>Contents</strong><p><a href="#measured-training-results">Measured training results</a></p><div class="toc">
 <ul>
 <li><a href="#what-makes-a-relevance-model-generalize">What Makes a Relevance Model Generalize?</a><ul>
 <li><a href="#a-controlled-study-of-data-composition-model-capacity-supervision-and-serving-cost">A controlled study of data composition, model capacity, supervision, and serving cost</a></li>
@@ -77,7 +77,7 @@ img{max-width:100%;height:auto}
 <p><strong>Simon Dong · Research protocol v1.1 · 16 September 2026</strong></p>
 <p><strong>Status:</strong> production replay and main data audit complete; scratch and full-parameter LM pilots passed; controlled training is running. Measured single-seed validation results are reported separately; final-test and deployment conclusions remain pending.</p>
 
-<div class="status"><strong>Research in progress.</strong> 6 controlled training runs complete. Production replay, data audit, and scratch/LM optimizer pilots are complete. Training results are exploratory; the final test remains locked.</div>
+<div class="status"><strong>Research in progress.</strong> 58 controlled training runs complete. Production replay, data audit, and scratch/LM optimizer pilots are complete. Training results are exploratory; the final test remains locked.</div>
 <div class="facts"><div><strong>9.95M</strong>final labeled pairs</div><div><strong>6.31M</strong>production model parameters</div><div><strong>&lt;4B</strong>LM serving parameter limit</div></div>
 <p><a href="experiments/search-relevance-generalization/PROTOCOL.md">Download protocol</a> · <a href="experiments/search-relevance-generalization/run-registry.json">Run registry</a> · <a href="experiments/search-relevance-generalization/aggregate-audit.json">Aggregate audit</a></p>
 <section class="lab" aria-labelledby="mixture-tool"><h3 id="mixture-tool">Explore feasible data mixtures</h3>
@@ -92,10 +92,49 @@ img{max-width:100%;height:auto}
 <tr><td>Full data integrity audit</td><td>Completed; see the aggregate audit file</td></tr>
 <tr><td>Production validation replay</td><td>Completed; 496,477 pairs, 64.38% exact total accuracy</td></tr>
 <tr><td>GPU infrastructure pilot</td><td>Completed on an allocated B200; full optimizer updates verified</td></tr>
-<tr><td>Controlled training experiments</td><td>6 completed; size, label, and small-LM head stages running</td></tr>
+<tr><td>Controlled training experiments</td><td>58 completed; size, label, and small-LM head stages running</td></tr>
 <tr><td>Confirmed model improvements</td><td>No results yet</td></tr></tbody></table>
-<h2>Measured training results</h2>
-<p><strong>6 controlled quality runs complete</strong>, plus systems checks. Results below are exploratory validation measurements from seed 173. They are not deployment recommendations or final-test results. Each row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.</p>
+<h2 id="measured-training-results">Measured training results</h2>
+<p><strong>58 controlled quality runs complete</strong>, plus systems checks. Results below are exploratory validation measurements from seed 173. They are not deployment recommendations or final-test results. Each row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.</p>
+<table>
+<thead>
+<tr>
+<th>Reference comparison</th>
+<th style="text-align: right;">Unique training pairs</th>
+<th style="text-align: right;">Common-five accuracy</th>
+<th style="text-align: right;">Common-five NLL ↓</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qwen3-0.6B, classification head</td>
+<td style="text-align: right;">250,000</td>
+<td style="text-align: right;">79.48%</td>
+<td style="text-align: right;">0.5503</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B, restricted token logits</td>
+<td style="text-align: right;">250,000</td>
+<td style="text-align: right;">79.42%</td>
+<td style="text-align: right;">0.5512</td>
+</tr>
+<tr>
+<td>Qwen3-0.6B, full-vocabulary token</td>
+<td style="text-align: right;">250,000</td>
+<td style="text-align: right;">79.41%</td>
+<td style="text-align: right;">0.5509</td>
+</tr>
+<tr>
+<td>Feature DCN, full data, two epochs</td>
+<td style="text-align: right;">8,953,912</td>
+<td style="text-align: right;">73.21%</td>
+<td style="text-align: right;">0.7007</td>
+</tr>
+</tbody>
+</table>
+<p>These reference rows are best-observed recipe comparisons with different input representations, training data counts, parameter counts, and compute. They do not isolate a single cause. The head-to-head LM comparison does freeze the backbone, examples, input serialization, batch order, and optimization recipe.</p>
+<details>
+<summary>Complete experiment table</summary>
 <table>
 <thead>
 <tr>
@@ -110,6 +149,486 @@ img{max-width:100%;height:auto}
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>architecture-2m-cross4-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">9,744,882</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.36%</td>
+<td style="text-align: right;">0.7295</td>
+<td style="text-align: right;">0.7080</td>
+<td style="text-align: right;">14.3 / 44.5</td>
+</tr>
+<tr>
+<td>architecture-2m-large-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">56,620,878</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.42%</td>
+<td style="text-align: right;">0.7856</td>
+<td style="text-align: right;">0.6741</td>
+<td style="text-align: right;">22.2 / 59.4</td>
+</tr>
+<tr>
+<td>architecture-2m-mlp-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">2,875,242</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">70.52%</td>
+<td style="text-align: right;">0.7730</td>
+<td style="text-align: right;">0.7692</td>
+<td style="text-align: right;">12.2 / 41.9</td>
+</tr>
+<tr>
+<td>architecture-2m-small-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">1,250,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">70.96%</td>
+<td style="text-align: right;">0.7592</td>
+<td style="text-align: right;">0.7628</td>
+<td style="text-align: right;">12.7 / 41.7</td>
+</tr>
+<tr>
+<td>architecture-2m-wide-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">17,763,726</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.58%</td>
+<td style="text-align: right;">0.7295</td>
+<td style="text-align: right;">0.6933</td>
+<td style="text-align: right;">13.7 / 46.0</td>
+</tr>
+<tr>
+<td>feature-2m-behavior_only-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">54.26%</td>
+<td style="text-align: right;">1.0944</td>
+<td style="text-align: right;">1.1479</td>
+<td style="text-align: right;">13.0 / 43.5</td>
+</tr>
+<tr>
+<td>feature-2m-lexical_only-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">63.32%</td>
+<td style="text-align: right;">0.9847</td>
+<td style="text-align: right;">1.1053</td>
+<td style="text-align: right;">13.7 / 43.0</td>
+</tr>
+<tr>
+<td>feature-2m-no_clicks-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.09%</td>
+<td style="text-align: right;">0.7352</td>
+<td style="text-align: right;">0.7177</td>
+<td style="text-align: right;">12.9 / 43.5</td>
+</tr>
+<tr>
+<td>feature-2m-no_corrected_behavior-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">71.99%</td>
+<td style="text-align: right;">0.7368</td>
+<td style="text-align: right;">0.7218</td>
+<td style="text-align: right;">12.4 / 42.9</td>
+</tr>
+<tr>
+<td>feature-2m-no_exposures-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">71.82%</td>
+<td style="text-align: right;">0.7415</td>
+<td style="text-align: right;">0.7256</td>
+<td style="text-align: right;">13.2 / 44.4</td>
+</tr>
+<tr>
+<td>feature-2m-no_legacy_behavior-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">71.31%</td>
+<td style="text-align: right;">0.7584</td>
+<td style="text-align: right;">0.7500</td>
+<td style="text-align: right;">13.4 / 44.2</td>
+</tr>
+<tr>
+<td>feature-2m-no_platform-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.08%</td>
+<td style="text-align: right;">0.7346</td>
+<td style="text-align: right;">0.7174</td>
+<td style="text-align: right;">13.0 / 43.9</td>
+</tr>
+<tr>
+<td>feature-2m-no_purchases-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.12%</td>
+<td style="text-align: right;">0.7339</td>
+<td style="text-align: right;">0.7165</td>
+<td style="text-align: right;">12.6 / 43.3</td>
+</tr>
+<tr>
+<td>feature-2m-no_similarity-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.10%</td>
+<td style="text-align: right;">0.7339</td>
+<td style="text-align: right;">0.7177</td>
+<td style="text-align: right;">13.7 / 43.5</td>
+</tr>
+<tr>
+<td>feature-2m-semantic_lexical-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">70.84%</td>
+<td style="text-align: right;">0.7695</td>
+<td style="text-align: right;">0.7659</td>
+<td style="text-align: right;">13.4 / 43.5</td>
+</tr>
+<tr>
+<td>feature-2m-semantic_only-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">59.82%</td>
+<td style="text-align: right;">0.9955</td>
+<td style="text-align: right;">1.0234</td>
+<td style="text-align: right;">13.8 / 43.2</td>
+</tr>
+<tr>
+<td>feature-2m-text_semantic_lexical-ce10-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">67.72%</td>
+<td style="text-align: right;">0.8470</td>
+<td style="text-align: right;">0.8862</td>
+<td style="text-align: right;">13.9 / 44.7</td>
+</tr>
+<tr>
+<td>label-1m-ce5-2510u-s173-r2</td>
+<td style="text-align: right;">1,000,000</td>
+<td style="text-align: right;">6,309,897</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">71.04%</td>
+<td style="text-align: right;">0.7995</td>
+<td style="text-align: right;">0.7340</td>
+<td style="text-align: right;">13.7 / 40.8</td>
+</tr>
+<tr>
+<td>label-1m-ce7-2510u-s173</td>
+<td style="text-align: right;">1,000,000</td>
+<td style="text-align: right;">6,309,963</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">71.27%</td>
+<td style="text-align: right;">0.7795</td>
+<td style="text-align: right;">0.7221</td>
+<td style="text-align: right;">13.7 / 39.7</td>
+</tr>
+<tr>
+<td>label-1m-components-2510u-s173</td>
+<td style="text-align: right;">1,000,000</td>
+<td style="text-align: right;">6,309,996</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">67.51%</td>
+<td style="text-align: right;">0.9357</td>
+<td style="text-align: right;">0.7196</td>
+<td style="text-align: right;">14.2 / 40.7</td>
+</tr>
+<tr>
+<td>label-1m-joint16-2510u-s173</td>
+<td style="text-align: right;">1,000,000</td>
+<td style="text-align: right;">6,310,260</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">71.36%</td>
+<td style="text-align: right;">0.7713</td>
+<td style="text-align: right;">0.7178</td>
+<td style="text-align: right;">12.9 / 40.3</td>
+</tr>
+<tr>
+<td>llm-qwen3-06b-classifier-250k-1ep-s173</td>
+<td style="text-align: right;">250,000</td>
+<td style="text-align: right;">596,057,095</td>
+<td style="text-align: right;">1,954</td>
+<td style="text-align: right;">79.48%</td>
+<td style="text-align: right;">0.5503</td>
+<td style="text-align: right;">0.5361</td>
+<td style="text-align: right;">353.6 / 599.4</td>
+</tr>
+<tr>
+<td>llm-qwen3-06b-restricted-250k-1ep-s173</td>
+<td style="text-align: right;">250,000</td>
+<td style="text-align: right;">596,049,920</td>
+<td style="text-align: right;">1,954</td>
+<td style="text-align: right;">79.42%</td>
+<td style="text-align: right;">0.5512</td>
+<td style="text-align: right;">0.5416</td>
+<td style="text-align: right;">353.0 / 597.7</td>
+</tr>
+<tr>
+<td>llm-qwen3-06b-token-250k-1ep-s173</td>
+<td style="text-align: right;">250,000</td>
+<td style="text-align: right;">596,049,920</td>
+<td style="text-align: right;">1,954</td>
+<td style="text-align: right;">79.41%</td>
+<td style="text-align: right;">0.5509</td>
+<td style="text-align: right;">0.5414</td>
+<td style="text-align: right;">354.0 / 601.4</td>
+</tr>
+<tr>
+<td>mix-500k-0-0-100-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">54.40%</td>
+<td style="text-align: right;">1.7012</td>
+<td style="text-align: right;">1.1723</td>
+<td style="text-align: right;">2.8 / 24.9</td>
+</tr>
+<tr>
+<td>mix-500k-0-100-0-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">65.63%</td>
+<td style="text-align: right;">0.8896</td>
+<td style="text-align: right;">0.9339</td>
+<td style="text-align: right;">3.0 / 25.2</td>
+</tr>
+<tr>
+<td>mix-500k-0-25-75-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">64.06%</td>
+<td style="text-align: right;">0.9928</td>
+<td style="text-align: right;">0.9469</td>
+<td style="text-align: right;">3.0 / 24.6</td>
+</tr>
+<tr>
+<td>mix-500k-0-50-50-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">65.41%</td>
+<td style="text-align: right;">0.9313</td>
+<td style="text-align: right;">0.9165</td>
+<td style="text-align: right;">3.0 / 25.4</td>
+</tr>
+<tr>
+<td>mix-500k-0-75-25-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">66.70%</td>
+<td style="text-align: right;">0.8848</td>
+<td style="text-align: right;">0.8722</td>
+<td style="text-align: right;">3.0 / 24.1</td>
+</tr>
+<tr>
+<td>mix-500k-100-0-0-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">68.83%</td>
+<td style="text-align: right;">0.8174</td>
+<td style="text-align: right;">0.8344</td>
+<td style="text-align: right;">3.1 / 25.4</td>
+</tr>
+<tr>
+<td>mix-500k-25-0-75-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">66.70%</td>
+<td style="text-align: right;">0.9181</td>
+<td style="text-align: right;">0.8546</td>
+<td style="text-align: right;">3.0 / 24.5</td>
+</tr>
+<tr>
+<td>mix-500k-25-25-50-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">67.72%</td>
+<td style="text-align: right;">0.8593</td>
+<td style="text-align: right;">0.8241</td>
+<td style="text-align: right;">2.8 / 24.7</td>
+</tr>
+<tr>
+<td>mix-500k-25-50-25-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">68.40%</td>
+<td style="text-align: right;">0.8343</td>
+<td style="text-align: right;">0.8122</td>
+<td style="text-align: right;">2.8 / 24.7</td>
+</tr>
+<tr>
+<td>mix-500k-25-75-0-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">67.94%</td>
+<td style="text-align: right;">0.8356</td>
+<td style="text-align: right;">0.8517</td>
+<td style="text-align: right;">2.8 / 24.6</td>
+</tr>
+<tr>
+<td>mix-500k-50-0-50-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">68.28%</td>
+<td style="text-align: right;">0.8500</td>
+<td style="text-align: right;">0.8172</td>
+<td style="text-align: right;">2.9 / 24.6</td>
+</tr>
+<tr>
+<td>mix-500k-50-25-25-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">68.96%</td>
+<td style="text-align: right;">0.8170</td>
+<td style="text-align: right;">0.8079</td>
+<td style="text-align: right;">3.0 / 24.6</td>
+</tr>
+<tr>
+<td>mix-500k-50-50-0-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">68.36%</td>
+<td style="text-align: right;">0.8261</td>
+<td style="text-align: right;">0.8487</td>
+<td style="text-align: right;">3.0 / 24.6</td>
+</tr>
+<tr>
+<td>mix-500k-70-20-10-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">69.37%</td>
+<td style="text-align: right;">0.8051</td>
+<td style="text-align: right;">0.8055</td>
+<td style="text-align: right;">3.0 / 24.6</td>
+</tr>
+<tr>
+<td>mix-500k-75-0-25-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">69.08%</td>
+<td style="text-align: right;">0.8160</td>
+<td style="text-align: right;">0.8032</td>
+<td style="text-align: right;">2.8 / 24.5</td>
+</tr>
+<tr>
+<td>mix-500k-75-25-0-ce10-500u-s173</td>
+<td style="text-align: right;">500,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">68.73%</td>
+<td style="text-align: right;">0.8202</td>
+<td style="text-align: right;">0.8380</td>
+<td style="text-align: right;">2.9 / 24.9</td>
+</tr>
+<tr>
+<td>optimization-2m-adamw-noamsgrad-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.17%</td>
+<td style="text-align: right;">0.7324</td>
+<td style="text-align: right;">0.7170</td>
+<td style="text-align: right;">12.5 / 43.1</td>
+</tr>
+<tr>
+<td>optimization-2m-dropout0-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.11%</td>
+<td style="text-align: right;">0.7318</td>
+<td style="text-align: right;">0.7216</td>
+<td style="text-align: right;">12.9 / 43.5</td>
+</tr>
+<tr>
+<td>optimization-2m-dropout03-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">71.84%</td>
+<td style="text-align: right;">0.7422</td>
+<td style="text-align: right;">0.7217</td>
+<td style="text-align: right;">12.6 / 43.6</td>
+</tr>
+<tr>
+<td>optimization-2m-logweight-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">71.54%</td>
+<td style="text-align: right;">0.7510</td>
+<td style="text-align: right;">0.7440</td>
+<td style="text-align: right;">13.6 / 44.3</td>
+</tr>
+<tr>
+<td>optimization-2m-lr1e-3-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.41%</td>
+<td style="text-align: right;">0.7424</td>
+<td style="text-align: right;">0.6955</td>
+<td style="text-align: right;">13.5 / 45.8</td>
+</tr>
+<tr>
+<td>optimization-2m-lr1e-4-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">70.45%</td>
+<td style="text-align: right;">0.7754</td>
+<td style="text-align: right;">0.7703</td>
+<td style="text-align: right;">13.3 / 44.2</td>
+</tr>
+<tr>
+<td>optimization-2m-wd0-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.13%</td>
+<td style="text-align: right;">0.7332</td>
+<td style="text-align: right;">0.7163</td>
+<td style="text-align: right;">12.9 / 44.1</td>
+</tr>
+<tr>
+<td>optimization-2m-wd01-2510u-s173</td>
+<td style="text-align: right;">2,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.15%</td>
+<td style="text-align: right;">0.7321</td>
+<td style="text-align: right;">0.7176</td>
+<td style="text-align: right;">13.8 / 44.8</td>
+</tr>
 <tr>
 <td>size-1000000-ce10-2510u-s173</td>
 <td style="text-align: right;">1,000,000</td>
@@ -170,15 +689,62 @@ img{max-width:100%;height:auto}
 <td style="text-align: right;">0.9532</td>
 <td style="text-align: right;">1.1 / 22.6</td>
 </tr>
+<tr>
+<td>size-4000000-ce10-2510u-s173</td>
+<td style="text-align: right;">4,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.34%</td>
+<td style="text-align: right;">0.7245</td>
+<td style="text-align: right;">0.7219</td>
+<td style="text-align: right;">13.6 / 50.2</td>
+</tr>
+<tr>
+<td>size-4000000-ce10-2ep-s173</td>
+<td style="text-align: right;">4,000,000</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">1,954</td>
+<td style="text-align: right;">71.99%</td>
+<td style="text-align: right;">0.7331</td>
+<td style="text-align: right;">0.7364</td>
+<td style="text-align: right;">9.6 / 47.4</td>
+</tr>
+<tr>
+<td>size-8953912-ce10-2510u-s173</td>
+<td style="text-align: right;">8,953,912</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">2,510</td>
+<td style="text-align: right;">72.45%</td>
+<td style="text-align: right;">0.7205</td>
+<td style="text-align: right;">0.7217</td>
+<td style="text-align: right;">12.6 / 71.7</td>
+</tr>
+<tr>
+<td>size-8953912-ce10-2ep-s173</td>
+<td style="text-align: right;">8,953,912</td>
+<td style="text-align: right;">6,310,062</td>
+<td style="text-align: right;">4,374</td>
+<td style="text-align: right;">73.21%</td>
+<td style="text-align: right;">0.7007</td>
+<td style="text-align: right;">0.7077</td>
+<td style="text-align: right;">22.1 / 81.0</td>
+</tr>
 </tbody>
 </table>
+</details>
 <p>Training seconds include the optimizer loop and its logging; total seconds include data loading, validation, checkpointing and private artifact upload, but end before the final tracking-client shutdown. Cached-data preparation is a separate study cost. GPU memory figures include resident datasets where used. The production model was trained on a different historical corpus/rubric, so a comparison with it does not isolate architecture.</p>
 <p><img alt="Measured scaling curves" src="experiments/search-relevance-generalization/size-scaling.png" />
 <a href="experiments/search-relevance-generalization/size-scaling.svg">SVG</a> · <a href="experiments/search-relevance-generalization/size-scaling.pdf">PDF</a></p>
 <p>The two curves answer different questions. Fixed updates repeat small datasets more often; fixed epochs give large datasets more updates. Query-balanced accuracy describes that sampled population and is not a substitute for a verified traffic-frequency tail metric. Points have one seed and therefore no across-seed confidence bands.</p>
-<h3>Precision check</h3>
+<h3 id="which-inputs-matter">Which inputs matter?</h3>
+<p><img alt="Retrained feature ablations" src="experiments/search-relevance-generalization/feature-ablations.png" /></p>
+<p>Ablations retain the architecture while masking the registered inputs during both training and evaluation. Parameters representing removed signals can still encode constants. These are predictive-information controls, not causal estimates of clicks or purchases. Stored semantic features also have substantial missingness.</p>
+<h3 id="how-does-source-composition-change-quality">How does source composition change quality?</h3>
+<p><img alt="Measured source-mixture outcomes" src="experiments/search-relevance-generalization/source-mixtures.png" /></p>
+<p>Each dot is a completed run at a feasible mixture; there is no fitted interpolation. Pure-source controls sit at the corners. Color scales are population-specific. The 70/20/10 reference is the additional interior point.</p>
+<h3 id="precision-check">Precision check</h3>
 <p>The 1M-pair, 500-update FP32/BF16 systems check passed its predeclared absolute tolerance of 0.002 in common-five accuracy and NLL. BF16 minus FP32: <strong>0.058 percentage points</strong> accuracy and <strong>-0.00114</strong> NLL. This one-seed engineering check does not establish statistical equivalence.</p>
-<h3>Language-model infrastructure check</h3>
+<h3 id="language-model-infrastructure-check">Language-model infrastructure check</h3>
 <p>The Qwen3-0.6B classification-head pilot trained all <strong>596,057,095 parameters</strong>, with nonzero gradients and detected changes in all <strong>312 trainable tensors</strong>. It completed 16 updates on 1,024 training examples and a fixed 2,048-pair validation probe. This confirms the execution path; it is not a generalization result. The full head comparison is separately registered at 250k pairs, one epoch, batch 128, and LR 1e-5.</p><h2 id="abstract">Abstract</h2>
 <p>We study whether search relevance improves through more examples, different examples, a different model, or a different use of the available signals. The dataset contains approximately ten million Gemini-labeled query–item pairs, drawn from natural search exposure, query-balanced production coverage, and random unexposed 3D items. The deployed reference is a 6.31-million-parameter deep-and-cross reranker using frozen content embeddings and historical engagement features. We will compare this reference with smaller and larger feature models, models trained from raw text, and language models below four billion total serving parameters. A central comparison holds the pretrained backbone and inputs fixed while changing the output from a generated class token to a learned classification or ordinal head. Experiments separate data volume, sampling distribution, feature information, optimization budget, and inference cost. Query-disjoint evaluation, temporal tests, source-specific diagnostics, calibration, repeated seeds, and a locked final evaluation govern model selection. This document specifies hypotheses and decision rules before model results are observed; audit observations are explicitly distinguished from planned experiments.</p>
 <h2 id="1-research-questions-and-falsifiable-hypotheses">1. Research questions and falsifiable hypotheses</h2>
@@ -237,7 +803,7 @@ img{max-width:100%;height:auto}
 <h2 id="2-audited-production-reference">2. Audited production reference</h2>
 <p>The source checkout is pinned to <code>02e00f7ac8828a0bf64b9dca73e4312ecb767474</code>. Live Triton metrics identify <code>sr-model-v2</code> version <strong>67</strong> under the marketplace discovery service. The downloaded version-67 weights and September-14 training export have the same SHA-256 digest, <code>e380a876a2af912cba84d39790213c63beb345213ca36e76ec8775659c1f39f1</code>. Inspection of the TorchScript model gives <strong>6,310,062 parameters</strong>.</p>
 <h3 id="21-inputs-and-architecture">2.1 Inputs and architecture</h3>
-<p>The production configuration uses 69 numeric behavior signals: search and platform exposure, clicks and purchases at item/query/query–item levels, corrected Q2D counts, and centrality/prominence measures. Each numeric signal uses a learned four-dimensional embedding of 32 percentile bins. Two scalar similarity scores and eight query–title lexical match features accompany four dense content vectors: item text (1024), item image (1152), query text/ROME (1024), and query image-space/SigLIP (1152).</p>
+<p>The production configuration uses 69 numeric behavior signals: search and platform exposure, clicks and purchases at item/query/query–item levels, corrected behavior counts, and centrality/prominence measures. Each numeric signal uses a learned four-dimensional embedding of 32 percentile bins. Two scalar similarity scores and eight query–title lexical match features accompany four dense content vectors: item text (1024), item image (1152), query text/ROME (1024), and query image-space/SigLIP (1152).</p>
 <p>Each dense vector is reduced to 256 dimensions by a learned value network multiplied by a sigmoid gate. Concatenation produces <strong>1310 features</strong>. Two full-rank cross layers feed a ReLU MLP with widths <strong>256 → 128 → 32 → 10</strong> and dropout 0.15. The two cross matrices alone each have shape 1310 × 1310, making the cross network a substantial part of the parameter budget.</p>
 <p>For a full-rank cross layer, the implementation family is of the form <code>x_(l+1) = x_0 ⊙ (W_l x_l + b_l) + x_l</code>. The optimized adapter matches the exported module on validation shards with maximum absolute logit error 3.82 × 10⁻⁶; all 6,310,062 production parameters are covered. The formula is not a replacement for this parity test.</p>
 <p>The network learns from scratch <strong>on top of pretrained frozen embeddings</strong>. Calling the entire system “trained from scratch” would hide the contribution and serving cost of those encoders. A raw-text random-initialized model is a separate baseline.</p>
@@ -466,6 +1032,7 @@ img{max-width:100%;height:auto}
 <p>Begin with a 500k-unique-pair mixture screen: the 15 simplex points with source weights in increments of 0.25, plus the approximately 70/20/10 reference if distinct. This includes pure-source controls and mixtures along every edge. Reserve the same evaluation sets for every run. Follow up only the best few neighborhoods and a reference mixture at 2M and larger <strong>feasible</strong> sizes.</p>
 <p>For source capacities <code>C_s</code> and desired proportions <code>w_s</code>, sampling without replacement requires <code>N ≤ min(C_s / w_s)</code> over positive weights. Approximately one million labeled random pairs does not permit an arbitrary random fraction at full scale. A requested infeasible combination is marked infeasible; it is never silently filled with duplicated examples. Oversampling is a separate explicitly labeled exposure-weighting experiment with unique count held visible.</p>
 <p>Test random fractions 0/5/10/20% in a follow-up at a feasible size while keeping the natural:balanced ratio within the remaining mass fixed. Compare equal unique-pair weight with clipped <code>log1p(pair_count)</code> and square-root weighting, normalizing to mean one. Do not simultaneously alter sampling and loss weighting without documenting the resulting effective target distribution. Measure effective sample size <code>(sum w)^2 / sum(w^2)</code>.</p>
+<p><strong>Mixture-screen amendment after the initial size curves, before any mixture results:</strong> the 250k fixed-update run showed severe overconfidence after approximately 41 passes (shared-five validation NLL 2.33). The 500k mixture screen will therefore use <strong>500 updates at batch 4096</strong>, approximately 4.10 passes, rather than inheriting the 2510-update size budget. All 16 mixtures receive the same revised budget; this avoids making the first composition screen primarily a test of prolonged small-data overfitting. Larger follow-ups retain separately stated budgets.</p>
 <h3 id="53-feature-information-and-failure-modes">5.3 Feature information and failure modes</h3>
 <table>
 <thead>
@@ -485,7 +1052,7 @@ img{max-width:100%;height:auto}
 </tr>
 <tr>
 <td>Historical behavior</td>
-<td>Item, query, and pair exposure/click/purchase histories, with corrected Q2D and D2Q/platform signals separated</td>
+<td>Item, query, and pair exposure/click/purchase histories, with legacy, platform, and corrected behavior families separated</td>
 </tr>
 <tr>
 <td>Raw content</td>
@@ -499,6 +1066,7 @@ img{max-width:100%;height:auto}
 </table>
 <p>Compare lexical-only, semantic-only, behavior-only, semantic+lexical, and all-production features. Then remove clicks, purchases, exposures, D2Q/platform, and Q2D families individually and in justified combinations. Treat behavioral signals as observational predictors; their presence does not make them causal evidence of relevance. Exclude identifiers that enable pair memorization unless explicitly studying an ID baseline.</p>
 <p>Run both <strong>retrained ablations</strong> (can the remaining information learn the task?) and <strong>inference perturbations</strong> (how does a fitted model fail when a signal disappears?). They answer different questions. Probe missingness alone, zero/missing masks, shuffled behavior within controlled strata, age of statistics, and behavior-preserving versus content-preserving counterfactuals. A classifier that easily predicts random-source membership from missing features motivates stronger source-shortcut checks, not an automatic conclusion that relevance was learned.</p>
+<p>The actual numeric family lists contain 18 legacy search signals, 18 platform signals, and 33 corrected behavior signals. Naming differs across repository layers (including D2Q/Q2D terminology), so ablations are registered by explicit column lists: remove legacy behavior (36 including platform), corrected behavior (33), platform only (18), clicks (21), purchases (21), or viewed/searches counts (21). The two scalar similarities are a separate ablation. Raw title equality between label-time metadata and cached features was verified for every main train/validation row.</p>
 <h3 id="54-architecture-and-optimization">5.4 Architecture and optimization</h3>
 <p>Start with linear/ordinal logistic and boosted-tree controls, an MLP, the production DCN, residual MLPs, and a feature-token transformer. Scale measured trainable parameters approximately around <strong>1M, 6M, 20M, and 60M</strong> where each architecture permits; include preprocessing and embedding reducers in the count. Sweep cross depth {0,2,4}, reducer width {128,256,512}, and MLP width/depth in staged subsets. Dense versus low-rank cross layers require matched parameter or compute comparisons, not a claim of free scaling.</p>
 <p>For scratch models, screen LR <code>{1e-4, 3.5e-4, 1e-3}</code>, weight decay <code>{0, 0.01, 0.1}</code>, dropout <code>{0, 0.15, 0.3}</code>, and exposure budgets equivalent to <code>{1,2,4}</code> epochs using successive stages rather than their full product. Preserve a literal production recipe as the reference. Compare AdamW with and without AMSGrad; consider SGD+momentum only with an adequate independently tuned LR range. Separate optimizer quality comparisons from fused-versus-unfused implementation comparisons. Record warmup fraction, schedule length, minimum LR, clipping, precision, batch, and actual update count.</p>
