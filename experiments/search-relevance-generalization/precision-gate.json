@@ -1,0 +1,19 @@
+{
+  "fp32": {
+    "accuracy_common_5": 0.6927168831587365,
+    "nll_common_5": 0.8056734031802324
+  },
+  "bf16": {
+    "accuracy_common_5": 0.6932949562618208,
+    "nll_common_5": 0.8045379946065025
+  },
+  "deltas_bf16_minus_fp32": {
+    "accuracy_common_5": 0.0005780731030843311,
+    "nll_common_5": -0.0011354085737298458
+  },
+  "tolerance": 0.002,
+  "kind": "single-seed systems screen, not formal equivalence",
+  "fp32_train_seconds": 3.0864668139256537,
+  "bf16_train_seconds": 2.979703785851598,
+  "passed": true
+}

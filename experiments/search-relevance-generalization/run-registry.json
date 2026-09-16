@@ -27,6 +27,87 @@
     "id": "model-experiments",
     "kind": "training",
     "state": "preparing controlled training; two allocated B200s verified",
-    "completed_runs": 0
+    "completed_runs": 6
+  },
+  {
+    "id": "llm-qwen3-06b-classifier-pilot-s173",
+    "state": "complete",
+    "kind": "language-model-optimizer-pilot",
+    "size": 250000,
+    "objective": "ce7",
+    "parameters": 596057095,
+    "seed": 173
+  },
+  {
+    "id": "size-1000000-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 1000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "size-1000000-ce10-2ep-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 1000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "size-2000000-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "size-2000000-ce10-2ep-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 2000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "size-250000-ce10-2510u-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 250000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "size-250000-ce10-2ep-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 250000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "systems-1m-500u-bf16-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 1000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
+  },
+  {
+    "id": "systems-1m-500u-fp32-s173",
+    "state": "complete",
+    "kind": "controlled-training",
+    "size": 1000000,
+    "objective": "ce10",
+    "parameters": 6310062,
+    "seed": 173
   }
 ]

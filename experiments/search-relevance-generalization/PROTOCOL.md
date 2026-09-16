@@ -4,7 +4,7 @@
 
 **Simon Dong · Research protocol v1.1 · 16 September 2026**
 
-**Status:** production replay and main data audit complete; GPU optimizer pilot passed; controlled model training in preparation. No new-model improvement is claimed yet.
+**Status:** production replay and main data audit complete; scratch and full-parameter LM pilots passed; controlled training is running. Measured single-seed validation results are reported separately; final-test and deployment conclusions remain pending.
 
 ## Abstract
 
@@ -216,7 +216,13 @@ Use pinned memory, bounded prefetch, persistent workers, and vectorized preproce
 
 BF16 autocast, fused AdamW, scaled-dot-product/FlashAttention kernels, `torch.compile`, and CUDA graphs are candidates, not assumed wins. Maintain FP32 optimizer states and stable loss reductions as required. Run pilots through the first optimizer update so optimizer states and workspaces are allocated. Measure memory peaks, nonzero gradients, parameter changes, actual trainable coverage, and loss behavior. Compare eager/optimized outputs and gradients at justified tolerances, then compare held-out quality using the same optimization path. Disable a speed optimization that changes the intended objective or degrades quality beyond the registered tolerance.
 
-### 6.2 Budget accounting and benchmarks
+### 6.2 First controlled runs, registered before candidate scores
+
+The systems check uses a nested 1M-pair reference mixture, seed 173, 500 updates, global batch 4096, and the production-size CE10 architecture. FP32 and BF16 receive identical initial weights, shuffled minibatch order, and optimizer/schedule settings. A provisional engineering acceptance gate is an absolute difference no larger than 0.002 in shared-five NLL and 0.002 in shared-five accuracy. This is a systems screening tolerance, not a statistical equivalence claim; borderline outcomes require additional seeds. The data-mixture and size screens will use a fixed-update view of **2510 updates × 4096 examples**, alongside a two-epoch view. At epoch boundaries, fixed-update jobs carry rows across shuffled passes to keep every update full; fixed-epoch jobs retain the final partial minibatch. Numeric quantiles are fitted on at most 250k deterministic randomly selected rows from each permitted training subset. All preprocessing fit counts and seeds are recorded.
+
+The first controlled LM-head comparison is fixed at **250k identical training pairs, one epoch, global batch 128, LR 1e-5, AdamW (betas 0.9/0.95, weight decay 0.01), BF16 autocast with FP32 parameters/states, and full validation**. All three heads use Qwen3-0.6B and the same tokenized query/title input and minibatch order. Class tokens 2–8 are each one token. No examples exceed the 256-token cap (median 82, maximum 163 across train/validation). The 596M-parameter classifier pilot verified gradients and changes in all 312 trainable tensors; FP32 left/right-padding maximum logit difference was 2.27e-5. The batch benchmark holds global batch 512 fixed while comparing accumulation: microbatches 64/128/256/512 reached approximately 588/638/648/659 examples/s, with peak memory 28/43/78/148 GB at the benchmark lengths. Microbatch 128 retains almost all throughput while leaving room for longer inputs; the main statistical batch is explicitly 128 rather than the benchmark's 512. Microbatch-dependent trajectories differed after several updates despite first-gradient sampled relative L2 differences below 0.002, so these throughput measurements do not establish quality equivalence across batch implementations.
+
+### 6.3 Budget accounting and benchmarks
 
 Record cold-start/compile time and steady-state throughput separately; report total run wall time including evaluation, checkpointing, and upload. Count **allocated** GPU-hours, not just kernel-active time. Estimate model memory from weights, master copies, gradients, optimizer states, activations and buffers, then validate the estimate by measurement. Full-parameter Adam training commonly needs far more than the BF16 weight size; a model loading successfully is not proof that training fits.
 
