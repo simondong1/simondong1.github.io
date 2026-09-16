@@ -105,7 +105,7 @@ img{max-width:100%;height:auto}
 <p><strong>Simon Dong · Research study v1.3 · 16 September 2026</strong></p>
 <p><strong>Status:</strong> production replay, data audit, source/feature/optimization screens, architecture controls, matched LLM heads, pretraining controls, three-seed confirmations, model fusion, temporal evaluation, and quality-checked serving compilation are complete. The 1M text-data scaling run precedes sealed final-test selection. Sections 1–7 retain the broader research agenda; the measured run registry and <code>FINAL_SELECTION.md</code> define executed work and the bounded closing stage. Proposed follow-ups are not represented as completed experiments.</p>
 
-<div class="status"><strong>Research in progress.</strong> 84 quality training runs complete. Later-traffic results and serving compilation are available; the registered final test awaits completion of the 1M data-scaling run.</div>
+<div class="status"><strong>Research in progress.</strong> 85 quality training runs complete. Later-traffic results and serving compilation are available. Finalists sealed; test preparation/scoring in progress.</div>
 <div class="facts"><div><strong>9.95M</strong>final labeled pairs</div><div><strong>6.31M</strong>production model parameters</div><div><strong>&lt;4B</strong>LM serving parameter limit</div></div>
 <p><a href="experiments/search-relevance-generalization/PROTOCOL.md">Download protocol</a> · <a href="experiments/search-relevance-generalization/FINAL_SELECTION.md">Final-test selection rules</a> · <a href="experiments/search-relevance-generalization/run-registry.json">Run registry</a> · <a href="experiments/search-relevance-generalization/aggregate-audit.json">Aggregate audit</a></p>
 <section class="lab" aria-labelledby="mixture-tool"><h3 id="mixture-tool">Explore feasible data mixtures</h3>
@@ -120,8 +120,8 @@ img{max-width:100%;height:auto}
 <tr><td>Full data integrity audit</td><td>Completed; see the aggregate audit file</td></tr>
 <tr><td>Production validation replay</td><td>Completed; 496,477 pairs, 64.38% exact total accuracy</td></tr>
 <tr><td>GPU infrastructure pilot</td><td>Completed on an allocated B200; full optimizer updates verified</td></tr>
-<tr><td>Controlled training experiments</td><td>84 completed; all measured recipes are listed below</td></tr>
-<tr><td>Locked test</td><td>Waiting for registered 1M training, then sealed scoring</td></tr>
+<tr><td>Controlled training experiments</td><td>85 completed; all measured recipes are listed below</td></tr>
+<tr><td>Locked test</td><td>Finalists sealed; test preparation/scoring in progress</td></tr>
 <tr><td>Later traffic</td><td>Completed; 267 full pages, weighted estimates and file-cluster intervals</td></tr>
 <tr><td>Serving measurements</td><td>Eager CPU/B200 complete; compiled 0.6B passed full-validation quality gate</td></tr></tbody></table>
 <h2 id="generalization-to-later-traffic">Generalization to later traffic</h2>
@@ -225,7 +225,7 @@ img{max-width:100%;height:auto}
 <p>The unseen-query subset contains 72 requests and 2,696 pairs. The mixture's pooled paired change versus 1.7B alone is <strong>0.113 [-0.306, 0.454] percentage points</strong> in accuracy, <strong>-0.0048 [-0.0082, -0.0011]</strong> NLL, and <strong>0.00157 [0.00003, 0.00304]</strong> page NDCG. Accuracy is not clearly separated. These temporal comparisons and sensitivity slices are secondary, not additional multiplicity-corrected primary tests.</p>
 <p>Image availability remains imperfect: <strong>28</strong> evaluable pairs explicitly used an unavailable-image placeholder, affecting <strong>10</strong> requests. Another 29 fetched images had catalog Pending/Blocked status and may be service placeholders despite decodable bytes. Snapshot URLs were re-fetched at study time; current-catalog fallbacks do not guarantee request-time image identity. The downloadable audit reports states and the complete-request sensitivity excluding explicit unavailable placeholders. The reannotation bridge below checks rubric continuity; it does not establish human accuracy.</p>
 <p><a href="experiments/search-relevance-generalization/temporal-results.json">Per-date results, uncertainty, image sensitivity, and frozen cascade use</a></p><h2 id="measured-training-results">Measured training results</h2>
-<p><strong>84 controlled quality runs complete</strong>, plus systems checks. Results below are exploratory validation measurements; individual seeds are recorded in the complete table. They are not deployment recommendations or final-test results. Each training row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.</p>
+<p><strong>85 controlled quality runs complete</strong>, plus systems checks. Results below are exploratory validation measurements; individual seeds are recorded in the complete table. They are not deployment recommendations or final-test results. Each training row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.</p>
 <table>
 <thead>
 <tr>
@@ -236,6 +236,12 @@ img{max-width:100%;height:auto}
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>Qwen3-0.6B, classification head, 1M</td>
+<td style="text-align: right;">1,000,000</td>
+<td style="text-align: right;">82.11%</td>
+<td style="text-align: right;">0.4781</td>
+</tr>
 <tr>
 <td>Qwen3-0.6B, classification head</td>
 <td style="text-align: right;">250,000</td>
@@ -268,6 +274,7 @@ img{max-width:100%;height:auto}
 </tr>
 </tbody>
 </table>
+<p>The 1M-pair 0.6B classifier reaches <strong>82.11%</strong> shared-five accuracy and <strong>0.4781</strong> NLL, versus 79.48% and 0.5503 at 250k. It exceeds the matched-family 1.7B/250k validation result under a larger data and optimization budget. It consumes one million examples in 7,813 updates versus 250k in 1,954; this is not an equal-compute capacity comparison. All use one pass, LR 1e-5, full-parameter AdamW, and the same query/title format.</p>
 <p>These reference rows are best-observed recipe comparisons with different input representations, training data counts, parameter counts, and compute. They do not isolate a single cause. The head-to-head LM comparison does freeze the backbone, examples, input serialization, batch order, and optimization recipe.</p>
 <details>
 <summary>Complete experiment table</summary>
@@ -594,6 +601,16 @@ img{max-width:100%;height:auto}
 <td style="text-align: right;">0.7713</td>
 <td style="text-align: right;">0.7178</td>
 <td style="text-align: right;">12.9 / 40.3</td>
+</tr>
+<tr>
+<td>llm-qwen3-06b-classifier-1m-1ep-s173</td>
+<td style="text-align: right;">1,000,000</td>
+<td style="text-align: right;">596,057,095</td>
+<td style="text-align: right;">7,813</td>
+<td style="text-align: right;">82.11%</td>
+<td style="text-align: right;">0.4781</td>
+<td style="text-align: right;">0.4600</td>
+<td style="text-align: right;">1415.4 / 1660.8</td>
 </tr>
 <tr>
 <td>llm-qwen3-06b-classifier-250k-1ep-s173</td>

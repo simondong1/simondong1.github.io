@@ -1,14 +1,18 @@
 ## Measured training results
 
-**84 controlled quality runs complete**, plus systems checks. Results below are exploratory validation measurements; individual seeds are recorded in the complete table. They are not deployment recommendations or final-test results. Each training row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.
+**85 controlled quality runs complete**, plus systems checks. Results below are exploratory validation measurements; individual seeds are recorded in the complete table. They are not deployment recommendations or final-test results. Each training row evaluates all 496,477 validation pairs unless identified as a pilot. Native five-class and native ten-class accuracies are not compared; the main table uses the registered common five-bin target.
 
 | Reference comparison | Unique training pairs | Common-five accuracy | Common-five NLL ↓ |
 |---|---:|---:|---:|
+| Qwen3-0.6B, classification head, 1M | 1,000,000 | 82.11% | 0.4781 |
 | Qwen3-0.6B, classification head | 250,000 | 79.48% | 0.5503 |
 | Qwen3-0.6B, restricted token logits | 250,000 | 79.42% | 0.5512 |
 | Qwen3-0.6B, full-vocabulary token | 250,000 | 79.41% | 0.5509 |
 | Qwen3-1.7B, classification head | 250,000 | 81.38% | 0.4963 |
 | Feature DCN, full data, two epochs | 8,953,912 | 73.21% | 0.7007 |
+
+The 1M-pair 0.6B classifier reaches **82.11%** shared-five accuracy and **0.4781** NLL, versus 79.48% and 0.5503 at 250k. It exceeds the matched-family 1.7B/250k validation result under a larger data and optimization budget. It consumes one million examples in 7,813 updates versus 250k in 1,954; this is not an equal-compute capacity comparison. All use one pass, LR 1e-5, full-parameter AdamW, and the same query/title format.
+
 
 These reference rows are best-observed recipe comparisons with different input representations, training data counts, parameter counts, and compute. They do not isolate a single cause. The head-to-head LM comparison does freeze the backbone, examples, input serialization, batch order, and optimization recipe.
 
@@ -47,6 +51,7 @@ These reference rows are best-observed recipe comparisons with different input r
 | label-1m-ce7-2510u-s173 | 1,000,000 | 6,309,963 | 2,510 | 71.27% | 0.7795 | 0.7221 | 13.7 / 39.7 |
 | label-1m-components-2510u-s173 | 1,000,000 | 6,309,996 | 2,510 | 67.51% | 0.9357 | 0.7196 | 14.2 / 40.7 |
 | label-1m-joint16-2510u-s173 | 1,000,000 | 6,310,260 | 2,510 | 71.36% | 0.7713 | 0.7178 | 12.9 / 40.3 |
+| llm-qwen3-06b-classifier-1m-1ep-s173 | 1,000,000 | 596,057,095 | 7,813 | 82.11% | 0.4781 | 0.4600 | 1415.4 / 1660.8 |
 | llm-qwen3-06b-classifier-250k-1ep-s173 | 250,000 | 596,057,095 | 1,954 | 79.48% | 0.5503 | 0.5361 | 353.6 / 599.4 |
 | llm-qwen3-06b-classifier-250k-2ep-s173 | 250,000 | 596,057,095 | 3,908 | 79.90% | 0.5548 | 0.4885 | 708.4 / 953.0 |
 | llm-qwen3-06b-classifier-250k-frozen-lr1e-3-s173 | 250,000 | 596,057,095 | 1,954 | 50.23% | 1.2173 | 1.2822 | 114.7 / 339.3 |

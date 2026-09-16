@@ -26,8 +26,8 @@
   {
     "id": "model-experiments",
     "kind": "training",
-    "state": "running final registered data-scaling trial",
-    "completed_runs": 84
+    "state": "complete",
+    "completed_runs": 85
   },
   {
     "id": "final-test-comparison-v1",
@@ -325,6 +325,15 @@
     "size": 1000000,
     "objective": "joint16",
     "parameters": 6310260,
+    "seed": 173
+  },
+  {
+    "id": "llm-qwen3-06b-classifier-1m-1ep-s173",
+    "state": "complete",
+    "kind": "language-model-training",
+    "size": 1000000,
+    "objective": "ce7",
+    "parameters": 596057095,
     "seed": 173
   },
   {
