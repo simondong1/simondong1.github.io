@@ -2,9 +2,9 @@
 
 ## A controlled study of data composition, model capacity, supervision, and serving cost
 
-**Simon Dong · Research protocol v1 · 16 September 2026**
+**Simon Dong · Research protocol v1.1 · 16 September 2026**
 
-**Status:** production and data audit in progress; model-training results are not yet available.
+**Status:** production replay and main data audit complete; GPU optimizer pilot passed; controlled model training in preparation. No new-model improvement is claimed yet.
 
 ## Abstract
 
@@ -35,7 +35,7 @@ The production configuration uses 69 numeric behavior signals: search and platfo
 
 Each dense vector is reduced to 256 dimensions by a learned value network multiplied by a sigmoid gate. Concatenation produces **1310 features**. Two full-rank cross layers feed a ReLU MLP with widths **256 → 128 → 32 → 10** and dropout 0.15. The two cross matrices alone each have shape 1310 × 1310, making the cross network a substantial part of the parameter budget.
 
-For a full-rank cross layer, the implementation family is of the form `x_(l+1) = x_0 ⊙ (W_l x_l + b_l) + x_l`. Exact parity will be established against the exported module, including tensor orientation, activation, bin boundaries, and initialization; the formula is not a replacement for a parity test.
+For a full-rank cross layer, the implementation family is of the form `x_(l+1) = x_0 ⊙ (W_l x_l + b_l) + x_l`. The optimized adapter matches the exported module on validation shards with maximum absolute logit error 3.82 × 10⁻⁶; all 6,310,062 production parameters are covered. The formula is not a replacement for this parity test.
 
 The network learns from scratch **on top of pretrained frozen embeddings**. Calling the entire system “trained from scratch” would hide the contribution and serving cost of those encoders. A raw-text random-initialized model is a separate baseline.
 
@@ -206,7 +206,7 @@ A cascade can apply a cheap feature model to all candidates and a small LM only 
 
 ## 6. Training and serving systems protocol
 
-Hardware allocation and total run budget are pending. Eight B200s are visible on a shared host; visibility or idleness is not allocation. Each launched job records physical UUIDs, logical indices, process/container IDs, and the allocation decision. Home storage has only approximately 26 GB free, so large reproducible caches use the spacious scratch filesystem and durable artifacts use the study's private object-store prefix. Existing users' files and processes are preserved.
+The scheduler reserves two B200 GPUs, approximately 46 CPU cores, and 480 GiB RAM for this devspace. Training is restricted to those two GPU UUIDs. The total study budget and serving SLA remain unspecified; stages are admitted using measured cost. Eight B200s are visible on the shared host; visibility or idleness is not allocation. Each launched job records physical UUIDs, logical indices, process/container IDs, and the allocation decision. Home storage has only approximately 26 GB free, so large reproducible caches use the spacious scratch filesystem and durable artifacts use the study's private object-store prefix. Existing users' files and processes are preserved.
 
 ### 6.1 Optimize the actual bottleneck
 
@@ -239,10 +239,31 @@ The GitHub Pages report will expose the protocol, public methodology, aggregate 
 | Final dataset and provenance | Full metadata audit complete; main splits valid, source joins exact, legacy evaluation issues documented |
 | Hugging Face | Public configs and a 0.6B weight download verified |
 | W&B | Audit run written, finished, and remote history verified |
-| GitHub Pages | Repository permissions and push dry-run verified; protocol prepared for publication |
+| GitHub Pages | Protocol and aggregate audit published; report updated after completed stages |
 | Spark | Query execution and feature-table partition reads verified; future traffic exists through September 15; exit-status parsing handled in a study-specific wrapper |
-| GPU allocation/budget | Awaiting user allocation; training has not started |
+| GPU allocation/budget | Two scheduler-reserved B200s verified; optimizer pilot passed on one; total study budget pending |
 | Future feature cutoffs and human evaluation | To be audited before making temporal or human-quality claims |
+
+## 9. Measured operational baseline and systems pilot
+
+The pinned production model was evaluated on all **496,477 validation pairs**. This is an operational comparison: overlap between its historical training corpus and this evaluation population has not yet been established. The new scratch experiments preserve the audited query-disjoint split. The production reference was trained under an earlier labeling/data regime, so differences do not isolate architecture.
+
+| Validation population | Pairs | Exact total accuracy | Balanced accuracy, supported totals | Original-scale MAE |
+|---|---:|---:|---:|---:|
+| All sources | 496,477 | 64.38% | 45.76% | 0.936 |
+| Natural traffic | 347,924 | 63.70% | 47.21% | 0.874 |
+| Query-balanced | 98,981 | 55.38% | 32.60% | 1.206 |
+| Random unexposed 3D | 49,572 | 87.14% | 47.39% | 0.834 |
+
+The shared five-bin accuracy is **68.74%**; relevant-versus-irrelevant AUROC is **0.9055**. The model assigns **5.44%** of probability mass to unsupported classes 0, 1, and 9. At a validation-tuned threshold achieving 95% relevant recall, irrelevant false acceptance is **40.67%**. These are validation operating points, not test estimates. Only **3.14%** of random-pool pairs are relevant, so its high raw accuracy does not demonstrate strong discrimination.
+
+Natural-pool zero-based NDCG@10 is **0.9570**, over **27,411** multi-item queries with nonzero ideal gain. Of 141,510 natural queries, 111,090 are singletons. The query-balanced pool contains 98,955 queries but only **25 multi-item queries**. These sampled lists do not establish complete-result-list or robust long-tail ranking quality. Complete-list evaluation remains necessary.
+
+Item text/image vectors are all-zero for **163,211** validation rows; query text/image vectors are all-zero for **169,370** rows. Zero-vector slices are reported explicitly without assuming every zero scalar similarity is missing.
+
+The infrastructure pilot completed forward/backward and fused AdamW updates; all **37 parameter tensors changed**, with finite nonzero gradients. It used a repeated small training batch and therefore makes no generalization claim. On one B200, BF16 at batch 4096 reached approximately **939k examples/s** over 20 timed updates after five warmup updates, excluding input preparation; peak allocated GPU memory was 0.60 GB. FP32 at batch 512 reached approximately 110k/s and BF16 at the same batch reached 119k/s. Larger batch speed is not a matched statistical-quality comparison. Full-data loading and held-out precision comparisons are still required.
+
+The initially available PyTorch 2.10/CUDA 13 environment failed cuBLAS matrix multiplication. A pre-existing PyTorch **2.11/CUDA 13** environment passed matrix multiplication and the optimizer pilot; the failed attempt is retained in the run journal. The feature cache preserves float32 values and row provenance; production replay and rubric/metric tests passed before training preparation.
 
 ## References
 

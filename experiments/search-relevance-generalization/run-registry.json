@@ -14,13 +14,19 @@
   {
     "id": "production-v67-replay",
     "kind": "baseline evaluation",
-    "state": "planned",
+    "state": "completed",
     "model_training": false
+  },
+  {
+    "id": "infra-pilot-torch211",
+    "kind": "infrastructure pilot, repeated training batch",
+    "state": "completed",
+    "quality_experiment": false
   },
   {
     "id": "model-experiments",
     "kind": "training",
-    "state": "awaiting allocation and data gates",
+    "state": "preparing controlled training; two allocated B200s verified",
     "completed_runs": 0
   }
 ]
