@@ -1,0 +1,44 @@
+{
+  "resume": [
+    {
+      "rollout_id": 35,
+      "samples": 36864,
+      "tokens": 255442677,
+      "buffer_groups": 0
+    }
+  ],
+  "training": [
+    {
+      "step": 144,
+      "samples": 37120,
+      "lr": 1e-06,
+      "grad_norm": 0.11605927243544169
+    },
+    {
+      "step": 145,
+      "samples": 37376,
+      "lr": 1e-06,
+      "grad_norm": 0.0796914680512131
+    },
+    {
+      "step": 146,
+      "samples": 37632,
+      "lr": 1e-06,
+      "grad_norm": 0.09499984333376765
+    },
+    {
+      "step": 147,
+      "samples": 37888,
+      "lr": 1e-06,
+      "grad_norm": 0.10097425004388293
+    }
+  ],
+  "first_rollout": {
+    "rollout_id": 36,
+    "samples": 37888,
+    "prompt_ids_sha256": "a2ab7d1aa929fd21c58f7ac4ad363b979cee7fef0ffd536cca61f0e78c7f75ca"
+  },
+  "source_snapshot_files_verified": 37,
+  "prompt_order_matches_original_rollout36": true,
+  "checks_pass": true
+}

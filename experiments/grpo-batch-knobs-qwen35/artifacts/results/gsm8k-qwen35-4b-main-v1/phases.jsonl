@@ -1,0 +1,290 @@
+{"kind": "evaluation", "event": "start", "rollout_id": 0, "time": 1789504844.5357873}
+{"kind": "evaluation", "event": "end", "rollout_id": 0, "time": 1789504876.153619, "seconds": 31.617831707000732}
+{"kind": "generation", "event": "start", "rollout_id": 0, "time": 1789504876.189326}
+{"kind": "generation", "event": "end", "rollout_id": 0, "time": 1789504920.710215, "seconds": 44.52088904380798}
+{"kind": "generation", "event": "start", "rollout_id": 1, "time": 1789504974.3369777}
+{"kind": "generation", "event": "end", "rollout_id": 1, "time": 1789505013.3910697, "seconds": 39.054091930389404}
+{"kind": "generation", "event": "start", "rollout_id": 2, "time": 1789505112.0156128}
+{"kind": "generation", "event": "end", "rollout_id": 2, "time": 1789505150.5017467, "seconds": 38.48613381385803}
+{"kind": "generation", "event": "start", "rollout_id": 3, "time": 1789505176.474309}
+{"kind": "generation", "event": "end", "rollout_id": 3, "time": 1789505217.5443285, "seconds": 41.070019483566284}
+{"kind": "generation", "event": "start", "rollout_id": 4, "time": 1789505264.1407301}
+{"kind": "generation", "event": "end", "rollout_id": 4, "time": 1789505312.9262187, "seconds": 48.78548860549927}
+{"kind": "generation", "event": "start", "rollout_id": 5, "time": 1789505338.2125683}
+{"kind": "generation", "event": "end", "rollout_id": 5, "time": 1789505386.9485035, "seconds": 48.73593521118164}
+{"kind": "generation", "event": "start", "rollout_id": 6, "time": 1789505467.2874434}
+{"kind": "generation", "event": "end", "rollout_id": 6, "time": 1789505498.017347, "seconds": 30.72990369796753}
+{"kind": "generation", "event": "start", "rollout_id": 7, "time": 1789505509.7666764}
+{"kind": "generation", "event": "end", "rollout_id": 7, "time": 1789505550.9566152, "seconds": 41.18993878364563}
+{"kind": "evaluation", "event": "start", "rollout_id": 7, "time": 1789505564.757939}
+{"kind": "evaluation", "event": "end", "rollout_id": 7, "time": 1789505605.6552901, "seconds": 40.897351026535034}
+{"kind": "generation", "event": "start", "rollout_id": 8, "time": 1789505605.6920376}
+{"kind": "generation", "event": "end", "rollout_id": 8, "time": 1789505650.0730302, "seconds": 44.38099265098572}
+{"kind": "generation", "event": "start", "rollout_id": 9, "time": 1789505707.5084941}
+{"kind": "generation", "event": "end", "rollout_id": 9, "time": 1789505755.1237857, "seconds": 47.615291595458984}
+{"kind": "generation", "event": "start", "rollout_id": 10, "time": 1789505767.8694072}
+{"kind": "generation", "event": "end", "rollout_id": 10, "time": 1789505824.8197563, "seconds": 56.95034909248352}
+{"kind": "generation", "event": "start", "rollout_id": 11, "time": 1789505875.1671972}
+{"kind": "generation", "event": "end", "rollout_id": 11, "time": 1789505938.995016, "seconds": 63.827818870544434}
+{"kind": "generation", "event": "start", "rollout_id": 12, "time": 1789506064.4038205}
+{"kind": "generation", "event": "end", "rollout_id": 12, "time": 1789506114.6595588, "seconds": 50.255738258361816}
+{"kind": "generation", "event": "start", "rollout_id": 13, "time": 1789506129.046333}
+{"kind": "generation", "event": "end", "rollout_id": 13, "time": 1789506169.9531717, "seconds": 40.9068386554718}
+{"kind": "generation", "event": "start", "rollout_id": 14, "time": 1789506182.9470248}
+{"kind": "generation", "event": "end", "rollout_id": 14, "time": 1789506244.284619, "seconds": 61.33759427070618}
+{"kind": "generation", "event": "start", "rollout_id": 15, "time": 1789506295.2645292}
+{"kind": "generation", "event": "end", "rollout_id": 15, "time": 1789506356.5259356, "seconds": 61.26140642166138}
+{"kind": "evaluation", "event": "start", "rollout_id": 15, "time": 1789506415.3262787}
+{"kind": "evaluation", "event": "end", "rollout_id": 15, "time": 1789506455.9523914, "seconds": 40.62611269950867}
+{"kind": "generation", "event": "start", "rollout_id": 16, "time": 1789506455.9902964}
+{"kind": "generation", "event": "end", "rollout_id": 16, "time": 1789506511.1955547, "seconds": 55.2052583694458}
+{"kind": "generation", "event": "start", "rollout_id": 17, "time": 1789506528.0207758}
+{"kind": "generation", "event": "end", "rollout_id": 17, "time": 1789506588.2703302, "seconds": 60.24955439567566}
+{"kind": "generation", "event": "start", "rollout_id": 18, "time": 1789506618.602705}
+{"kind": "generation", "event": "end", "rollout_id": 18, "time": 1789506672.454193, "seconds": 53.85148811340332}
+{"kind": "generation", "event": "start", "rollout_id": 19, "time": 1789506688.385227}
+{"kind": "generation", "event": "end", "rollout_id": 19, "time": 1789506746.0664763, "seconds": 57.681249380111694}
+{"kind": "generation", "event": "start", "rollout_id": 20, "time": 1789506763.9515228}
+{"kind": "generation", "event": "end", "rollout_id": 20, "time": 1789506837.6862226, "seconds": 73.73469972610474}
+{"kind": "generation", "event": "start", "rollout_id": 21, "time": 1789506903.8340766}
+{"kind": "generation", "event": "end", "rollout_id": 21, "time": 1789506965.0672164, "seconds": 61.233139753341675}
+{"kind": "generation", "event": "start", "rollout_id": 22, "time": 1789506986.6224344}
+{"kind": "generation", "event": "end", "rollout_id": 22, "time": 1789507051.585553, "seconds": 64.96311855316162}
+{"kind": "generation", "event": "start", "rollout_id": 23, "time": 1789507073.208604}
+{"kind": "generation", "event": "end", "rollout_id": 23, "time": 1789507136.822886, "seconds": 63.61428189277649}
+{"kind": "evaluation", "event": "start", "rollout_id": 23, "time": 1789507155.6523712}
+{"kind": "evaluation", "event": "end", "rollout_id": 23, "time": 1789507214.1655846, "seconds": 58.51321339607239}
+{"kind": "generation", "event": "start", "rollout_id": 24, "time": 1789507214.215287}
+{"kind": "generation", "event": "end", "rollout_id": 24, "time": 1789507280.8395324, "seconds": 66.62424540519714}
+{"kind": "generation", "event": "start", "rollout_id": 25, "time": 1789507362.533329}
+{"kind": "generation", "event": "end", "rollout_id": 25, "time": 1789507433.4122486, "seconds": 70.87891960144043}
+{"kind": "generation", "event": "start", "rollout_id": 26, "time": 1789507467.9814146}
+{"kind": "generation", "event": "end", "rollout_id": 26, "time": 1789507533.6468067, "seconds": 65.66539216041565}
+{"kind": "generation", "event": "start", "rollout_id": 27, "time": 1789507553.38632}
+{"kind": "generation", "event": "end", "rollout_id": 27, "time": 1789507615.9443939, "seconds": 62.55807375907898}
+{"kind": "generation", "event": "start", "rollout_id": 28, "time": 1789507636.0591896}
+{"kind": "generation", "event": "end", "rollout_id": 28, "time": 1789507702.1998143, "seconds": 66.14062476158142}
+{"kind": "generation", "event": "start", "rollout_id": 29, "time": 1789507722.0074575}
+{"kind": "generation", "event": "end", "rollout_id": 29, "time": 1789507785.3075333, "seconds": 63.30007576942444}
+{"kind": "generation", "event": "start", "rollout_id": 30, "time": 1789507803.4388926}
+{"kind": "generation", "event": "end", "rollout_id": 30, "time": 1789507865.317379, "seconds": 61.8784863948822}
+{"kind": "generation", "event": "start", "rollout_id": 31, "time": 1789507882.9596}
+{"kind": "generation", "event": "end", "rollout_id": 31, "time": 1789507934.853851, "seconds": 51.894251108169556}
+{"kind": "evaluation", "event": "start", "rollout_id": 31, "time": 1789508072.463005}
+{"kind": "evaluation", "event": "end", "rollout_id": 31, "time": 1789508129.5502968, "seconds": 57.0872917175293}
+{"kind": "generation", "event": "start", "rollout_id": 32, "time": 1789508129.5999022}
+{"kind": "generation", "event": "end", "rollout_id": 32, "time": 1789508193.560235, "seconds": 63.9603328704834}
+{"kind": "generation", "event": "start", "rollout_id": 33, "time": 1789508216.9404714}
+{"kind": "generation", "event": "end", "rollout_id": 33, "time": 1789508287.1539943, "seconds": 70.21352291107178}
+{"kind": "generation", "event": "start", "rollout_id": 34, "time": 1789508332.3413804}
+{"kind": "generation", "event": "end", "rollout_id": 34, "time": 1789508388.6278393, "seconds": 56.28645896911621}
+{"kind": "generation", "event": "start", "rollout_id": 35, "time": 1789508406.916293}
+{"kind": "generation", "event": "end", "rollout_id": 35, "time": 1789508481.2219253, "seconds": 74.30563235282898}
+{"kind": "generation", "event": "start", "rollout_id": 36, "time": 1789508508.635333}
+{"kind": "generation", "event": "end", "rollout_id": 36, "time": 1789508583.202161, "seconds": 74.56682801246643}
+{"kind": "generation", "event": "start", "rollout_id": 37, "time": 1789508613.008595}
+{"kind": "generation", "event": "end", "rollout_id": 37, "time": 1789508661.9006972, "seconds": 48.89210224151611}
+{"kind": "generation", "event": "start", "rollout_id": 38, "time": 1789508681.6340215}
+{"kind": "generation", "event": "end", "rollout_id": 38, "time": 1789508762.4824197, "seconds": 80.84839820861816}
+{"kind": "generation", "event": "start", "rollout_id": 39, "time": 1789508791.687447}
+{"kind": "generation", "event": "end", "rollout_id": 39, "time": 1789508864.118663, "seconds": 72.43121600151062}
+{"kind": "evaluation", "event": "start", "rollout_id": 39, "time": 1789508896.3053293}
+{"kind": "evaluation", "event": "end", "rollout_id": 39, "time": 1789508958.988515, "seconds": 62.68318557739258}
+{"kind": "generation", "event": "start", "rollout_id": 40, "time": 1789508959.0493803}
+{"kind": "generation", "event": "end", "rollout_id": 40, "time": 1789509026.4228005, "seconds": 67.37342023849487}
+{"kind": "generation", "event": "start", "rollout_id": 41, "time": 1789509053.078974}
+{"kind": "generation", "event": "end", "rollout_id": 41, "time": 1789509128.609855, "seconds": 75.53088092803955}
+{"kind": "generation", "event": "start", "rollout_id": 42, "time": 1789509157.9349322}
+{"kind": "generation", "event": "end", "rollout_id": 42, "time": 1789509242.8688674, "seconds": 84.93393516540527}
+{"kind": "generation", "event": "start", "rollout_id": 43, "time": 1789509283.5644195}
+{"kind": "generation", "event": "end", "rollout_id": 43, "time": 1789509363.5859149, "seconds": 80.02149534225464}
+{"kind": "generation", "event": "start", "rollout_id": 44, "time": 1789509399.7824776}
+{"kind": "generation", "event": "end", "rollout_id": 44, "time": 1789509475.455655, "seconds": 75.67317748069763}
+{"kind": "generation", "event": "start", "rollout_id": 45, "time": 1789509506.0250149}
+{"kind": "generation", "event": "end", "rollout_id": 45, "time": 1789509585.591165, "seconds": 79.56615018844604}
+{"kind": "generation", "event": "start", "rollout_id": 46, "time": 1789509656.3459918}
+{"kind": "generation", "event": "end", "rollout_id": 46, "time": 1789509729.216581, "seconds": 72.87058925628662}
+{"kind": "generation", "event": "start", "rollout_id": 47, "time": 1789509760.8460214}
+{"kind": "generation", "event": "end", "rollout_id": 47, "time": 1789509834.6078682, "seconds": 73.76184678077698}
+{"kind": "evaluation", "event": "start", "rollout_id": 47, "time": 1789509861.4627256}
+{"kind": "evaluation", "event": "end", "rollout_id": 47, "time": 1789509924.784626, "seconds": 63.321900367736816}
+{"kind": "generation", "event": "start", "rollout_id": 48, "time": 1789509924.8543525}
+{"kind": "generation", "event": "end", "rollout_id": 48, "time": 1789509991.314973, "seconds": 66.46062064170837}
+{"kind": "generation", "event": "start", "rollout_id": 49, "time": 1789510021.853568}
+{"kind": "generation", "event": "end", "rollout_id": 49, "time": 1789510102.951253, "seconds": 81.09768486022949}
+{"kind": "generation", "event": "start", "rollout_id": 50, "time": 1789510135.7183545}
+{"kind": "generation", "event": "end", "rollout_id": 50, "time": 1789510214.2589226, "seconds": 78.54056811332703}
+{"kind": "generation", "event": "start", "rollout_id": 51, "time": 1789510248.25555}
+{"kind": "generation", "event": "end", "rollout_id": 51, "time": 1789510320.01581, "seconds": 71.76026010513306}
+{"kind": "generation", "event": "start", "rollout_id": 52, "time": 1789510348.7551558}
+{"kind": "generation", "event": "end", "rollout_id": 52, "time": 1789510425.1097827, "seconds": 76.35462689399719}
+{"kind": "generation", "event": "start", "rollout_id": 53, "time": 1789510453.9740927}
+{"kind": "generation", "event": "end", "rollout_id": 53, "time": 1789510540.007563, "seconds": 86.03347039222717}
+{"kind": "generation", "event": "start", "rollout_id": 54, "time": 1789510572.606629}
+{"kind": "generation", "event": "end", "rollout_id": 54, "time": 1789510639.996298, "seconds": 67.38966917991638}
+{"kind": "generation", "event": "start", "rollout_id": 55, "time": 1789510666.320394}
+{"kind": "generation", "event": "end", "rollout_id": 55, "time": 1789510736.1127741, "seconds": 69.7923800945282}
+{"kind": "evaluation", "event": "start", "rollout_id": 55, "time": 1789510756.572349}
+{"kind": "evaluation", "event": "end", "rollout_id": 55, "time": 1789510815.0988107, "seconds": 58.526461601257324}
+{"kind": "generation", "event": "start", "rollout_id": 56, "time": 1789510815.1566155}
+{"kind": "generation", "event": "end", "rollout_id": 56, "time": 1789510888.6709716, "seconds": 73.51435613632202}
+{"kind": "generation", "event": "start", "rollout_id": 57, "time": 1789510917.4513745}
+{"kind": "generation", "event": "end", "rollout_id": 57, "time": 1789510985.6807156, "seconds": 68.22934103012085}
+{"kind": "generation", "event": "start", "rollout_id": 58, "time": 1789511008.3495033}
+{"kind": "generation", "event": "end", "rollout_id": 58, "time": 1789511075.5528917, "seconds": 67.20338845252991}
+{"kind": "generation", "event": "start", "rollout_id": 59, "time": 1789511098.755534}
+{"kind": "generation", "event": "end", "rollout_id": 59, "time": 1789511161.4798374, "seconds": 62.72430348396301}
+{"kind": "generation", "event": "start", "rollout_id": 60, "time": 1789511183.781952}
+{"kind": "generation", "event": "end", "rollout_id": 60, "time": 1789511229.4146664, "seconds": 45.63271450996399}
+{"kind": "generation", "event": "start", "rollout_id": 61, "time": 1789511246.6276183}
+{"kind": "generation", "event": "end", "rollout_id": 61, "time": 1789511300.6209254, "seconds": 53.99330711364746}
+{"kind": "generation", "event": "start", "rollout_id": 62, "time": 1789511319.3682697}
+{"kind": "generation", "event": "end", "rollout_id": 62, "time": 1789511373.988668, "seconds": 54.62039828300476}
+{"kind": "generation", "event": "start", "rollout_id": 63, "time": 1789511392.610273}
+{"kind": "generation", "event": "end", "rollout_id": 63, "time": 1789511455.1585958, "seconds": 62.548322916030884}
+{"kind": "evaluation", "event": "start", "rollout_id": 63, "time": 1789511575.908465}
+{"kind": "evaluation", "event": "end", "rollout_id": 63, "time": 1789511620.587585, "seconds": 44.67912006378174}
+{"kind": "generation", "event": "start", "rollout_id": 64, "time": 1789511620.6382353}
+{"kind": "generation", "event": "end", "rollout_id": 64, "time": 1789511663.0767434, "seconds": 42.43850803375244}
+{"kind": "generation", "event": "start", "rollout_id": 65, "time": 1789511682.137}
+{"kind": "generation", "event": "end", "rollout_id": 65, "time": 1789511731.091174, "seconds": 48.95417380332947}
+{"kind": "generation", "event": "start", "rollout_id": 66, "time": 1789511749.666202}
+{"kind": "generation", "event": "end", "rollout_id": 66, "time": 1789511823.410806, "seconds": 73.7446038722992}
+{"kind": "generation", "event": "start", "rollout_id": 67, "time": 1789511848.7858782}
+{"kind": "generation", "event": "end", "rollout_id": 67, "time": 1789511913.1994524, "seconds": 64.41357421875}
+{"kind": "generation", "event": "start", "rollout_id": 68, "time": 1789511929.9566393}
+{"kind": "generation", "event": "end", "rollout_id": 68, "time": 1789511967.238022, "seconds": 37.28138279914856}
+{"kind": "generation", "event": "start", "rollout_id": 69, "time": 1789511981.468105}
+{"kind": "generation", "event": "end", "rollout_id": 69, "time": 1789512025.0258737, "seconds": 43.55776858329773}
+{"kind": "generation", "event": "start", "rollout_id": 70, "time": 1789512042.9455829}
+{"kind": "generation", "event": "end", "rollout_id": 70, "time": 1789512090.4777472, "seconds": 47.532164335250854}
+{"kind": "generation", "event": "start", "rollout_id": 71, "time": 1789512108.915346}
+{"kind": "generation", "event": "end", "rollout_id": 71, "time": 1789512170.384255, "seconds": 61.46890902519226}
+{"kind": "evaluation", "event": "start", "rollout_id": 71, "time": 1789512191.513725}
+{"kind": "evaluation", "event": "end", "rollout_id": 71, "time": 1789512248.2774312, "seconds": 56.76370620727539}
+{"kind": "generation", "event": "start", "rollout_id": 72, "time": 1789512248.3259456}
+{"kind": "generation", "event": "end", "rollout_id": 72, "time": 1789512291.9301949, "seconds": 43.604249238967896}
+{"kind": "generation", "event": "start", "rollout_id": 73, "time": 1789512308.6394799}
+{"kind": "generation", "event": "end", "rollout_id": 73, "time": 1789512357.7314975, "seconds": 49.09201765060425}
+{"kind": "generation", "event": "start", "rollout_id": 74, "time": 1789512373.6676986}
+{"kind": "generation", "event": "end", "rollout_id": 74, "time": 1789512450.988173, "seconds": 77.32047438621521}
+{"kind": "generation", "event": "start", "rollout_id": 75, "time": 1789512479.2930894}
+{"kind": "generation", "event": "end", "rollout_id": 75, "time": 1789512556.6000974, "seconds": 77.3070080280304}
+{"kind": "generation", "event": "start", "rollout_id": 76, "time": 1789512582.3186963}
+{"kind": "generation", "event": "end", "rollout_id": 76, "time": 1789512656.2950659, "seconds": 73.9763696193695}
+{"kind": "generation", "event": "start", "rollout_id": 77, "time": 1789512682.3569465}
+{"kind": "generation", "event": "end", "rollout_id": 77, "time": 1789512751.2710364, "seconds": 68.9140899181366}
+{"kind": "generation", "event": "start", "rollout_id": 78, "time": 1789512773.306383}
+{"kind": "generation", "event": "end", "rollout_id": 78, "time": 1789512832.2755084, "seconds": 58.969125509262085}
+{"kind": "generation", "event": "start", "rollout_id": 79, "time": 1789512853.497085}
+{"kind": "generation", "event": "end", "rollout_id": 79, "time": 1789512921.2788198, "seconds": 67.78173470497131}
+{"kind": "evaluation", "event": "start", "rollout_id": 79, "time": 1789512941.3735962}
+{"kind": "evaluation", "event": "end", "rollout_id": 79, "time": 1789512999.707561, "seconds": 58.333964824676514}
+{"kind": "generation", "event": "start", "rollout_id": 80, "time": 1789512999.7591736}
+{"kind": "generation", "event": "end", "rollout_id": 80, "time": 1789513071.7686338, "seconds": 72.00946021080017}
+{"kind": "generation", "event": "start", "rollout_id": 81, "time": 1789513099.1659894}
+{"kind": "generation", "event": "end", "rollout_id": 81, "time": 1789513165.451443, "seconds": 66.28545355796814}
+{"kind": "generation", "event": "start", "rollout_id": 82, "time": 1789513189.910277}
+{"kind": "generation", "event": "end", "rollout_id": 82, "time": 1789513252.3187592, "seconds": 62.40848231315613}
+{"kind": "generation", "event": "start", "rollout_id": 83, "time": 1789513275.446195}
+{"kind": "generation", "event": "end", "rollout_id": 83, "time": 1789513349.3480864, "seconds": 73.90189146995544}
+{"kind": "generation", "event": "start", "rollout_id": 84, "time": 1789513375.4362113}
+{"kind": "generation", "event": "end", "rollout_id": 84, "time": 1789513441.6126812, "seconds": 66.17646980285645}
+{"kind": "generation", "event": "start", "rollout_id": 85, "time": 1789513462.6209762}
+{"kind": "generation", "event": "end", "rollout_id": 85, "time": 1789513538.708488, "seconds": 76.08751177787781}
+{"kind": "generation", "event": "start", "rollout_id": 86, "time": 1789513566.3131056}
+{"kind": "generation", "event": "end", "rollout_id": 86, "time": 1789513608.4547384, "seconds": 42.14163279533386}
+{"kind": "generation", "event": "start", "rollout_id": 87, "time": 1789513627.6277423}
+{"kind": "generation", "event": "end", "rollout_id": 87, "time": 1789513678.9818244, "seconds": 51.354082107543945}
+{"kind": "evaluation", "event": "start", "rollout_id": 87, "time": 1789513701.263867}
+{"kind": "evaluation", "event": "end", "rollout_id": 87, "time": 1789513760.7496784, "seconds": 59.48581147193909}
+{"kind": "generation", "event": "start", "rollout_id": 88, "time": 1789513760.801581}
+{"kind": "generation", "event": "end", "rollout_id": 88, "time": 1789513832.688718, "seconds": 71.88713717460632}
+{"kind": "generation", "event": "start", "rollout_id": 89, "time": 1789513860.784984}
+{"kind": "generation", "event": "end", "rollout_id": 89, "time": 1789513926.7514024, "seconds": 65.96641826629639}
+{"kind": "generation", "event": "start", "rollout_id": 90, "time": 1789513951.698321}
+{"kind": "generation", "event": "end", "rollout_id": 90, "time": 1789514033.5727303, "seconds": 81.87440919876099}
+{"kind": "generation", "event": "start", "rollout_id": 91, "time": 1789514059.4785237}
+{"kind": "generation", "event": "end", "rollout_id": 91, "time": 1789514140.00452, "seconds": 80.52599620819092}
+{"kind": "generation", "event": "start", "rollout_id": 92, "time": 1789514167.7331908}
+{"kind": "generation", "event": "end", "rollout_id": 92, "time": 1789514233.4818945, "seconds": 65.74870371818542}
+{"kind": "generation", "event": "start", "rollout_id": 93, "time": 1789514255.3541539}
+{"kind": "generation", "event": "end", "rollout_id": 93, "time": 1789514323.2298045, "seconds": 67.87565064430237}
+{"kind": "generation", "event": "start", "rollout_id": 94, "time": 1789514346.6332533}
+{"kind": "generation", "event": "end", "rollout_id": 94, "time": 1789514417.8528068, "seconds": 71.21955347061157}
+{"kind": "generation", "event": "start", "rollout_id": 95, "time": 1789514444.8578875}
+{"kind": "generation", "event": "end", "rollout_id": 95, "time": 1789514503.3226962, "seconds": 58.46480870246887}
+{"kind": "evaluation", "event": "start", "rollout_id": 95, "time": 1789514615.5573378}
+{"kind": "evaluation", "event": "end", "rollout_id": 95, "time": 1789514672.953318, "seconds": 57.39598035812378}
+{"kind": "generation", "event": "start", "rollout_id": 96, "time": 1789514673.0085163}
+{"kind": "generation", "event": "end", "rollout_id": 96, "time": 1789514739.0213358, "seconds": 66.01281952857971}
+{"kind": "generation", "event": "start", "rollout_id": 97, "time": 1789514764.6752112}
+{"kind": "generation", "event": "end", "rollout_id": 97, "time": 1789514833.123658, "seconds": 68.44844675064087}
+{"kind": "generation", "event": "start", "rollout_id": 98, "time": 1789514854.4425137}
+{"kind": "generation", "event": "end", "rollout_id": 98, "time": 1789514928.1156068, "seconds": 73.67309308052063}
+{"kind": "generation", "event": "start", "rollout_id": 99, "time": 1789514954.5813065}
+{"kind": "generation", "event": "end", "rollout_id": 99, "time": 1789515027.1884246, "seconds": 72.60711812973022}
+{"kind": "generation", "event": "start", "rollout_id": 100, "time": 1789515049.9598556}
+{"kind": "generation", "event": "end", "rollout_id": 100, "time": 1789515119.629148, "seconds": 69.66929244995117}
+{"kind": "generation", "event": "start", "rollout_id": 101, "time": 1789515143.3751101}
+{"kind": "generation", "event": "end", "rollout_id": 101, "time": 1789515218.4020655, "seconds": 75.02695536613464}
+{"kind": "generation", "event": "start", "rollout_id": 102, "time": 1789515241.6926658}
+{"kind": "generation", "event": "end", "rollout_id": 102, "time": 1789515311.3967838, "seconds": 69.70411801338196}
+{"kind": "generation", "event": "start", "rollout_id": 103, "time": 1789515335.1071887}
+{"kind": "generation", "event": "end", "rollout_id": 103, "time": 1789515415.4082983, "seconds": 80.30110955238342}
+{"kind": "evaluation", "event": "start", "rollout_id": 103, "time": 1789515444.8371046}
+{"kind": "evaluation", "event": "end", "rollout_id": 103, "time": 1789515505.7299244, "seconds": 60.89281988143921}
+{"kind": "generation", "event": "start", "rollout_id": 104, "time": 1789515505.7838347}
+{"kind": "generation", "event": "end", "rollout_id": 104, "time": 1789515577.270398, "seconds": 71.486563205719}
+{"kind": "generation", "event": "start", "rollout_id": 105, "time": 1789515604.6408195}
+{"kind": "generation", "event": "end", "rollout_id": 105, "time": 1789515673.2359326, "seconds": 68.59511303901672}
+{"kind": "generation", "event": "start", "rollout_id": 106, "time": 1789515693.1226215}
+{"kind": "generation", "event": "end", "rollout_id": 106, "time": 1789515760.3893478, "seconds": 67.26672625541687}
+{"kind": "generation", "event": "start", "rollout_id": 107, "time": 1789515782.2060795}
+{"kind": "generation", "event": "end", "rollout_id": 107, "time": 1789515848.0000305, "seconds": 65.7939510345459}
+{"kind": "generation", "event": "start", "rollout_id": 108, "time": 1789515865.8855698}
+{"kind": "generation", "event": "end", "rollout_id": 108, "time": 1789515926.1449845, "seconds": 60.25941467285156}
+{"kind": "generation", "event": "start", "rollout_id": 109, "time": 1789515943.7646043}
+{"kind": "generation", "event": "end", "rollout_id": 109, "time": 1789516005.5123734, "seconds": 61.74776911735535}
+{"kind": "generation", "event": "start", "rollout_id": 110, "time": 1789516022.9402165}
+{"kind": "generation", "event": "end", "rollout_id": 110, "time": 1789516089.8735938, "seconds": 66.93337726593018}
+{"kind": "generation", "event": "start", "rollout_id": 111, "time": 1789516110.2966287}
+{"kind": "generation", "event": "end", "rollout_id": 111, "time": 1789516187.5684323, "seconds": 77.27180361747742}
+{"kind": "evaluation", "event": "start", "rollout_id": 111, "time": 1789516213.9112632}
+{"kind": "evaluation", "event": "end", "rollout_id": 111, "time": 1789516271.896078, "seconds": 57.98481488227844}
+{"kind": "generation", "event": "start", "rollout_id": 112, "time": 1789516271.9455588}
+{"kind": "generation", "event": "end", "rollout_id": 112, "time": 1789516338.111041, "seconds": 66.16548228263855}
+{"kind": "generation", "event": "start", "rollout_id": 113, "time": 1789516363.3779078}
+{"kind": "generation", "event": "end", "rollout_id": 113, "time": 1789516430.476997, "seconds": 67.0990891456604}
+{"kind": "generation", "event": "start", "rollout_id": 114, "time": 1789516450.312757}
+{"kind": "generation", "event": "end", "rollout_id": 114, "time": 1789516518.1524189, "seconds": 67.83966183662415}
+{"kind": "generation", "event": "start", "rollout_id": 115, "time": 1789516540.978192}
+{"kind": "generation", "event": "end", "rollout_id": 115, "time": 1789516607.429853, "seconds": 66.45166087150574}
+{"kind": "generation", "event": "start", "rollout_id": 116, "time": 1789516628.1842804}
+{"kind": "generation", "event": "end", "rollout_id": 116, "time": 1789516697.16146, "seconds": 68.97717952728271}
+{"kind": "generation", "event": "start", "rollout_id": 117, "time": 1789516719.3053885}
+{"kind": "generation", "event": "end", "rollout_id": 117, "time": 1789516786.5034647, "seconds": 67.19807624816895}
+{"kind": "generation", "event": "start", "rollout_id": 118, "time": 1789516808.435822}
+{"kind": "generation", "event": "end", "rollout_id": 118, "time": 1789516872.9243279, "seconds": 64.48850584030151}
+{"kind": "generation", "event": "start", "rollout_id": 119, "time": 1789516895.0148118}
+{"kind": "generation", "event": "end", "rollout_id": 119, "time": 1789516958.6817377, "seconds": 63.66692590713501}
+{"kind": "evaluation", "event": "start", "rollout_id": 119, "time": 1789516979.9258106}
+{"kind": "evaluation", "event": "end", "rollout_id": 119, "time": 1789517036.6747391, "seconds": 56.74892854690552}
+{"kind": "generation", "event": "start", "rollout_id": 120, "time": 1789517036.7213223}
+{"kind": "generation", "event": "end", "rollout_id": 120, "time": 1789517100.8228781, "seconds": 64.10155582427979}
+{"kind": "generation", "event": "start", "rollout_id": 121, "time": 1789517123.2173727}
+{"kind": "generation", "event": "end", "rollout_id": 121, "time": 1789517190.1706653, "seconds": 66.95329260826111}
+{"kind": "generation", "event": "start", "rollout_id": 122, "time": 1789517210.3850048}
+{"kind": "generation", "event": "end", "rollout_id": 122, "time": 1789517281.7828715, "seconds": 71.39786672592163}
+{"kind": "generation", "event": "start", "rollout_id": 123, "time": 1789517306.8201978}
+{"kind": "generation", "event": "end", "rollout_id": 123, "time": 1789517380.2190228, "seconds": 73.39882493019104}
+{"kind": "generation", "event": "start", "rollout_id": 124, "time": 1789517405.6414607}
+{"kind": "generation", "event": "end", "rollout_id": 124, "time": 1789517472.8886843, "seconds": 67.24722361564636}
+{"kind": "generation", "event": "start", "rollout_id": 125, "time": 1789517495.2201357}
+{"kind": "generation", "event": "end", "rollout_id": 125, "time": 1789517560.6495423, "seconds": 65.42940664291382}
+{"kind": "generation", "event": "start", "rollout_id": 126, "time": 1789517581.962822}
+{"kind": "generation", "event": "end", "rollout_id": 126, "time": 1789517649.8958178, "seconds": 67.93299579620361}
+{"kind": "generation", "event": "start", "rollout_id": 127, "time": 1789517671.3808255}
+{"kind": "generation", "event": "end", "rollout_id": 127, "time": 1789517738.721032, "seconds": 67.34020638465881}
+{"kind": "evaluation", "event": "start", "rollout_id": 127, "time": 1789517854.0673168}
+{"kind": "evaluation", "event": "end", "rollout_id": 127, "time": 1789517917.5713394, "seconds": 63.5040225982666}

@@ -1,0 +1,21 @@
+{
+  "run": "dapo-qwen35-4b-main-v2-resume3",
+  "cause": "Generation worker terminated; underlying cause not established.",
+  "worker_stopping_utc": "2026-09-16T05:48:31Z",
+  "retained_through_responses": 94208,
+  "observed_completed_responses": 95232,
+  "discarded_responses": 1024,
+  "discarded_output_tokens": 8232494,
+  "discarded_optimizer_updates": 4,
+  "job_seconds": 16227.744947910309,
+  "job_seconds_estimated": true,
+  "job_seconds_bounds": [
+    16158.147374868393,
+    16227.744947910309
+  ],
+  "allocated_gpu_hours": 72.12331087960138,
+  "cleanup": "Only the named interrupted driver received SIGTERM, then SIGKILL after it remained in core-dump shutdown. GPU children exited before replacement launch. Ray services were preserved.",
+  "resume_from_iteration": 91,
+  "remaining_responses": 36864,
+  "remaining_updates": 144
+}

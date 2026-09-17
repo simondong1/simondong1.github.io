@@ -1,0 +1,59 @@
+{
+  "baseline_run": "dapo-qwen35-4b-main-v2-resume7",
+  "new_run": "dapo-qwen35-4b-main-v2-resume9",
+  "before_concurrency": 10,
+  "after_concurrency": 32,
+  "baseline_archives": [
+    {
+      "rollout_id": 94,
+      "samples": 97280,
+      "archive_seconds": 85.64367914199829,
+      "archived": true
+    },
+    {
+      "rollout_id": 95,
+      "samples": 98304,
+      "archive_seconds": 84.61142134666443,
+      "archived": true
+    },
+    {
+      "rollout_id": 96,
+      "samples": 99328,
+      "archive_seconds": 86.80133152008057,
+      "archived": true
+    },
+    {
+      "rollout_id": 97,
+      "samples": 100352,
+      "archive_seconds": 86.28080320358276,
+      "archived": true
+    }
+  ],
+  "new_archives": [
+    {
+      "rollout_id": 98,
+      "samples": 101376,
+      "archive_seconds": 81.97791790962219,
+      "archived": true
+    },
+    {
+      "rollout_id": 99,
+      "samples": 102400,
+      "archive_seconds": 83.76562929153442,
+      "archived": true
+    },
+    {
+      "rollout_id": 100,
+      "samples": 103424,
+      "archive_seconds": 80.43707275390625,
+      "archived": true
+    }
+  ],
+  "before_mean_seconds": 85.83430880308151,
+  "after_mean_seconds": 82.06020665168762,
+  "observed_change_fraction": -0.0439696224507653,
+  "decision": "retain32",
+  "checkpoint_pointer_published_last": true,
+  "scientific_settings_changed": false,
+  "interpretation": "Sequential operational observations on the same training node, not independent repetitions or a causal speedup estimate. Native timing includes weights, rollout state and final pointer uploads."
+}

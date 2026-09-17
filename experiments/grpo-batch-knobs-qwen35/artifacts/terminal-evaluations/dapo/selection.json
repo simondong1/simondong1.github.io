@@ -1,0 +1,15 @@
+{
+  "main": "dapo-qwen35-4b-main-v2-resume9",
+  "selected_responses": 65536,
+  "endpoint_responses": 131072,
+  "rule": "Best saved checkpoint or initial model on validation; ties favor earlier",
+  "selected_validation_accuracy": 0.86328125,
+  "evaluations_sha256": "cbb72573326df46de75934eb0aafd72d2893a606d84fe8ab7843b17892bcdded",
+  "test_sha256": "c91cdaa8e2cf3846347a89d1c1b7e0cb19f8e424e5c8af9bb633264cb897b360",
+  "evaluations_by_segment_sha256": {
+    "dapo-qwen35-4b-main-v2": "17f11a10d61f81236c095850ed25e673e7e3926ffd8b5af17bb44e51f87fbaf2",
+    "dapo-qwen35-4b-main-v2-resume3": "252e0b966c8f5e6af24a38c404f3081b16671facb6f0e33a11498ca56682fcf0",
+    "dapo-qwen35-4b-main-v2-resume7": "37b54ec19016baef32d99bd91273e12fdfbf33c4868476e1a36f8c7bb0801d5d",
+    "dapo-qwen35-4b-main-v2-resume9": "cbb72573326df46de75934eb0aafd72d2893a606d84fe8ab7843b17892bcdded"
+  }
+}

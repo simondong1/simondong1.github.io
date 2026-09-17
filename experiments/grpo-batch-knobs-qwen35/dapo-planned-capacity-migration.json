@@ -1,0 +1,15 @@
+{
+  "segment": "dapo-qwen35-4b-main-v2-resume2",
+  "reason": "planned migration to available Tier-2 capacity",
+  "completed_responses_in_segment": 4096,
+  "retained_through_responses": 36864,
+  "completed_updates_in_segment": 16,
+  "discarded_completed_responses": 0,
+  "discarded_updates": 0,
+  "job_seconds": 1646.5728619098663,
+  "allocated_gpu_hours": 3.6590508042441474,
+  "checkpoint_archive_seconds": 91.47661471366882,
+  "checkpoint_rollout_id": 35,
+  "time": 1789521912.992507,
+  "wandb_all_records_match": true
+}

@@ -1,0 +1,24 @@
+{
+  "resume": [
+    {
+      "rollout_id": 31,
+      "samples": 32768,
+      "tokens": 220317437,
+      "buffer_groups": 0
+    }
+  ],
+  "first_resumed_rollout_id": 32,
+  "prompt_order_matches_interrupted_segment": true,
+  "retained_counts": {
+    "generated_responses": 33792,
+    "consumed_responses": 32768,
+    "updates": 128,
+    "output_tokens": 229198380,
+    "observed_completed_responses_all_segments": 39936,
+    "observed_output_tokens_all_segments": 281573423,
+    "discarded_responses": 6144,
+    "discarded_output_tokens": 52375043,
+    "unique_training_prompts": 4224
+  },
+  "checks_pass": true
+}

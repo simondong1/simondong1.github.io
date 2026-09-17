@@ -1,0 +1,67 @@
+{
+  "name": "dapo-qwen35-4b-main-v2-resume6",
+  "mode": "learning",
+  "task": "dapo",
+  "data_file": "dapo-train.jsonl",
+  "worker_gpus": 8,
+  "train_gpus": 8,
+  "tp": 1,
+  "rollout_gpus": 4,
+  "prompts": 128,
+  "group": 8,
+  "batch": 256,
+  "steps": 4,
+  "rollouts": 128,
+  "response_length": 16384,
+  "packing": 8192,
+  "lr": 1e-06,
+  "thinking": false,
+  "disable_radix_cache": true,
+  "eval_file": "dapo-validation.jsonl",
+  "eval_every_samples": 8192,
+  "eval_samples": 1,
+  "eval_temperature": 0,
+  "save_every_samples": 1024,
+  "persistent_data_source": true,
+  "phase_timing": true,
+  "seed": 3100,
+  "rollout_seed": 4100,
+  "selection_every_samples": 32768,
+  "ckpt_step": 91,
+  "resume": true,
+  "resume_from_samples": 94208,
+  "resume_history": [
+    {
+      "run": "dapo-qwen35-4b-main-v2",
+      "through_samples": 32768
+    },
+    {
+      "run": "dapo-qwen35-4b-main-v2-resume1",
+      "through_samples": 32768
+    },
+    {
+      "run": "dapo-qwen35-4b-main-v2-resume2",
+      "through_samples": 36864
+    },
+    {
+      "run": "dapo-qwen35-4b-main-v2-resume3",
+      "through_samples": 94208
+    },
+    {
+      "run": "dapo-qwen35-4b-main-v2-resume4b",
+      "through_samples": 94208
+    },
+    {
+      "run": "dapo-qwen35-4b-main-v2-resume5b",
+      "through_samples": 94208
+    }
+  ],
+  "cluster_node_gpus": [
+    8,
+    4
+  ],
+  "reserved_gpus": 12,
+  "gpu_node_count": 2,
+  "heterogeneous_rollout_nodes": true,
+  "colocate": false
+}

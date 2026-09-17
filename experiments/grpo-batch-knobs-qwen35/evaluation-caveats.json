@@ -1,0 +1,45 @@
+{
+  "recorded_at_utc": "2026-09-16T04:22:57.416225+00:00",
+  "scope": "Post hoc output inspection. No training configuration, source label, primary score, checkpoint selection rule, or evaluation budget is changed.",
+  "completion_sensitivity": {
+    "motivation": "The frozen numeric verifier can credit an answer before the response reaches its token cap. Some credited GSM8K responses were truncated during repeated deliberation.",
+    "rule": "Additionally report scores with every non-completed response counted as incorrect, using the original paired predictions and bootstrap procedure.",
+    "gsm8k_credited_truncated": {
+      "initial": 0,
+      "endpoint_131072": 6,
+      "selected_98304": 2
+    },
+    "predeclared": false,
+    "used_for_selection": false,
+    "dapo_credited_truncated": {
+      "initial": 2,
+      "endpoint_131072": 0,
+      "selected_65536": 0
+    },
+    "dapo_interpretation": "Only two initially credited answers are removed. Endpoint and validation-selected scores are unchanged; the positive paired gains persist."
+  },
+  "known_validation_label_errors": [
+    {
+      "task": "gsm8k",
+      "id": "29cd6c85bd87ab4143da",
+      "source_revision": "740312add88f781978c0658806c59bc2815b9866",
+      "reference_answer": "10",
+      "mathematically_correct_answer": "15",
+      "verification": "A 30-minute head start at 15 mph is 7.5 miles. At a closing speed of 45-15=30 mph, catch-up requires 7.5/30 hours = 15 minutes. The source solution substitutes a 20-minute head start.",
+      "found": "Earlier frozen-label audit; the identical item remains in this study's validation split."
+    },
+    {
+      "task": "dapo",
+      "id": "4fef654207584146c66e",
+      "source_revision": "65877096c24ffa7abc4e4fa5edb95cf3413a5674",
+      "reference_answer": "204",
+      "mathematically_correct_answer": "72",
+      "verification": "Three contractors only lend tractors to one another, conserving their total. Each ends with 24, so the total was 3*24=72. Reversing the transfers gives original holdings of 39, 21, and 12, also summing to 72.",
+      "found": "Deterministic inspection of completed incorrect DAPO validation answers at 65,536 responses; random seed 731.",
+      "observed_effect_through_65536": "Every scheduled validation from initial through 65,536 answers 72 and receives zero from the frozen 204 label. Correcting this item would add the same 1/512 to these scores."
+    }
+  ],
+  "label_error_limit": "Each identified item affects its task's 512-question validation accuracy by at most 0.1953125 percentage points. These spot checks do not estimate label-error prevalence. Frozen labels remain authoritative for primary selection and reporting.",
+  "template_behavior": "All main and test jobs use enable_thinking=false. This is a chat-template setting, not a constraint preventing long reasoning or generated thinking delimiters. The selected GSM8K checkpoint produced a closing thinking delimiter in 1307/1319 test responses, compared with 7/1319 at the endpoint; the resolved template settings were identical.",
+  "updated_at_utc": "2026-09-16T11:52:25.434728+00:00"
+}

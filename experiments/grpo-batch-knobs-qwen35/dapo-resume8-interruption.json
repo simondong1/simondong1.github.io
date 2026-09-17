@@ -1,0 +1,25 @@
+{
+  "segment": "dapo-qwen35-4b-main-v2-resume8",
+  "reason": "Replacement generation worker disappeared during first rollout; controller stopped exact driver",
+  "completed_rollouts": 0,
+  "completed_optimizer_updates": 0,
+  "completed_checkpoints": 0,
+  "completed_rollout_response_count": 0,
+  "individual_responses_in_unfinished_rollout": "unknown; not persisted",
+  "output_tokens_in_unfinished_rollout": "unknown; not persisted",
+  "retained_through_responses": 100352,
+  "retained_output_tokens": 780349493,
+  "job_seconds_upper_bound": 840.7357788085938,
+  "job_seconds_bounds": [
+    697.1336109638214,
+    840.7357788085938
+  ],
+  "allocated_gpu_hours_upper_bound": 3.7366034613715278,
+  "included_in_execution_cost": true,
+  "source_rollouts_file_present": false,
+  "wandb_numerical_checks": 0,
+  "wandb_note": "No completed rollout or train-update metrics existed for comparison",
+  "driver_shutdown_stalled_in_core_dump": true,
+  "gpu_actors_gone_before_forced_driver_exit": true,
+  "checkpoint_uploads_after_tuning": 0
+}

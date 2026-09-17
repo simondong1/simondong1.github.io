@@ -1,0 +1,65 @@
+{
+  "dapo-mode-direct8k-v1": {
+    "n": 128,
+    "accuracy": 0.6171875,
+    "mean_tokens": 4591.9765625,
+    "length_quantiles": [
+      4078.0,
+      8192.0,
+      8192.0,
+      8192.0
+    ],
+    "truncation": 0.2890625,
+    "completed_correct_by_cap": {
+      "8192": 0.6171875,
+      "16384": 0.6171875,
+      "24576": 0.6171875,
+      "32768": 0.6171875
+    }
+  },
+  "dapo-mode-think32k-v1": {
+    "n": 128,
+    "accuracy": 0.6484375,
+    "mean_tokens": 22126.15625,
+    "length_quantiles": [
+      22884.0,
+      32768.0,
+      32768.0,
+      32768.0
+    ],
+    "truncation": 0.2890625,
+    "completed_correct_by_cap": {
+      "8192": 0.1015625,
+      "16384": 0.3046875,
+      "24576": 0.5078125,
+      "32768": 0.6484375
+    }
+  },
+  "paired_prompt_bootstrap": {
+    "thinking_minus_non_thinking": 0.03125,
+    "95pct_interval": [
+      -0.0390625,
+      0.1015625
+    ],
+    "n_prompts": 64,
+    "note": "Joint comparison of mode AND cap, not an isolated mode effect. One small pilot; no training-seed robustness."
+  },
+  "dapo-mode-direct16k-overlap-v1": {
+    "n": 128,
+    "accuracy": 0.7890625,
+    "mean_tokens": 5225.359375,
+    "length_quantiles": [
+      4019.0,
+      10908.0,
+      12392.599999999997,
+      14942.0
+    ],
+    "truncation": 0.0,
+    "completed_correct_by_cap": {
+      "8192": 0.671875,
+      "16384": 0.7890625,
+      "24576": 0.7890625,
+      "32768": 0.7890625
+    }
+  }
+}

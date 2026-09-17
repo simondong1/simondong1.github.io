@@ -1,0 +1,258 @@
+{
+  "gsm8k": {
+    "task": "gsm8k",
+    "selection": {
+      "main": "gsm8k-qwen35-4b-main-v1",
+      "selected_responses": 98304,
+      "endpoint_responses": 131072,
+      "rule": "Best saved checkpoint or initial model on validation; ties favor earlier",
+      "selected_validation_accuracy": 0.955078125,
+      "evaluations_sha256": "2da9089e0bd8a8682c35574accd8fe6d526edd7eabdab05b6a0efde0de2b6260",
+      "test_sha256": "e31103bdcc0a8d1701318fca6b809df9f3fcdd05fbb3d855067db59c0adb08c7"
+    },
+    "tests": {
+      "0": {
+        "accuracy": 0.9347990902198635,
+        "n": 1319,
+        "correct": 1233.0,
+        "job_seconds": 114.25608539581299,
+        "reserved_gpus": 8,
+        "allocated_gpu_hours": 0.2539024119906955,
+        "truncation_fraction": 0.0,
+        "correct_truncated_responses": 0,
+        "mean_response_tokens": 390.44275966641396,
+        "predictions_sha256": "fa991cf7f8ace1ef523bba0543d7bd120d6da0b91ad27b6d9361638c2089be65"
+      },
+      "131072": {
+        "accuracy": 0.9514783927217589,
+        "n": 1319,
+        "correct": 1255.0,
+        "job_seconds": 162.53582668304443,
+        "reserved_gpus": 8,
+        "allocated_gpu_hours": 0.361190725962321,
+        "truncation_fraction": 0.01061410159211524,
+        "correct_truncated_responses": 6,
+        "mean_response_tokens": 1224.4844579226688,
+        "predictions_sha256": "e21e194f075c2f4c5a5de678224ca82aafd2fbcfb5b2b906feda6e8e15b4c7db"
+      },
+      "98304": {
+        "accuracy": 0.9613343442001516,
+        "n": 1319,
+        "correct": 1268.0,
+        "job_seconds": 161.3967318534851,
+        "reserved_gpus": 8,
+        "allocated_gpu_hours": 0.3586594041188558,
+        "truncation_fraction": 0.01061410159211524,
+        "correct_truncated_responses": 2,
+        "mean_response_tokens": 1134.5921152388173,
+        "predictions_sha256": "6976b5072818696cd4e7db36eee01522962e4763eb4b2793a8da9ff43a448e0a"
+      }
+    },
+    "endpoint_minus_initial": {
+      "change": 0.016679302501895376,
+      "ci95": [
+        0.003032600454890068,
+        0.030326004548900682
+      ],
+      "prompts": 1319,
+      "improved": 53,
+      "regressed": 31,
+      "bootstrap_replicates": 20000
+    },
+    "selected_minus_initial": {
+      "change": 0.026535253980288095,
+      "ci95": [
+        0.014404852160727824,
+        0.03866565579984837
+      ],
+      "prompts": 1319,
+      "improved": 51,
+      "regressed": 16,
+      "bootstrap_replicates": 20000
+    },
+    "endpoint_minus_selected": {
+      "change": -0.009855951478392721,
+      "ci95": [
+        -0.018953752843062926,
+        -0.000758150113722517
+      ],
+      "prompts": 1319,
+      "improved": 12,
+      "regressed": 25,
+      "bootstrap_replicates": 20000
+    },
+    "completed_response_sensitivity": {
+      "rule": "Post hoc: count every response without completed status as incorrect; do not change the frozen grader or checkpoint selection.",
+      "accuracy": {
+        "0": 0.9347990902198635,
+        "131072": 0.9469294920394238,
+        "98304": 0.9598180439727066
+      },
+      "endpoint_minus_initial": {
+        "change": 0.012130401819560273,
+        "ci95": [
+          -0.001516300227445034,
+          0.02577710386656558
+        ],
+        "prompts": 1319,
+        "improved": 50,
+        "regressed": 34,
+        "bootstrap_replicates": 20000
+      },
+      "selected_minus_initial": {
+        "change": 0.025018953752843062,
+        "ci95": [
+          0.01288855193328279,
+          0.037149355572403335
+        ],
+        "prompts": 1319,
+        "improved": 50,
+        "regressed": 17,
+        "bootstrap_replicates": 20000
+      },
+      "endpoint_minus_selected": {
+        "change": -0.01288855193328279,
+        "ci95": [
+          -0.022744503411675512,
+          -0.003032600454890068
+        ],
+        "prompts": 1319,
+        "improved": 13,
+        "regressed": 30,
+        "bootstrap_replicates": 20000
+      }
+    },
+    "note": "Paired prompt bootstrap; one training seed per task. Test never selected checkpoints."
+  },
+  "dapo": {
+    "task": "dapo",
+    "selection": {
+      "main": "dapo-qwen35-4b-main-v2-resume9",
+      "selected_responses": 65536,
+      "endpoint_responses": 131072,
+      "rule": "Best saved checkpoint or initial model on validation; ties favor earlier",
+      "selected_validation_accuracy": 0.86328125,
+      "evaluations_sha256": "cbb72573326df46de75934eb0aafd72d2893a606d84fe8ab7843b17892bcdded",
+      "test_sha256": "c91cdaa8e2cf3846347a89d1c1b7e0cb19f8e424e5c8af9bb633264cb897b360",
+      "evaluations_by_segment_sha256": {
+        "dapo-qwen35-4b-main-v2": "17f11a10d61f81236c095850ed25e673e7e3926ffd8b5af17bb44e51f87fbaf2",
+        "dapo-qwen35-4b-main-v2-resume3": "252e0b966c8f5e6af24a38c404f3081b16671facb6f0e33a11498ca56682fcf0",
+        "dapo-qwen35-4b-main-v2-resume7": "37b54ec19016baef32d99bd91273e12fdfbf33c4868476e1a36f8c7bb0801d5d",
+        "dapo-qwen35-4b-main-v2-resume9": "cbb72573326df46de75934eb0aafd72d2893a606d84fe8ab7843b17892bcdded"
+      }
+    },
+    "tests": {
+      "0": {
+        "accuracy": 0.7470703125,
+        "n": 1024,
+        "correct": 765.0,
+        "job_seconds": 224.4066138267517,
+        "reserved_gpus": 12,
+        "allocated_gpu_hours": 0.7480220460891723,
+        "truncation_fraction": 0.05078125,
+        "correct_truncated_responses": 2,
+        "mean_response_tokens": 4795.615234375,
+        "predictions_sha256": "95c7ac5306394ec279d9a1c605b892a860f2445994ba6b3de47de4addca9c466"
+      },
+      "131072": {
+        "accuracy": 0.8193359375,
+        "n": 1024,
+        "correct": 839.0,
+        "job_seconds": 264.14122104644775,
+        "reserved_gpus": 12,
+        "allocated_gpu_hours": 0.8804707368214925,
+        "truncation_fraction": 0.05078125,
+        "correct_truncated_responses": 0,
+        "mean_response_tokens": 6586.078125,
+        "predictions_sha256": "d5e781ceb7cd2e95aef80117429ba8bd24ce00a563bf2bd27a58525154f07869"
+      },
+      "65536": {
+        "accuracy": 0.8369140625,
+        "n": 1024,
+        "correct": 857.0,
+        "job_seconds": 297.7762610912323,
+        "reserved_gpus": 12,
+        "allocated_gpu_hours": 0.9925875369707743,
+        "truncation_fraction": 0.0498046875,
+        "correct_truncated_responses": 0,
+        "mean_response_tokens": 7899.2880859375,
+        "predictions_sha256": "4e72d0be21b88c7120c0033552370b8a8635aa4cce9ec78a26b3a26a48c4bc60"
+      }
+    },
+    "endpoint_minus_initial": {
+      "change": 0.072265625,
+      "ci95": [
+        0.046875,
+        0.0986328125
+      ],
+      "prompts": 1024,
+      "improved": 129,
+      "regressed": 55,
+      "bootstrap_replicates": 20000
+    },
+    "selected_minus_initial": {
+      "change": 0.08984375,
+      "ci95": [
+        0.06640625,
+        0.1142578125
+      ],
+      "prompts": 1024,
+      "improved": 128,
+      "regressed": 36,
+      "bootstrap_replicates": 20000
+    },
+    "endpoint_minus_selected": {
+      "change": -0.017578125,
+      "ci95": [
+        -0.037109375,
+        0.001953125
+      ],
+      "prompts": 1024,
+      "improved": 44,
+      "regressed": 62,
+      "bootstrap_replicates": 20000
+    },
+    "completed_response_sensitivity": {
+      "rule": "Post hoc: count every response without completed status as incorrect; do not change the frozen grader or checkpoint selection.",
+      "accuracy": {
+        "0": 0.7451171875,
+        "131072": 0.8193359375,
+        "65536": 0.8369140625
+      },
+      "endpoint_minus_initial": {
+        "change": 0.07421875,
+        "ci95": [
+          0.048828125,
+          0.099609375
+        ],
+        "prompts": 1024,
+        "improved": 129,
+        "regressed": 53,
+        "bootstrap_replicates": 20000
+      },
+      "selected_minus_initial": {
+        "change": 0.091796875,
+        "ci95": [
+          0.068359375,
+          0.1162109375
+        ],
+        "prompts": 1024,
+        "improved": 129,
+        "regressed": 35,
+        "bootstrap_replicates": 20000
+      },
+      "endpoint_minus_selected": {
+        "change": -0.017578125,
+        "ci95": [
+          -0.037109375,
+          0.001953125
+        ],
+        "prompts": 1024,
+        "improved": 44,
+        "regressed": 62,
+        "bootstrap_replicates": 20000
+      }
+    },
+    "note": "Paired prompt bootstrap; one training seed per task. Test never selected checkpoints."
+  }
+}
